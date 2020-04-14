@@ -1,0 +1,24 @@
+cluster.family.min_pop = 2
+cluster.family.max_pop = 10
+cluster.family.average_pop = 4
+
+cluster.friends.min_pop = 5
+cluster.friends.max_pop = 50
+cluster.friends.average_pop = 15
+
+cluster.work.min_pop = 1
+cluster.work.max_pop = 100
+cluster.work.average_pop = 20
+cluster.work.same_city = 0.9
+
+cluster.*.min_pop = 2
+cluster.*.max_proportion = 0.3
+cluster.*.depth = 0
+cluster.*.nest_min = 5
+cluster.*.nest_max = 20
+cluster.*.nest_average = 8
+cluster.*.same_city = 0.95
+cluster.*.min_nested_cluster_count = 3
+
+city.max_density = 5000
+city.min_density = 1000
