@@ -1,0 +1,13 @@
+@include base.props
+
+population = 50000
+city_count = 20
+city_max_pop = 15000
+city_min_pop = 1000
+size_x = 100
+size_y = 100
+initial = 20
+
+auto_immunity = 0.6
+
+city.min_density = 900
