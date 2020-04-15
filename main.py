@@ -21,7 +21,7 @@ def main() :
         p.infect(0)
     print()
     t = dynamic_table((('Day', '%4d'), ('Infected', '%6d'), ('Rate', '%6.2f'),
-                       ('Total', '%6d'), ('Rate', '%6.2f'),
+                       ('Total', '%6d'), ('%', '%6.2f'), ('Rate', '%6.2f'),
                        ('Recovered', '%6d'), ('Immune', '%6d'),
                        ('Uninfected Cities', '%5d'),
                        ('Uninfected Clusters', '%6d'), ('%', '%6.2f'),
@@ -35,7 +35,7 @@ def main() :
         uninf_cities = sum([ 1 for c in w.cities if c.is_uninfected() ])
         uninf_clusters = sum([ c.get_uninfected_clusters() for c in w.cities ])
         susc_clusters = sum([ c.get_susceptible_clusters() for c in w.cities ])
-        t.add(day, w.infected, w.infected/prev_infected, total_infected,
+        t.add(day, w.infected, w.infected/prev_infected, total_infected, 100 * total_infected/w.population,
               total_infected / prev_total, w.recovered-w.never_infected, w.never_infected,
               uninf_cities, uninf_clusters, 100*uninf_clusters/total_clusters,
               susc_clusters, 100*susc_clusters/total_clusters)
@@ -45,7 +45,7 @@ def main() :
         w.one_day(day)
 
 def show_cities(w) :
-    print()
+    print('\n')
     t = dynamic_table((('City', '%5d'), ('Location', '%20s'), ('Population', '%6d'), ('Size', '%6.2f')))
     for c in w.cities :
         t.add(c.name, str(c.location), c.pop, c.size)
