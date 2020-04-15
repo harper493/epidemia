@@ -55,7 +55,7 @@ class properties(object) :
         if type_ :
             try :
                 result = (type_)(result)
-            except ValueError :
+            except (ValueError, TypeError) :
                 result = type_()
         return result
 #
