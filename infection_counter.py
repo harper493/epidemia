@@ -24,3 +24,6 @@ class infection_counter() :
         return self.infected+self.recovered==0
 
 
+    def is_susceptible(self):
+        return self.infected+self.recovered < self.pop
+

@@ -8,6 +8,6 @@ size_x = 100
 size_y = 100
 initial = 20
 
-auto_immunity = 0.6
+auto_immunity = 0.7
 
 city.min_density = 900

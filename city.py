@@ -73,6 +73,9 @@ class city(infection_counter) :
     def get_uninfected_clusters(self):
         return sum([ (1 if cl.is_uninfected() else 0) for cl in self.iter_clusters() if cl.depth==0 ])
 
+    def get_susceptible_clusters(self):
+        return sum([ (1 if cl.is_susceptible() else 0) for cl in self.iter_clusters() if cl.depth==0 ])
+
     def iter_clusters(self):
         for c1 in self.clusters.values() :
             for c2 in c1.values() :

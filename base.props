@@ -23,7 +23,7 @@ cluster.*.min_nested_cluster_count = 3
 city.max_density = 5000
 city.min_density = 1000
 
-recovery_time = 7
-infectiousness = 0.009
+recovery_time = 10
+infectiousness = 0.012
 cluster_exposure = 0.03
 

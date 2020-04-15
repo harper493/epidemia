@@ -24,18 +24,21 @@ def main() :
                        ('Total', '%6d'), ('Rate', '%6.2f'),
                        ('Recovered', '%6d'), ('Immune', '%6d'),
                        ('Uninfected Cities', '%5d'),
-                       ('Uninfected Clusters', '%6d'), ('%', '%6.2f')))
+                       ('Uninfected Clusters', '%6d'), ('%', '%6.2f'),
+                       ('Susceptible Clusters', '%6d'), ('%', '%6.2f')))
     day = 0
     prev_infected = initial
     total_infected = initial
     prev_total = initial
     while w.infected >= prev_infected or w.infected > w.population//1000 :
-        total_infected = w.infected + w.recovered
+        total_infected = w.infected + w.recovered - w.never_infected
         uninf_cities = sum([ 1 for c in w.cities if c.is_uninfected() ])
         uninf_clusters = sum([ c.get_uninfected_clusters() for c in w.cities ])
+        susc_clusters = sum([ c.get_susceptible_clusters() for c in w.cities ])
         t.add(day, w.infected, w.infected/prev_infected, total_infected,
               total_infected / prev_total, w.recovered-w.never_infected, w.never_infected,
-              uninf_cities, uninf_clusters, 100*uninf_clusters/total_clusters)
+              uninf_cities, uninf_clusters, 100*uninf_clusters/total_clusters,
+              susc_clusters, 100*susc_clusters/total_clusters)
         prev_infected = w.infected
         prev_total = total_infected
         day += 1
