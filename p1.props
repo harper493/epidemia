@@ -1,7 +1,7 @@
 @include base.props
 
-population = 10000
+population = 50000
 initial = 20
 
-auto_immunity = 0.5
-infectiousness = 0.005
+auto_immunity = 0
+infectiousness = 0.002

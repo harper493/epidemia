@@ -6,11 +6,13 @@ from properties import properties
 from constructor import constructor
 import itertools
 from math import *
+import time
 
 from city import city
 from cluster import cluster
 from person import person
 from infection_counter import infection_counter
+from cached_choice import cached_choice
 
 DEFAULT_SIZE = 100
 GRID_SIZE = 10
@@ -36,6 +38,7 @@ class world(infection_counter) :
     }
 
     def __init__(self, props=None, cmd_args=None, **kwargs) :
+        start_time = time.time()
         constructor(world.arg_table, args=kwargs, props=props, cmd_args=cmd_args).apply(self)
         infection_counter.__init__(self)
         self.day = self.next_day = 0
@@ -51,10 +54,13 @@ class world(infection_counter) :
         self.geometry = geometry(self.size_x, self.size_y)
         self.city_exposure *= self.infectiousness
         self._add_cities()
+        self.city_cache = cached_choice(self.cities, lambda c: c.pop)
         self._add_people()
         cluster.nest_clusters(self)
         for p in random.choices(self.people, k=self.initial_infected):
             p.infect(0)
+        self.setup_time = time.time() - start_time
+        self.start_time = time.time()
 
     def reset(self):
         for c in self.cities :
@@ -96,7 +102,7 @@ class world(infection_counter) :
             self.people.append(p)
 
     def get_random_city(self) :
-        return get_random_member(self.cities, lambda c: c.pop)
+        return self.city_cache.choose()
 
     def get_auto_immunity(self):
         return self.auto_immunity
@@ -131,6 +137,7 @@ class world(infection_counter) :
             self.max_growth = self.growth
         if self.max_growth > 1 :
             self.days_to_double = log(2) / log(self.max_growth)
+        self.run_time = time.time() - self.start_time
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
         return self.infected >= self.prev_infected or self.infected > self.population // 1000

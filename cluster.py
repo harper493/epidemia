@@ -4,14 +4,17 @@ from infection_counter import infection_counter
 import random
 from functools import partial
 
+from cached_choice import cached_choice
+
 class cluster(infection_counter) :
 
     cluster_id = 1
 
-    def __init__(self, name, type_, city_, world_, pop: int=0, size: int=0, depth: int=0):
-        self.name, self.type_, self.city, self.world_, self.pop, self.size = name, type_, city_, world_, pop, size
+    def __init__(self, name, city_, world_, size: int=0, depth: int=0):
+        self.name, self.city, self.world_, self.size = name, city_, world_, size
         infection_counter.__init__(self, world_)
         self.depth = depth
+        self.pop = (size if depth==0 else 0)
         self.members = []
         self.parent = None
         self.exposure = 0
@@ -20,8 +23,8 @@ class cluster(infection_counter) :
         #print(str(self))
 
     def __str__(self):
-        return 'cluster %s type %s city %s loc %s depth %d pop %d' % \
-               (self.name, self.type_, self.city.name, str(self.location), self.depth, self.pop)
+        return 'cluster %s city %s loc %s depth %d pop %d' % \
+               (self.name, self.city.name, str(self.location), self.depth, self.pop)
 
     def show_detail(self) :
         indent = 0
@@ -65,9 +68,7 @@ class cluster(infection_counter) :
             max_pop = min(cprops['max_pop'], obj.pop * cprops['max_proportion'])
             avg_pop = cprops['average_pop']
             count = obj.pop // avg_pop
-            sizes = reciprocal(count , min_pop, max_pop, obj.pop).get()
-            obj.clusters[cname][0] = [ cluster(cluster._get_cluster_id(), cname, obj, world_, pop=s) \
-                                       for s in sizes ]
+            obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', obj, 0, count, min_pop, max_pop, obj.pop)
             depth = cprops['depth']
             nest_avg = cprops['nest_average']
             nest_min = cprops['nest_min']
@@ -79,10 +80,8 @@ class cluster(infection_counter) :
                 count = count // nest_avg
                 sum_ = count*nest_avg
                 max_ = min(nest_max, sum_ - count * nest_min)
-                sizes = reciprocal(count, nest_min, max_, sum_).get()
                 d += 1
-                obj.clusters[cname][d] = [ cluster(d*100000+cluster._get_cluster_id(), cname, obj, world_, depth=d, size=s)
-                                                  for s in sizes ]
+                obj.clusters[cname][d] = cluster_collection(f'{obj.name}.{cname}', obj, d, count, nest_min, max_, sum_)
 
     @staticmethod
     def nest_clusters(world_):
@@ -103,7 +102,7 @@ class cluster(infection_counter) :
                                 if others :
                                     pc = get_random_member(others, lambda cc: 1/city.distance(cc))
                                     pcs = pc.clusters[cname][depth+1]
-                            cc.parent = get_random_member(pcs, lambda cl: cl.size)
+                            cc.parent = pcs.choose()
                             cc.parent.members.append(cc)
                         busy = True
             depth += 1
@@ -112,6 +111,7 @@ class cluster(infection_counter) :
                 for d in sorted(cl.keys())[1:] :
                     for cl2 in cl[d] :
                         cl2.pop = sum([ cl3.pop for cl3 in cl2.members ])
+                    cl[d].rebuild_cache()
 
     @staticmethod
     def make_cluster_info(props) :
@@ -138,4 +138,33 @@ class cluster(infection_counter) :
         result = cluster.cluster_id
         cluster.cluster_id += 1
         return result
+
+class cluster_collection(object) :
+
+    def __init__(self, name, city_, depth, count=0, min_pop=0, max_pop=0, total=0):
+        self.name = name
+        self.city_, self.depth = city_, depth
+        self.count, self.min_pop, self.max_pop, self.total = count, min_pop, max_pop, total
+        self.world_ = self.city_.world_
+        self.content = {}
+        self.cache = None
+        if self.count:
+            self.build()
+
+    def build(self, count=0, min_pop=0, max_pop=0, total=0):
+        sizes = reciprocal(count or self.count, min_pop or self.min_pop, max_pop or self.max_pop, total or self.total).get()
+        self.content = [cluster(f'{self.name}.{self.depth}.{i}', self.city_, self.world_, size=s, depth=self.depth) \
+                                  for i,s in enumerate(sizes) ]
+        self.rebuild_cache()
+
+    def rebuild_cache(self):
+        self.cache = cached_choice(self.content, lambda c: c.pop if c.pop else c.size)
+
+    def choose(self):
+        return self.cache.choose()
+
+    def __iter__(self):
+        for cl in self.content :
+            yield cl
+
 

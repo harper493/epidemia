@@ -21,7 +21,7 @@ class infection_counter() :
             self.parent.recover_one(p)
 
     def is_uninfected(self):
-        return self.infected+self.recovered==0
+        return (self.infected+self.recovered)==0
 
 
     def is_susceptible(self):

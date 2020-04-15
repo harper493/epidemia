@@ -6,6 +6,8 @@ import math
 import random
 from functools import partial
 
+from cached_choice import cached_choice
+
 class city(infection_counter) :
 
     class neighbor(object) :
@@ -21,7 +23,6 @@ class city(infection_counter) :
         self._make_size()
         cluster.make_clusters(world_, self)
         self.cluster_count = sum([ 1 for cl in self.iter_clusters() if cl.depth==0 ])
-        self.cluster_pop_cache = {}
 
     def __str__(self):
         return '%3d %16s pop %6d size %.3f nbrs %s' % (self.name, str(self.location), self.pop, self.size,
@@ -43,12 +44,7 @@ class city(infection_counter) :
     def pick_clusters(self, location):
         result = {}
         for cname, c in self.clusters.items() :
-            try :
-                cpop = self.cluster_pop_cache[cname]
-            except KeyError :
-                cpop = [ cl.pop for cl in c[0] ]
-                self.cluster_pop_cache[cname] = cpop
-            result[cname] = random.choices(c[0], weights=cpop)[0]
+            result[cname] = c[0].choose()
         return result
 
     def make_neighbors(self):

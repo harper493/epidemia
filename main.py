@@ -35,6 +35,10 @@ def main() :
               susc_clusters, 100*susc_clusters/total_clusters)
     print('\nMax Infected: %d Total Infected: %d Max Growth: %.2f%% Days to Double: %.1f Days to Peak: %d' \
           % (w.max_infected, w.prev_total, (w.max_growth-1)*100, w.days_to_double, w.highest_day))
+    print('\nPopulation: %d Setup Time: %.2fS Days: %d in %.2fS %.3f S/day' \
+        % (w.population, w.setup_time, w.day, w.run_time,
+           w.run_time/w.day))
+
 
 def show_cities(w) :
     print('\n')
