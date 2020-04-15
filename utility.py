@@ -3,7 +3,7 @@ __all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'common_prefix', 
             'get_console_width', 'show_time', 'get_user_ip', \
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
             'contains_any', 'get_random_member',
-            'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent' )
+            'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict' )
 
 import math
 import string
@@ -490,3 +490,10 @@ def number(s: str) :
         return float(s)
     else :
         return int(s)
+#
+# make_dict - given an object and a list of attributes, create a dict where
+# each attribute's value is identified by its name
+#
+
+def make_dict(obj, *attrs) :
+    return { a:getattr(obj, a, None) for a in attrs }

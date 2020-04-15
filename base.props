@@ -31,4 +31,5 @@ city.min_size_multiplier = 1.5
 recovery_time = 10
 infectiousness = 0.012
 cluster_exposure = 0.03
+initial_infected = 20
 

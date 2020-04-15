@@ -3,5 +3,5 @@
 population = 10000
 initial = 20
 
-auto_immunity = 0.8
-infectiousness = 0.014
+auto_immunity = 0.5
+infectiousness = 0.005

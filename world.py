@@ -1,11 +1,11 @@
 from geometry import *
 import random
-import math
 from utility import *
 from reciprocal import reciprocal
 from properties import properties
 from constructor import constructor
 import itertools
+from math import *
 
 from city import city
 from cluster import cluster
@@ -32,17 +32,29 @@ class world(infection_counter) :
         'city_exposure' : (float, 0.001),
         'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
+        'initial_infected' : (int, 20),
     }
 
     def __init__(self, props=None, cmd_args=None, **kwargs) :
         constructor(world.arg_table, args=kwargs, props=props, cmd_args=cmd_args).apply(self)
         infection_counter.__init__(self)
+        self.day = self.next_day = 0
+        self.prev_infected = self.initial_infected
+        self.total_infected = self.initial_infected
+        self.prev_total = self.initial_infected
+        self.max_infected = 0
+        self.immune = 0
+        self.growth = self.max_growth = 1
+        self.highest_day = 0
+        self.daily = {}
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
         self.city_exposure *= self.infectiousness
         self._add_cities()
         self._add_people()
         cluster.nest_clusters(self)
+        for p in random.choices(self.people, k=self.initial_infected):
+            p.infect(0)
 
     def reset(self):
         for c in self.cities :
@@ -51,7 +63,7 @@ class world(infection_counter) :
     def _add_cities(self) :
         self.city_count = self.props.get(int, 'city', 'count')
         if self.city_count==0 :
-            self.city_count = int(sround(int(math.sqrt(self.population) / self.props.get(int, 'city', 'ordinality')), 2))
+            self.city_count = int(sround(int(sqrt(self.population) / self.props.get(int, 'city', 'ordinality')), 2))
             self.city_max_pop = int(sround(self.population // 3, 2))
             self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
                                            int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
@@ -98,14 +110,30 @@ class world(infection_counter) :
     def get_infectiousness(self):
         return self.infectiousness
 
-    def one_day(self, day: int):
+    def one_day(self):
+        self.prev_infected = self.infected
+        self.prev_total = self.total_infected
+        self.day = self.next_day
+        self.next_day += 1
         self.reset()
         for p in self.people :
             if p.is_infected():
-                p.infectious(day)
+                p.infectious(self.day)
         for p in self.people :
-            p.expose(day)
-
+            p.expose(self.day)
+        self.total_infected = self.infected + self.recovered - self.never_infected
+        self.immune = self.recovered - self.never_infected
+        if self.infected > self.max_infected :
+            self.max_infected = self.infected
+            self.highest_day = self.day
+        self.growth = self.infected / self.prev_infected
+        if self.infected > self.population//100 and self.growth > self.max_growth:
+            self.max_growth = self.growth
+        if self.max_growth > 1 :
+            self.days_to_double = log(2) / log(self.max_growth)
+        self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
+                                               'growth')
+        return self.infected >= self.prev_infected or self.infected > self.population // 1000
 
 if __name__=='__main__' :
     props = properties('p1.props')
