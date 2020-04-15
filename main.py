@@ -5,6 +5,9 @@ import random
 from utility import *
 from dynamic_table import dynamic_table
 
+import cProfile
+import re
+
 def main() :
     props = properties('p1.props')
     cluster.make_cluster_info(props)
@@ -17,9 +20,10 @@ def main() :
     day = 0
     prev_infected = initial
     while w.infected :
-        t.add(day, w.infected, w.infected/prev_infected, w.recovered, w.never_infected)
+        t.add(day, w.infected, w.infected/prev_infected, w.recovered-w.never_infected, w.never_infected)
         prev_infected = w.infected
         day += 1
         w.one_day(day)
 
-main()
+#main()
+cProfile.run('main()')

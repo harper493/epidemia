@@ -3,6 +3,7 @@ from infection_counter import infection_counter
 from geometry import *
 from utility import *
 import math
+import random
 from functools import partial
 
 class city(infection_counter) :
@@ -19,6 +20,7 @@ class city(infection_counter) :
         self.exposure = 0
         self._make_size()
         cluster.make_clusters(world_, self)
+        self.cluster_pop_cache = {}
 
     def __str__(self):
         return '%3d %16s pop %6d size %.3f nbrs %s' % (self.name, str(self.location), self.pop, self.size,
@@ -40,7 +42,12 @@ class city(infection_counter) :
     def pick_clusters(self, location):
         result = {}
         for cname, c in self.clusters.items() :
-            result[cname] = get_random_member(c[0], lambda c: c.pop)
+            try :
+                cpop = self.cluster_pop_cache[cname]
+            except KeyError :
+                cpop = [ cl.pop for cl in c[0] ]
+                self.cluster_pop_cache[cname] = cpop
+            result[cname] = random.choices(c[0], weights=cpop)[0]
         return result
 
     def make_neighbors(self):

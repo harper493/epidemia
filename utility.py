@@ -19,6 +19,7 @@ import textwrap
 import datetime
 import readline
 import numpy as np
+import random
 
 #
 # sround - round a number to the specified number of digits with possible round up
@@ -462,7 +463,7 @@ def parse_time_of_day(value) :
 #
 
 def get_random_member(coll, key):
-    return np.random.choice(coll, 1, [key(c) for c in coll])[0]
+    return random.choices(coll, weights=[key(c) for c in coll])[0]
 
 #
 # decay - perform one step of an exponentialy smoothed moving average
