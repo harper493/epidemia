@@ -1,14 +1,16 @@
 from utility import *
 from reciprocal import reciprocal
+from infection_counter import infection_counter
 import random
 from functools import partial
 
-class cluster(object) :
+class cluster(infection_counter) :
 
     cluster_id = 1
 
     def __init__(self, name, type_, city_, world_, pop: int=0, size: int=0, depth: int=0):
         self.name, self.type_, self.city, self.world_, self.pop, self.size = name, type_, city_, world_, pop, size
+        infection_counter.__init__(self, world_)
         self.depth = depth
         self.members = []
         self.parent = None

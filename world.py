@@ -88,9 +88,11 @@ class world(infection_counter) :
 
     def _add_people(self):
         self.people = []
+        print('Adding population ', end='')
+        ticks = self.population//50
         for n in range(self.population) :
             p = person(n, self)
-            if (n%100)==0 :
+            if (n % ticks)==0 :
                 print ('.', end='')
             self.people.append(p)
 

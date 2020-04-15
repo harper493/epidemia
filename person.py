@@ -54,9 +54,13 @@ class person(object) :
     def infect(self, day):
         self.infected = day
         self.city.infect_one(self)
+        for cl in self.clusters.values() :
+            cl.infect_one(self)
         self.state = person_state.I
 
     def recover(self):
         self.city.recover_one(self)
+        for cl in self.clusters.values() :
+            cl.recover_one(self)
         self.state = person_state.R
         

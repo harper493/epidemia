@@ -20,4 +20,7 @@ class infection_counter() :
         if self.parent :
             self.parent.recover_one(p)
 
+    def is_uninfected(self):
+        return self.infected+self.recovered==0
+
 

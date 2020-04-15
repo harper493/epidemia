@@ -20,6 +20,7 @@ class city(infection_counter) :
         self.exposure = 0
         self._make_size()
         cluster.make_clusters(world_, self)
+        self.cluster_count = sum([ 1 for cl in self.iter_clusters() if cl.depth==0 ])
         self.cluster_pop_cache = {}
 
     def __str__(self):
@@ -56,7 +57,6 @@ class city(infection_counter) :
             if c is not self :
                 self.neighbors.append(city.neighbor(c, self.distance(c)))
         self.neighbors.sort(key=lambda c: c.dist)
-        print(str(self))
 
     def get_random_neighbor(self):
         return get_random_member(self.neighbors, lambda n: 1/n.dist)
@@ -69,6 +69,9 @@ class city(infection_counter) :
 
     def get_exposure(self):
         return self.exposure
+
+    def get_uninfected_clusters(self):
+        return sum([ (1 if cl.is_uninfected() else 0) for cl in self.iter_clusters() if cl.depth==0 ])
 
     def iter_clusters(self):
         for c1 in self.clusters.values() :
