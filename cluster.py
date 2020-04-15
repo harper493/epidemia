@@ -8,11 +8,12 @@ class cluster(object) :
     cluster_id = 1
 
     def __init__(self, name, type_, city_, world_, pop: int=0, size: int=0, depth: int=0):
-        self.name, self.type_, self.city, self.pop, self.size = name, type_, city_, pop, size
+        self.name, self.type_, self.city, self.world_, self.pop, self.size = name, type_, city_, world_, pop, size
         self.depth = depth
         self.members = []
         self.parent = None
         self.exposure = 0
+        self.exposure_good = False
         self.location = self.city.get_random_location()
         #print(str(self))
 
@@ -33,6 +34,25 @@ class cluster(object) :
 
     def reset(self):
         self.exposure = 0
+        self.exposure_good = False
+
+    def expose(self):
+        inf = self.world_.get_infectiousness()
+        self.exposure += inf
+        p = self.parent
+        while p :
+            inf *= self.world_.get_cluster_exposure()
+            p.exposure += inf
+            p = p.parent
+
+    def get_exposure(self):
+        if not self.exposure_good :
+            p = self.parent
+            while p :
+                self.exposure += p.exposure
+                p = p.parent
+            self.exposure_good = True
+        return self.exposure
 
     @staticmethod
     def make_clusters(world_, obj) :

@@ -10,6 +10,7 @@ import itertools
 from city import city
 from cluster import cluster
 from person import person
+from infection_counter import infection_counter
 
 DEFAULT_SIZE = 100
 GRID_SIZE = 10
@@ -19,7 +20,7 @@ DEFAULT_CITIES = 10
 DEFAULT_CITY_MIN_POP = 2000
 DEFAULT_CITY_MAX_POP = 20000
 
-class world(object) :
+class world(infection_counter) :
 
     arg_table = {
         'population' : (int, DEFAULT_POP),
@@ -28,16 +29,28 @@ class world(object) :
         'city_count' : (int, DEFAULT_CITIES),
         'city_min_pop' : (int, DEFAULT_CITY_MIN_POP),
         'city_max_pop' : (int, DEFAULT_CITY_MAX_POP),
+        'auto_immunity' : (float, 0.0),
+        'travel' : (float,0.01),
+        'infectiousness' : (float, 0.01),
+        'city_exposure' : (float, 0.001),
+        'cluster_exposure' : (float, 0.01),
+        'recovery_time' : (int, 7),
     }
 
     def __init__(self, props=None, cmd_args=None, **kwargs) :
         constructor(world.arg_table, args=kwargs, props=props, cmd_args=cmd_args).apply(self)
+        infection_counter.__init__(self)
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
+        self.city_exposure *= self.infectiousness
         self._make_grid()
         self._add_cities()
         self._add_people()
         cluster.nest_clusters(self)
+
+    def reset(self):
+        for c in self.cities :
+            c.reset()
 
     def _add_cities(self) :
         self.cities = []
@@ -83,6 +96,27 @@ class world(object) :
 
     def get_random_city(self) :
         return get_random_member(self.cities, lambda c: c.pop)
+
+    def get_auto_immunity(self):
+        return self.auto_immunity
+
+    def get_city_exposure(self):
+        return self.city_exposure
+
+    def get_cluster_exposure(self):
+        return self.cluster_exposure
+
+    def get_infectiousness(self):
+        return self.infectiousness
+
+    def one_day(self, day: int):
+        self.reset()
+        for p in self.people :
+            if p.is_infected():
+                p.infectious(day)
+        for p in self.people :
+            p.expose(day)
+
 
 if __name__=='__main__' :
     props = properties('p1.props')

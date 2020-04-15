@@ -1,10 +1,11 @@
 from cluster import cluster
+from infection_counter import infection_counter
 from geometry import *
 from utility import *
 import math
 from functools import partial
 
-class city(object) :
+class city(infection_counter) :
 
     class neighbor(object) :
 
@@ -13,7 +14,7 @@ class city(object) :
 
     def __init__(self, name, location_: point, pop: int, world_):
         self.name, self.location, self.pop, self.world_ = name, location_, pop, world_
-        self.initial_pop = pop
+        infection_counter.__init__(self, world_)
         self.grid = None
         self.exposure = 0
         self._make_size()
@@ -25,6 +26,8 @@ class city(object) :
 
     def reset(self):
         self.exposure = 0
+        for cl in self.iter_clusters() :
+            cl.reset()
 
     def get_random_location(self):
         bearing = random.uniform(0, 2*math.pi)
@@ -53,6 +56,18 @@ class city(object) :
 
     def touches(self, other: 'city'):
         return self.size + other.size > self.distance(other)
+
+    def expose(self):
+        self.exposure += self.world_.get_city_exposure()
+
+    def get_exposure(self):
+        return self.exposure
+
+    def iter_clusters(self):
+        for c1 in self.clusters.values() :
+            for c2 in c1.values() :
+                for c3 in c2 :
+                    yield c3
 
     def _make_size(self):
         minp = self.world_.props.get(int, 'city_min_pop')
