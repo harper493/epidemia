@@ -30,12 +30,21 @@ def main() :
     prev_infected = initial
     total_infected = initial
     prev_total = initial
+    max_infected = 0
+    max_growth = 0
+    highest_day = 0
     while w.infected >= prev_infected or w.infected > w.population//1000 :
         total_infected = w.infected + w.recovered - w.never_infected
         uninf_cities = sum([ 1 for c in w.cities if c.is_uninfected() ])
         uninf_clusters = sum([ c.get_uninfected_clusters() for c in w.cities ])
         susc_clusters = sum([ c.get_susceptible_clusters() for c in w.cities ])
-        t.add(day, w.infected, w.infected/prev_infected, total_infected, 100 * total_infected/w.population,
+        growth = w.infected/prev_infected
+        if w.infected > max_infected :
+            max_infected = w.infected
+            highest_day = day
+        if w.infected > w.population//100 :
+            max_growth = max(max_growth, growth)
+        t.add(day, w.infected, growth, total_infected, 100 * total_infected/w.population,
               total_infected / prev_total, w.recovered-w.never_infected, w.never_infected,
               uninf_cities, uninf_clusters, 100*uninf_clusters/total_clusters,
               susc_clusters, 100*susc_clusters/total_clusters)
@@ -43,6 +52,7 @@ def main() :
         prev_total = total_infected
         day += 1
         w.one_day(day)
+    print('Max Infected: %d Max Growth: %.2f %% Days to Peak: %d' % (max_infected, (max_growth-1)*100, highest_day))
 
 def show_cities(w) :
     print('\n')
