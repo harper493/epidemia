@@ -83,8 +83,8 @@ class city(infection_counter) :
                     yield c3
 
     def _make_size(self):
-        minp = self.world_.props.get(int, 'city_min_pop')
-        maxp = self.world_.props.get(int, 'city_max_pop')
+        minp = self.world_.city_min_pop
+        maxp = self.world_.city_max_pop
         mind = self.world_.props.get(int, 'city', 'min_density')
         maxd = self.world_.props.get(int, 'city', 'max_density')
         z1 = self.pop - minp

@@ -26,9 +26,6 @@ class world(infection_counter) :
         'population' : (int, DEFAULT_POP),
         'size_x' : (float, DEFAULT_SIZE),
         'size_y' : (float, DEFAULT_SIZE),
-        'city_count' : (int, DEFAULT_CITIES),
-        'city_min_pop' : (int, DEFAULT_CITY_MIN_POP),
-        'city_max_pop' : (int, DEFAULT_CITY_MAX_POP),
         'auto_immunity' : (float, 0.0),
         'travel' : (float,0.01),
         'infectiousness' : (float, 0.01),
@@ -43,7 +40,6 @@ class world(infection_counter) :
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
         self.city_exposure *= self.infectiousness
-        self._make_grid()
         self._add_cities()
         self._add_people()
         cluster.nest_clusters(self)
@@ -53,13 +49,20 @@ class world(infection_counter) :
             c.reset()
 
     def _add_cities(self) :
+        self.city_count = self.props.get(int, 'city', 'count')
+        if self.city_count==0 :
+            self.city_count = int(sround(int(math.sqrt(self.population) / self.props.get(int, 'city', 'ordinality')), 2))
+            self.city_max_pop = int(sround(self.population // 3, 2))
+            self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
+                                           int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
+        else :
+            self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'mac_pop'), self.props.get(int, 'city', 'min_pop')
         self.cities = []
         pops = reciprocal(self.city_count,self.city_min_pop, self.city_max_pop, self.population).get()
         for i, pop in enumerate(pops) :
             location = self.geometry.random_location()
             c = city(i, location, pop, self)
             self.cities.append(c)
-            self._add_grid(c)
         done = False
         while not done :
             done = True
@@ -69,22 +72,6 @@ class world(infection_counter) :
                     done = False
         for c in self.cities :
             c.make_neighbors()
-
-    def _make_grid(self):
-        self.grid = {}
-        for x in range(GRID_SIZE) :
-            for y in range(GRID_SIZE) :
-                self.grid[(x,y)] = []
-
-    def _find_grid(self, location):
-        x = int(GRID_SIZE*location.x/self.geometry.size_x)
-        y = int(GRID_SIZE*location.y/self.geometry.size_y)
-        return self.grid[(x,y)]
-
-    def _add_grid(self, c):
-        g = self._find_grid(c.location)
-        c.grid = g
-        g.append(c)
 
     def _add_people(self):
         self.people = []

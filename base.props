@@ -22,6 +22,11 @@ cluster.*.min_nested_cluster_count = 3
 
 city.max_density = 5000
 city.min_density = 1000
+city.ordinality = 25
+city.count = 0
+city.max_pop = 0
+city.min_pop = 0
+city.min_size_multiplier = 1.5
 
 recovery_time = 10
 infectiousness = 0.012
