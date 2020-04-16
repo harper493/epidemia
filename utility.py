@@ -1,4 +1,4 @@
-__all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'common_prefix', \
+__all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'var_to_title', 'common_prefix', \
             'splice', 'column_layout', 'format_columns', \
             'get_console_width', 'show_time', 'get_user_ip', \
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
@@ -82,7 +82,21 @@ def camel_to_title(text) :
             prev_upper = False
         result += c
     return result
-
+#
+# var_to_title - convert an underscore separated name to title case
+#
+def var_to_title(text) :
+    result = ''
+    up = True
+    for ch in text :
+        if ch=='_' :
+            ch = ' '
+            up = True
+        elif up :
+            ch = ch.upper()
+            up = False
+        result += ch
+    return result
 #
 # common_prefix - given a list of strings, return the longest
 # prefix they all share
