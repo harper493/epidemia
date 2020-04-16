@@ -43,7 +43,7 @@ def sround(value, digits=1, round_up=True) :
             result += bound
             remainder -= bound
             digits -= 1
-        if round_up :
+        if round_up and result < value :
             result += one_digit
     return result
         
