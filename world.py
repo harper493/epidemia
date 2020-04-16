@@ -69,12 +69,13 @@ class world(infection_counter) :
     def _add_cities(self) :
         self.city_count = self.props.get(int, 'city', 'count')
         if self.city_count==0 :
-            self.city_count = int(sround(int(sqrt(self.population) / self.props.get(int, 'city', 'ordinality')), 2))
+            self.city_count = int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
+                                             / self.props.get(int, 'city', 'auto_divider')), 2))
             self.city_max_pop = int(sround(self.population // 3, 2))
             self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
                                            int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
         else :
-            self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'mac_pop'), self.props.get(int, 'city', 'min_pop')
+            self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'max_pop'), self.props.get(int, 'city', 'min_pop')
         self.cities = []
         pops = reciprocal(self.city_count,self.city_min_pop, self.city_max_pop, self.population).get()
         for i, pop in enumerate(pops) :
@@ -141,6 +142,15 @@ class world(infection_counter) :
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
         return self.infected >= self.prev_infected or self.infected > self.population // 1000
+
+    def get_days(self):
+        return [ k for k in self.daily.keys() ]
+
+    def get_data(self, name):
+        return [ d[name] for d in self.daily.values() ]
+
+    def get_data_point(self, name, day):
+        return self.daily[day][name]
 
 if __name__=='__main__' :
     props = properties('p1.props')

@@ -6,11 +6,13 @@ from cluster import cluster
 import random
 from utility import *
 from dynamic_table import dynamic_table
+from plotter import plotter
 
 import cProfile
 import re
 
 PROFILE = False
+PLOT = True
 
 def main() :
     props = properties('p1.props')
@@ -38,6 +40,19 @@ def main() :
     print('\nPopulation: %d Setup Time: %.2fS Days: %d in %.2fS %.3f S/day' \
         % (w.population, w.setup_time, w.day, w.run_time,
            w.run_time/w.day))
+
+    if PLOT :
+        from_ = None
+        for d in w.get_days() :
+            if from_ :
+                if w.get_data_point('infected', d) < w.get_data_point('total_infected', d) // 10 :
+                    to = d
+                    break
+            elif w.get_data_point('total_infected', d) > w.population // 50 :
+                    from_ = d
+
+        p = plotter(w, ['total_infected'])
+        p.plot(from_=from_, to=to)
 
 
 def show_cities(w) :

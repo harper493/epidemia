@@ -22,7 +22,8 @@ cluster.*.min_nested_cluster_count = 3
 
 city.max_density = 5000
 city.min_density = 1000
-city.ordinality = 25
+city.auto_power = 0.67
+city.auto_divider = 200
 city.count = 0
 city.max_pop = 0
 city.min_pop = 0
