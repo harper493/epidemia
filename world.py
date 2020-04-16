@@ -6,6 +6,7 @@ from properties import properties
 from constructor import constructor
 import itertools
 from math import *
+from copy import copy
 import time
 
 from city import city
@@ -49,6 +50,7 @@ class world(infection_counter) :
         self.immune = 0
         self.growth = self.max_growth = 1
         self.highest_day = 0
+        self.days_to_double = 0
         self.daily = {}
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
@@ -56,9 +58,13 @@ class world(infection_counter) :
         self._add_cities()
         self.city_cache = cached_choice(self.cities, lambda c: c.pop)
         self._add_people()
+        self.infected_list = []
+        self.susceptible_list = copy(self.people)
         cluster.nest_clusters(self)
+        self.new_infected_list = []
         for p in random.choices(self.people, k=self.initial_infected):
             p.infect(0)
+        self.infected_list = self.new_infected_list
         self.setup_time = time.time() - start_time
         self.start_time = time.time()
 
@@ -69,11 +75,13 @@ class world(infection_counter) :
     def _add_cities(self) :
         self.city_count = self.props.get(int, 'city', 'count')
         if self.city_count==0 :
-            self.city_count = int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
-                                             / self.props.get(int, 'city', 'auto_divider')), 2))
+            self.city_count = max(int(self.props.get(int, 'city', 'min_count')),
+                    int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
+                                                 / self.props.get(int, 'city', 'auto_divider')), 2)))
             self.city_max_pop = int(sround(self.population // 3, 2))
             self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
                                            int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
+            print(f'!!! {self.city_count=} {self.city_max_pop=} {self.city_min_pop=}')
         else :
             self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'max_pop'), self.props.get(int, 'city', 'min_pop')
         self.cities = []
@@ -117,17 +125,26 @@ class world(infection_counter) :
     def get_infectiousness(self):
         return self.infectiousness
 
+    def infect_one(self, p):
+        was_infected = p.is_infected()
+        infection_counter.infect_one(self, p)
+        if not was_infected :
+            self.new_infected_list.append(p)
+
     def one_day(self):
+        self.new_infected_list = []
+        self.new_susceptible_list = []
         self.prev_infected = self.infected
         self.prev_total = self.total_infected
         self.day = self.next_day
         self.next_day += 1
         self.reset()
-        for p in self.people :
-            if p.is_infected():
-                p.infectious(self.day)
-        for p in self.people :
+        for p in self.infected_list :
+            p.infectious(self.day)
+        for p in self.susceptible_list :
             p.expose(self.day)
+            if p.is_susceptible() :
+                self.new_susceptible_list.append(p)
         self.total_infected = self.infected + self.recovered - self.never_infected
         self.immune = self.recovered - self.never_infected
         if self.infected > self.max_infected :
@@ -141,6 +158,8 @@ class world(infection_counter) :
         self.run_time = time.time() - self.start_time
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
+        self.infected_list = [ p for p in self.infected_list if p.is_infected()] + self.new_infected_list
+        self.susceptible_list = self.new_susceptible_list
         return self.infected >= self.prev_infected or self.infected > self.population // 1000
 
     def get_days(self):

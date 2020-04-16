@@ -23,14 +23,15 @@ cluster.*.min_nested_cluster_count = 3
 city.max_density = 5000
 city.min_density = 1000
 city.auto_power = 0.67
-city.auto_divider = 200
+city.auto_divider = 250
 city.count = 0
 city.max_pop = 0
 city.min_pop = 0
-city.min_size_multiplier = 1.5
+city.min_count = 5
+city.min_size_multiplier = 2.5
 
-recovery_time = 10
+recovery_time = 6
 infectiousness = 0.012
-cluster_exposure = 0.03
+cluster_exposure = 0.01
 initial_infected = 20
 

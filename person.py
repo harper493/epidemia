@@ -2,9 +2,12 @@ from enum import Enum
 import random
 
 class person_state(Enum) :
-    S = 0
-    I = 1
-    R = 2
+    S = 0    # susceptible
+    G = 1    # gestating
+    I = 2    # infected
+    R = 3    # recovered
+    D = 4    # dead
+    X = 5    # auto-immune, exposed but never infected
 
 class person(object) :
 

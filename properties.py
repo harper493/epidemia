@@ -23,6 +23,7 @@
 
 import re
 import codecs
+import os
 
 class properties(object) :
 
@@ -212,6 +213,8 @@ class properties(object) :
 # load_file - load a property file
 #
     def load_file(self, path) :
+        if os.path.splitext(path)[1]=='' :
+            path += '.props'
         f = codecs.open(path, encoding='utf-8')
         self.add_properties(f.read())
         f.close()
