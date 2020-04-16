@@ -14,6 +14,7 @@ from cluster import cluster
 from person import person
 from infection_counter import infection_counter
 from cached_choice import cached_choice
+from lognormal import lognormal
 
 DEFAULT_SIZE = 100
 GRID_SIZE = 10
@@ -27,6 +28,7 @@ class world(infection_counter) :
 
     arg_table = {
         'population' : (int, DEFAULT_POP),
+        'city_max_pop' : (int, 0),
         'size_x' : (float, DEFAULT_SIZE),
         'size_y' : (float, DEFAULT_SIZE),
         'auto_immunity' : (float, 0.0),
@@ -42,6 +44,7 @@ class world(infection_counter) :
         start_time = time.time()
         constructor(world.arg_table, args=kwargs, props=props, cmd_args=cmd_args).apply(self)
         infection_counter.__init__(self)
+        self.recovery_dist = lognormal(props.get(float, 'recovery_time'), props.get(float, 'recovery_sd'))
         self.day = self.next_day = 0
         self.prev_infected = self.initial_infected
         self.total_infected = self.initial_infected
@@ -73,15 +76,15 @@ class world(infection_counter) :
             c.reset()
 
     def _add_cities(self) :
-        self.city_count = self.props.get(int, 'city', 'count')
-        if self.city_count==0 :
-            self.city_count = max(int(self.props.get(int, 'city', 'min_count')),
-                    int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
+        self.city_count = self.props.get(int, 'city_count')
+        if self.city_count==0 or self.city_max_pop==0 :
+            self.city_count = self.city_count or max(int(self.props.get(int, 'city', 'min_count')),
+                                int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
                                                  / self.props.get(int, 'city', 'auto_divider')), 2)))
             self.city_max_pop = int(sround(self.population // 3, 2))
             self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
                                            int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
-            print(f'!!! {self.city_count=} {self.city_max_pop=} {self.city_min_pop=}')
+            #print(f'!!! {self.city_count=} {self.city_max_pop=} {self.city_min_pop=}')
         else :
             self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'max_pop'), self.props.get(int, 'city', 'min_pop')
         self.cities = []

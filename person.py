@@ -34,7 +34,7 @@ class person(object) :
         return self.state==person_state.R
 
     def infectious(self, day):
-        if day - self.infected >= self.world_.recovery_time :
+        if day - self.infected >= self.world_.recovery_dist() :
             self.recover()
         else :
             for cl in self.clusters.values() :

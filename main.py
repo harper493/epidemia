@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.8
 
 from world import world
 from properties import properties
@@ -19,19 +19,20 @@ def main() :
     propfiles = ['base.props']
     if args.props_file :
         propfiles.append(args.props_file)
-    props = properties(*propfiles)
+    props = properties(*propfiles, cmd_args=args.extra_props)
     cluster.make_cluster_info(props)
     w = world(props=props)
     if args.very_verbose :
         show_cities(w)
     total_clusters = sum([ c.cluster_count for c in w.cities ])
     print()
-    t = dynamic_table((('Day', '%4d'), ('Infected', '%6d'), ('Rate', '%6.2f'),
-                       ('Total', '%6d'), ('%', '%6.2f'), ('Rate', '%6.2f'),
-                       ('Recovered', '%6d'), ('Immune', '%6d'),
-                       ('Uninfected Cities', '%5d'),
-                       ('Uninfected Clusters', '%6d'), ('%', '%6.2f'),
-                       ('Susceptible Clusters', '%6d'), ('%', '%6.2f')))
+    if args.verbose :
+        t = dynamic_table((('Day', '%4d'), ('Infected', '%6d'), ('Rate', '%6.2f'),
+                           ('Total', '%6d'), ('%', '%6.2f'), ('Rate', '%6.2f'),
+                           ('Recovered', '%6d'), ('Immune', '%6d'),
+                           ('Uninfected Cities', '%5d'),
+                           ('Uninfected Clusters', '%6d'), ('%', '%6.2f'),
+                           ('Susceptible Clusters', '%6d'), ('%', '%6.2f')))
     while w.one_day() :
         if args.verbose :
             uninf_cities = sum([ 1 for c in w.cities if c.is_uninfected() ])
@@ -73,5 +74,5 @@ def plot_results(w) :
     p.plot(from_=from_, to=to)
 
 
-cProfile.run('main()')
-#main()
+#cProfile.run('main()')
+main()

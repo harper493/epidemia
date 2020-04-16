@@ -12,6 +12,9 @@ in the expression 1/n^p so hat it can manipulate the values to get everything to
 
 import random
 import statistics
+import math
+import sys
+import matplotlib.pyplot as plt
 
 DEFAULT_TOLERANCE = 0.1     # percent
 MAX_POWER = 10000000
@@ -41,8 +44,6 @@ class reciprocal(object) :
             prev_sum, prev_prev_sum = None, 1
             while p<MAX_POWER and p>1/MAX_POWER :
                 ss = [ pow(n, p) for n in s ]
-                if (max(ss)==1) :
-                    print('^^^', p, ss)
                 m = (r-1)/ (max(ss)-1)
                 ss = [ ((n-1) * m)+1 for n in ss ]
                 t = sum(self._make_result(ss))
@@ -86,6 +87,21 @@ class reciprocal(object) :
         return s
 
 if __name__=="__main__" :
+    mean = 9
+    sd = 2
+    mu = math.log(mean**2/math.sqrt(mean**2 + sd **2))
+    sigma = math.sqrt(math.log(1+(sd/mean)**2))
+    results = []
+    for i in range(10000) :
+        r = random.lognormvariate(mu, sigma)
+        results.append(r)
+    amean = statistics.mean(results)
+    asd = statistics.stdev(results)
+    print(f'{mean=} {sd=} {mu=} {sigma=} {amean=} {asd=}')
+    num_bins = 40
+    n, bins, patches = plt.hist(results, num_bins, facecolor='blue', alpha=0.5)
+    plt.show()
+    sys.exit(0)
     for i in range(10) :
         r = reciprocal(200, 1000, 500000,1000000)
         rr = r.get()
@@ -93,4 +109,5 @@ if __name__=="__main__" :
                (sum(rr), statistics.mean(rr), statistics.pstdev(rr),
                 statistics.harmonic_mean(rr), statistics.median(rr), r.power,
                str(rr)))
+
 

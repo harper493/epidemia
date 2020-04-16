@@ -27,10 +27,12 @@ import os
 
 class properties(object) :
 
-    def __init__(self, *files) :
+    def __init__(self, *files, cmd_args=None) :
         self.root = {}
         for f in files :
             self.load_file(f)
+        if cmd_args :
+            self.add_properties('\n'.join([f'{n}={v}' for n,v in cmd_args.items()]))
 
 #
 # get - takes a list of keys and returns the best match
