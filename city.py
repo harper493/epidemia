@@ -22,7 +22,7 @@ class city(infection_counter) :
         self.exposure = 0
         self._make_size()
         cluster.make_clusters(world_, self)
-        self.cluster_count = sum([ 1 for cl in self.iter_clusters() if cl.depth==0 ])
+        self.cluster_count = None
 
     def __str__(self):
         return '%3d %16s pop %6d size %.3f nbrs %s' % (self.name, str(self.location), self.pop, self.size,
@@ -61,22 +61,32 @@ class city(infection_counter) :
         return self.size + other.size > self.distance(other)
 
     def expose(self):
-        self.exposure += self.world_.get_city_exposure()
+        self.exposure = 1 - (((1 - self.exposure) * (1 -self.world_.get_city_exposure())))
 
     def get_exposure(self):
         return self.exposure
 
-    def get_uninfected_clusters(self):
-        return sum([ (1 if cl.is_uninfected() else 0) for cl in self.iter_clusters() if cl.depth==0 ])
+    def get_leaf_clusters(self):
+        if self.cluster_count is None :
+            self.cluster_count = count(self.iter_leaf_clusters(), lambda cl: cl.pop>0)
+        return self.cluster_count
+
+    def get_untouched_clusters(self):
+        return count(self.iter_leaf_clusters(), lambda cl: cl.pop>0 and cl.is_untouched())
 
     def get_susceptible_clusters(self):
-        return sum([ (1 if cl.is_susceptible() else 0) for cl in self.iter_clusters() if cl.depth==0 ])
+        return count(self.iter_leaf_clusters(), lambda cl: cl.pop>0 and cl.is_susceptible())
 
     def iter_clusters(self):
         for c1 in self.clusters.values() :
             for c2 in c1.values() :
                 for c3 in c2 :
                     yield c3
+
+    def iter_leaf_clusters(self):
+        for c1 in self.clusters.values() :
+            for c2 in c1[0] :
+                yield c2
 
     def _make_size(self):
         minp = self.world_.city_min_pop

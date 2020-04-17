@@ -4,11 +4,11 @@ cluster.family.average_pop = 4
 
 cluster.friends.min_pop = 5
 cluster.friends.max_pop = 50
-cluster.friends.average_pop = 15
+cluster.friends.average_pop = 10
 
 cluster.work.min_pop = 1
 cluster.work.max_pop = 100
-cluster.work.average_pop = 20
+cluster.work.average_pop = 10
 cluster.work.same_city = 0.9
 
 cluster.*.min_pop = 2
@@ -29,10 +29,13 @@ city.min_pop = 0
 city.min_count = 5
 city.min_size_multiplier = 2.5
 
-recovery_time = 9
+recovery_time = 15
 recovery_sd = 2
+gestating_time = 4
+gestating_sd = 1.5
 infectiousness = 0.012
-cluster_exposure = 0.01
+cluster_exposure = 0.0001
 initial_infected = 20
 city_count = 0
+city_exposure = 1e-5
 

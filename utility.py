@@ -3,7 +3,8 @@ __all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'var_to_title', '
             'get_console_width', 'show_time', 'get_user_ip', \
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
             'contains_any', 'get_random_member',
-            'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict' )
+            'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict',
+            'assert_', 'count' )
 
 import math
 import string
@@ -511,3 +512,16 @@ def number(s: str) :
 
 def make_dict(obj, *attrs) :
     return { a:getattr(obj, a, None) for a in attrs }
+
+#
+# assert_ - check the condition and potentially hit a breakpoint if it occurs
+#
+def assert_(p) :
+    if not p :
+        xxx = 1
+
+#
+# count - return the number of entries in an iterable matching a predicate
+#
+def count(coll, pred) :
+    return sum([ 1 for c in coll if pred(c)])

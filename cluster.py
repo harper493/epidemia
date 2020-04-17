@@ -12,9 +12,10 @@ class cluster(infection_counter) :
 
     def __init__(self, name, city_, world_, size: int=0, depth: int=0):
         self.name, self.city, self.world_, self.size = name, city_, world_, size
-        infection_counter.__init__(self, world_)
+        infection_counter.__init__(self)
         self.depth = depth
-        self.pop = (size if depth==0 else 0)
+        self.pop = 0
+        self.people = set()
         self.members = []
         self.parent = None
         self.exposure = 0
@@ -58,6 +59,11 @@ class cluster(infection_counter) :
                 p = p.parent
             self.exposure_good = True
         return self.exposure
+
+    def enroll(self, p: 'person'):
+        assert(p not in self.people)
+        self.pop += 1
+        self.people.add(p)
 
     @staticmethod
     def make_clusters(world_, obj) :
@@ -106,12 +112,19 @@ class cluster(infection_counter) :
                             cc.parent.members.append(cc)
                         busy = True
             depth += 1
-        for city in world_.cities :
-            for cname, cl in city.clusters.items() :
-                for d in sorted(cl.keys())[1:] :
-                    for cl2 in cl[d] :
-                        cl2.pop = sum([ cl3.pop for cl3 in cl2.members ])
-                    cl[d].rebuild_cache()
+        busy, d = True, 0
+        while busy :
+            busy = False
+            for city in world_.cities :
+                for cname, cl in city.clusters.items() :
+                    if d <= max(cl.keys()) :
+                        busy = True
+                        for cl2 in cl[d] :
+                            if cl2.parent :
+                                cl2.parent.pop += cl2.pop
+                                cl2.parent.people.update(cl2.people)
+                        cl[d].rebuild_cache()
+            d += 1
 
     @staticmethod
     def make_cluster_info(props) :
@@ -158,7 +171,7 @@ class cluster_collection(object) :
         self.rebuild_cache()
 
     def rebuild_cache(self):
-        self.cache = cached_choice(self.content, lambda c: c.pop if c.pop else c.size)
+        self.cache = cached_choice(self.content, lambda c: c.size)
 
     def choose(self):
         return self.cache.choose()

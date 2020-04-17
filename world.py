@@ -24,6 +24,34 @@ DEFAULT_CITIES = 10
 DEFAULT_CITY_MIN_POP = 2000
 DEFAULT_CITY_MAX_POP = 20000
 
+class people_list() :
+
+    def __init__(self, content=None):
+        self.current = set()
+        self.new = set()
+        if content :
+            for c in content :
+                self.new.add(c)
+
+    def reset(self):
+        self.current = self.new
+        self.new = set()
+
+    def add(self, p):
+        if p in self.new :
+            a = 1
+        else :
+            self.new.add(p)
+
+    def __iter__(self):
+        for p in self.current:
+            yield p
+
+    def validate(self, pred):
+        for p in self.current :
+            if not pred(p) :
+                a = 1
+
 class world(infection_counter) :
 
     arg_table = {
@@ -34,7 +62,7 @@ class world(infection_counter) :
         'auto_immunity' : (float, 0.0),
         'travel' : (float,0.01),
         'infectiousness' : (float, 0.01),
-        'city_exposure' : (float, 0.001),
+        'city_exposure' : (float, 1e-5),
         'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
         'initial_infected' : (int, 20),
@@ -45,10 +73,13 @@ class world(infection_counter) :
         constructor(world.arg_table, args=kwargs, props=props, cmd_args=cmd_args).apply(self)
         infection_counter.__init__(self)
         self.recovery_dist = lognormal(props.get(float, 'recovery_time'), props.get(float, 'recovery_sd'))
+        self.gestating_dist = lognormal(props.get(float, 'gestating_time'), props.get(float, 'gestating_sd'))
         self.day = self.next_day = 0
+        self.pop = self.population               # backward compatibility hack
         self.prev_infected = self.initial_infected
         self.total_infected = self.initial_infected
         self.prev_total = self.initial_infected
+        self.prev_recovered = 0
         self.max_infected = 0
         self.immune = 0
         self.growth = self.max_growth = 1
@@ -61,13 +92,14 @@ class world(infection_counter) :
         self._add_cities()
         self.city_cache = cached_choice(self.cities, lambda c: c.pop)
         self._add_people()
-        self.infected_list = []
-        self.susceptible_list = copy(self.people)
         cluster.nest_clusters(self)
-        self.new_infected_list = []
+        self.infected_list = people_list()
+        self.gestating_list = people_list()
         for p in random.choices(self.people, k=self.initial_infected):
-            p.infect(0)
-        self.infected_list = self.new_infected_list
+            if p.is_susceptible() :
+                p.infect(0)
+                self.infected_list.add(p)
+        self.susceptible_list = people_list([ p for p in self.people if p.is_susceptible() ])
         self.setup_time = time.time() - start_time
         self.start_time = time.time()
 
@@ -79,16 +111,16 @@ class world(infection_counter) :
         self.city_count = self.props.get(int, 'city_count')
         if self.city_count==0 or self.city_max_pop==0 :
             self.city_count = self.city_count or max(int(self.props.get(int, 'city', 'min_count')),
-                                int(sround(int(pow(self.population, self.props.get(float, 'city', 'auto_power'))
+                                int(sround(int(pow(self.pop, self.props.get(float, 'city', 'auto_power'))
                                                  / self.props.get(int, 'city', 'auto_divider')), 2)))
-            self.city_max_pop = int(sround(self.population // 3, 2))
-            self.city_min_pop = int(sround((self.population - self.city_max_pop) // \
+            self.city_max_pop = int(sround(self.pop // 3, 2))
+            self.city_min_pop = int(sround((self.pop - self.city_max_pop) // \
                                            int(self.city_count * self.props.get(float, 'city', 'min_size_multiplier')), 2))
             #print(f'!!! {self.city_count=} {self.city_max_pop=} {self.city_min_pop=}')
         else :
             self.city_max_pop, self.city_min_pop = self.props.get(int, 'city', 'max_pop'), self.props.get(int, 'city', 'min_pop')
         self.cities = []
-        pops = reciprocal(self.city_count,self.city_min_pop, self.city_max_pop, self.population).get()
+        pops = reciprocal(self.city_count,self.city_min_pop, self.city_max_pop, self.pop).get()
         for i, pop in enumerate(pops) :
             location = self.geometry.random_location()
             c = city(i, location, pop, self)
@@ -106,8 +138,8 @@ class world(infection_counter) :
     def _add_people(self):
         self.people = []
         print('Adding population ', end='')
-        ticks = self.population//50
-        for n in range(self.population) :
+        ticks = self.pop//50
+        for n in range(self.pop) :
             p = person(n, self)
             if (n % ticks)==0 :
                 print ('.', end='')
@@ -128,42 +160,48 @@ class world(infection_counter) :
     def get_infectiousness(self):
         return self.infectiousness
 
-    def infect_one(self, p):
-        was_infected = p.is_infected()
-        infection_counter.infect_one(self, p)
-        if not was_infected :
-            self.new_infected_list.append(p)
-
     def one_day(self):
-        self.new_infected_list = []
-        self.new_susceptible_list = []
+        self.infected_list.reset()
+        self.susceptible_list.reset()
+        self.gestating_list.reset()
+        self.infected_list.validate(person.is_infected)
+        self.susceptible_list.validate(person.is_susceptible)
+        self.gestating_list.validate(person.is_gestating)
         self.prev_infected = self.infected
+        self.prev_recovered = self.recovered
         self.prev_total = self.total_infected
         self.day = self.next_day
         self.next_day += 1
         self.reset()
         for p in self.infected_list :
             p.infectious(self.day)
+            if p.is_infected() :
+                self.infected_list.add(p)
+        for p in self.gestating_list :
+            if p.gestating(self.day) :
+                assert(p.is_infected())
+                self.infected_list.add(p)
+            else :
+                self.gestating_list.add(p)
         for p in self.susceptible_list :
             p.expose(self.day)
             if p.is_susceptible() :
-                self.new_susceptible_list.append(p)
-        self.total_infected = self.infected + self.recovered - self.never_infected
-        self.immune = self.recovered - self.never_infected
+                self.susceptible_list.add(p)
+            elif p.is_gestating() :
+                self.gestating_list.add(p)
+        self.total_infected = self.infected + self.recovered
         if self.infected > self.max_infected :
             self.max_infected = self.infected
             self.highest_day = self.day
         self.growth = self.infected / self.prev_infected
-        if self.infected > self.population//100 and self.growth > self.max_growth:
+        if self.infected > self.pop//100 and self.growth > self.max_growth:
             self.max_growth = self.growth
         if self.max_growth > 1 :
             self.days_to_double = log(2) / log(self.max_growth)
         self.run_time = time.time() - self.start_time
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
-        self.infected_list = [ p for p in self.infected_list if p.is_infected()] + self.new_infected_list
-        self.susceptible_list = self.new_susceptible_list
-        return self.infected >= self.prev_infected or self.infected > self.population // 1000
+        return self.infected >= self.prev_infected or self.infected > self.pop // 1000
 
     def get_days(self):
         return [ k for k in self.daily.keys() ]

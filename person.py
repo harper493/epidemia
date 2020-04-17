@@ -1,4 +1,5 @@
 from enum import Enum
+from utility import *
 import random
 
 class person_state(Enum) :
@@ -19,6 +20,8 @@ class person(object) :
         self.clusters = self.city.pick_clusters(self.location)
         self.state = person_state.S
         self.infected = None
+        for cl in self.clusters.values():
+            cl.enroll(self)
 
     def __str__(self):
         return 'person %s state %s city %s location %s' % \
@@ -27,19 +30,28 @@ class person(object) :
     def is_susceptible(self) -> bool:
         return self.state==person_state.S
 
+    def is_gestating(self) -> bool:
+        return self.state==person_state.G
+
     def is_infected(self) -> bool:
         return self.state==person_state.I
 
     def is_recovered(self) -> bool:
         return self.state==person_state.R
 
-    def infectious(self, day):
-        if day - self.infected >= self.world_.recovery_dist() :
+    def is_immune(self) -> bool:
+        return self.state==person.state.X
+
+    def infectious(self, day: int) -> bool:
+        assert (self.is_infected())
+        if day - self.infected >= self.world_.recovery_dist.get() :
             self.recover()
+            assert(self.is_recovered())
         else :
             for cl in self.clusters.values() :
                 cl.expose()
             self.city.expose()
+            assert (self.is_infected())
 
     def expose(self, day: int):
         if self.is_susceptible() :
@@ -50,12 +62,26 @@ class person(object) :
             auto_immunity = self.world_.get_auto_immunity()
             if r < risk :
                 if r < risk *self.world_.get_auto_immunity() :
-                    self.recover()
+                    self.immunise()
                 else :
-                    self.infect(day)
+                    self.gestate(day)
+
+    def gestating(self, day: int) -> bool:
+        if day - self.infected >= self.world_.gestating_dist.get() :
+            self.infect(day)
+            return True
+        else :
+            return False
+
+    def gestate(self, day: int):
+        assert(self.is_susceptible())
+        self.infected = day
+        self.state = person_state.G
+
 
     def infect(self, day):
-        self.infected = day
+        if self.infected is None :
+            self.infected = day
         self.city.infect_one(self)
         for cl in self.clusters.values() :
             cl.infect_one(self)
@@ -66,4 +92,12 @@ class person(object) :
         for cl in self.clusters.values() :
             cl.recover_one(self)
         self.state = person_state.R
+
+    def immunise(self):
+        assert_(self.is_susceptible())
+        self.city.immunise_one(self)
+        for cl in self.clusters.values() :
+            cl.immunise_one(self)
+        self.state = person_state.X
+
         

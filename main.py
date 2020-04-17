@@ -3,14 +3,13 @@
 from world import world
 from properties import properties
 from cluster import cluster
-import random
 from utility import *
 from dynamic_table import dynamic_table
 from plotter import plotter
 from argparser import argparser
+from math import *
 
 import cProfile
-import re
 
 PROFILE = True
 
@@ -24,24 +23,28 @@ def main() :
     w = world(props=props)
     if args.very_verbose :
         show_cities(w)
-    total_clusters = sum([ c.cluster_count for c in w.cities ])
+    total_clusters = sum([c.get_leaf_clusters() for c in w.cities])
     print()
     if args.verbose :
         t = dynamic_table((('Day', '%4d'), ('Infected', '%6d'), ('Rate', '%6.2f'),
-                           ('Total', '%6d'), ('%', '%6.2f'), ('Rate', '%6.2f'),
-                           ('Recovered', '%6d'), ('Immune', '%6d'),
-                           ('Uninfected Cities', '%5d'),
-                           ('Uninfected Clusters', '%6d'), ('%', '%6.2f'),
+                           ('Total', '%6d'), ('%', '%6.2f'), ('Rate', '%6.2f'), ('Delta', '%5d'),
+                           ('Recovered', '%6d'), ('Delta', '%5d'), ('Immune', '%6d'),
+                           ('Untouched Cities', '%5d'),
+                           ('Untouched Clusters', '%6d'), ('%', '%6.2f'),
                            ('Susceptible Clusters', '%6d'), ('%', '%6.2f')))
     while w.one_day() :
         if args.verbose :
-            uninf_cities = sum([ 1 for c in w.cities if c.is_uninfected() ])
-            uninf_clusters = sum([ c.get_uninfected_clusters() for c in w.cities ])
+            untouched_cities = sum([ 1 for c in w.cities if c.is_untouched() ])
+            untouched_clusters = sum([ c.get_untouched_clusters() for c in w.cities ])
             susc_clusters = sum([ c.get_susceptible_clusters() for c in w.cities ])
-            t.add(w.day, w.infected, w.growth, w.total_infected, 100 * w.total_infected/w.population,
-                  w.total_infected / w.prev_total, w.immune, w.never_infected,
-                  uninf_cities, uninf_clusters, 100*uninf_clusters/total_clusters,
-                  susc_clusters, 100*susc_clusters/total_clusters)
+            t.add(w.day, w.infected, w.growth,
+                  w.total_infected, 100 * w.total_infected / w.population, w.total_infected / w.prev_total,
+                  w.total_infected - w.prev_total,
+                  w.recovered, w.recovered - w.prev_recovered, w.immune,
+                  untouched_cities, untouched_clusters, 100 * untouched_clusters / total_clusters,
+                  susc_clusters, 100 * susc_clusters / total_clusters)
+            if w.total_infected > 0.99 * w. population :
+                a=1
     print('\nMax Infected: %d (%.2f%%) Total Infected: %d (%.2f%%) Max Growth: %.2f%% Days to Double: %.1f Days to Peak: %d' \
           % (w.max_infected, 100*w.max_infected/w.population,
              w.prev_total, 100*w.prev_total/w.population,
@@ -64,14 +67,16 @@ def plot_results(w) :
     for d in w.get_days():
         ti = w.get_data_point('total_infected', d)
         if from_:
-            if w.get_data_point('infected', d) < ti // 10:
+            if w.get_data_point('infected', d) < ti // 5:
                 to = d
                 break
-        elif ti > w.population // 50:
+        elif ti > sqrt(w.population) :
             from_ = d
 
     p = plotter(w, 'total_infected', 'infected')
-    p.plot(from_=from_, to=to)
+    title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
+    title += f'\nMax Days to Double {w.days_to_double:.1f}'
+    p.plot(from_=from_, to=to, title=title)
 
 
 #cProfile.run('main()')
