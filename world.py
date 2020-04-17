@@ -193,7 +193,7 @@ class world(infection_counter) :
         if self.infected > self.max_infected :
             self.max_infected = self.infected
             self.highest_day = self.day
-        self.growth = self.infected / self.prev_infected
+        self.growth = self.infected / (self.prev_infected or 1)
         if self.infected > self.pop//100 and self.growth > self.max_growth:
             self.max_growth = self.growth
         if self.max_growth > 1 :

@@ -1,6 +1,6 @@
 
 population = 30000
-initial_infected = 100
+initial_infected = 10
 
 auto_immunity = 0.6
 infectiousness = 0.015

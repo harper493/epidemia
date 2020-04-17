@@ -38,12 +38,12 @@ def main() :
             untouched_clusters = sum([ c.get_untouched_clusters() for c in w.cities ])
             susc_clusters = sum([ c.get_susceptible_clusters() for c in w.cities ])
             t.add(w.day, w.infected, w.growth,
-                  w.total_infected, 100 * w.total_infected / w.population, w.total_infected / w.prev_total,
+                  w.total_infected, 100 * w.total_infected / w.population, w.total_infected / (w.prev_total or 1),
                   w.total_infected - w.prev_total,
                   w.recovered, w.recovered - w.prev_recovered, w.immune,
                   untouched_cities, untouched_clusters, 100 * untouched_clusters / total_clusters,
                   susc_clusters, 100 * susc_clusters / total_clusters)
-            if w.total_infected > 0.99 * w. population :
+            if w.total_infected > 0.95 * w. population :
                 a=1
     print('\nMax Infected: %d (%.2f%%) Total Infected: %d (%.2f%%) Max Growth: %.2f%% Days to Double: %.1f Days to Peak: %d' \
           % (w.max_infected, 100*w.max_infected/w.population,

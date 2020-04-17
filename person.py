@@ -76,6 +76,9 @@ class person(object) :
     def gestate(self, day: int):
         assert(self.is_susceptible())
         self.infected = day
+        self.city.gestate_one(self)
+        for cl in self.clusters.values() :
+            cl.gestate_one(self)
         self.state = person_state.G
 
 
