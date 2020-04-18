@@ -12,10 +12,10 @@ class person_state(Enum) :
 
 class person(object) :
 
-    def __init__(self, name, world_):
+    def __init__(self, name, world_, city=None):
         self.name = name
         self.world_ = world_
-        self.city = world_.get_random_city()
+        self.city = city if city is not None else world_.get_random_city()
         self.location = self.city.get_random_location()
         self.clusters = self.city.pick_clusters(self.location)
         self.state = person_state.S

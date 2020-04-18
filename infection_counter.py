@@ -48,6 +48,8 @@ class infection_counter() :
             self.parent.immunise_one(p)
 
     def is_untouched(self):
+        if self.susceptible is None :
+            self.susceptible = self.pop
         return self.susceptible==self.pop
 
     def is_susceptible(self):

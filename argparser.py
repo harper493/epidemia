@@ -23,8 +23,11 @@ class argparser(object) :
         arg('-V', '--very-verbose', action='store_true',  help="describe what's going on A LOT")
         arg('-n', '--initial_infected*', type=int, default=None, help='initial infected')
         arg('-p', '--population*', type=int, default=None, help='size of population')
+        arg('-N', '--infected_cities*', type=str, default=None,
+                       help='number or proportion of cities to be initially infected')
         arg('-i', '--infectiousness*',type=float, default=None, \
                        help='level of infectiousness (0-1)')
+        arg('-S', '--sensitivity', type=str, default=None, help='perform sensitivity analysis')
         arg('-a', '--auto-immunity*', type=float, default=None, \
                        help='level of non-infectious immunity (0-1)')
         a = p.parse_args()

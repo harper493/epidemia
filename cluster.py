@@ -71,10 +71,10 @@ class cluster(infection_counter) :
         for cname, cprops in cluster.cluster_info.items() :
             obj.clusters[cname] = { 0:[] }
             min_pop = cprops['min_pop']
-            max_pop = min(cprops['max_pop'], obj.pop * cprops['max_proportion'])
+            max_pop = min(cprops['max_pop'], obj.target_pop * cprops['max_proportion'])
             avg_pop = cprops['average_pop']
-            count = obj.pop // avg_pop
-            obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', obj, 0, count, min_pop, max_pop, obj.pop)
+            count = obj.target_pop // avg_pop
+            obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', obj, 0, count, min_pop, max_pop, obj.target_pop)
             depth = cprops['depth']
             nest_avg = cprops['nest_average']
             nest_min = cprops['nest_min']

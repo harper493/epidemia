@@ -16,10 +16,12 @@ class city(infection_counter) :
             self.city_, self.dist = city_, dist
 
     def __init__(self, name, location_: point, pop: int, world_):
-        self.name, self.location, self.pop, self.world_ = name, location_, pop, world_
+        self.name, self.location, self.target_pop, self.world_ = name, location_, pop, world_
         infection_counter.__init__(self, world_)
         self.grid = None
         self.exposure = 0
+        self.pop = 0
+        self.people = []
         self._make_size()
         cluster.make_clusters(world_, self)
         self.cluster_count = None
@@ -37,6 +39,10 @@ class city(infection_counter) :
         bearing = random.uniform(0, 2*math.pi)
         radius = random.uniform(0,1)**2 * self.size
         return self.location + point(radius * math.sin(bearing), radius * math.cos(bearing))
+
+    def add_person(self, p):
+        self.pop += 1
+        self.people.append(p)
 
     def distance(self, c: 'city'):
         return self.location.dist(c.location)
@@ -56,6 +62,9 @@ class city(infection_counter) :
 
     def get_random_neighbor(self):
         return get_random_member(self.neighbors, lambda n: 1/n.dist)
+
+    def get_random_person(self):
+        return random.choices(self.people)
 
     def touches(self, other: 'city'):
         return self.size + other.size > self.distance(other)
@@ -93,14 +102,14 @@ class city(infection_counter) :
         maxp = self.world_.city_max_pop
         mind = self.world_.props.get(int, 'city', 'min_density')
         maxd = self.world_.props.get(int, 'city', 'max_density')
-        z1 = self.pop - minp
+        z1 = self.target_pop - minp
         z2 = maxp - minp
         z3 = z1/z2
         z4 = maxd - mind
         z5 = z3*z4
         z6 = z5 + mind
-        z = ((self.pop-minp) / (maxp-minp)) * (maxd-mind) + mind
-        area = self.pop /z6
+        z = ((self.target_pop-minp) / (maxp-minp)) * (maxd-mind) + mind
+        area = self.target_pop /z6
         z8 = math.sqrt(area / math.pi)
         self.size = z8
 

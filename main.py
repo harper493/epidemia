@@ -5,7 +5,7 @@ from properties import properties
 from cluster import cluster
 from utility import *
 from dynamic_table import dynamic_table
-from plotter import plotter
+from     plotter import plotter
 from argparser import argparser
 from math import *
 
@@ -19,6 +19,12 @@ def main() :
     if args.props_file :
         propfiles.append(args.props_file)
     props = properties(*propfiles, cmd_args=args.extra_props)
+    if args.sensitivity :
+        run_sensitivity(args, props)
+    else :
+        run_one(args, props)
+
+def run_one(args, props) :
     cluster.make_cluster_info(props)
     w = world(props=props)
     if args.very_verbose :
@@ -57,7 +63,7 @@ def main() :
 
 def show_cities(w) :
     print('\n')
-    t = dynamic_table((('City', '%5d'), ('Location', '%20s'), ('Population', '%6d'), ('Size', '%6.2f')))
+    t = dynamic_table((('City', '%6s'), ('Location', '%20s'), ('Population', '%6d'), ('Size', '%6.2f')))
     for c in w.cities :
         t.add(c.name, str(c.location), c.pop, c.size)
 
@@ -77,6 +83,13 @@ def plot_results(w) :
     title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
     title += f'\nMax Days to Double {w.days_to_double:.1f}'
     p.plot(from_=from_, to=to, title=title)
+
+    if False :
+        p2 = plotter(w, ('Growth', 'growth'))
+        p2.plot(from_=from_, to=to, log=False)
+
+def run_sensitivity(args, props):
+    pass
 
 
 #cProfile.run('main()')

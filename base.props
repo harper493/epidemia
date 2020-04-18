@@ -34,8 +34,9 @@ recovery_sd = 2
 gestating_time = 4
 gestating_sd = 1.5
 infectiousness = 0.012
-cluster_exposure = 0.0001
+cluster_exposure = 0.007
 initial_infected = 20
 city_count = 0
 city_exposure = 1e-5
+infected_cities = 0
 

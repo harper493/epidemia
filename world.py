@@ -38,10 +38,7 @@ class people_list() :
         self.new = set()
 
     def add(self, p):
-        if p in self.new :
-            a = 1
-        else :
-            self.new.add(p)
+        self.new.add(p)
 
     def __iter__(self):
         for p in self.current:
@@ -66,6 +63,7 @@ class world(infection_counter) :
         'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
         'initial_infected' : (int, 20),
+        'infected_cities' : (float, 0.5)
     }
 
     def __init__(self, props=None, cmd_args=None, **kwargs) :
@@ -90,15 +88,12 @@ class world(infection_counter) :
         self.geometry = geometry(self.size_x, self.size_y)
         self.city_exposure *= self.infectiousness
         self._add_cities()
-        self.city_cache = cached_choice(self.cities, lambda c: c.pop)
-        self._add_people()
+        self.city_cache = cached_choice(self.cities, lambda c: c.target_pop)
         cluster.nest_clusters(self)
         self.infected_list = people_list()
         self.gestating_list = people_list()
-        for p in random.choices(self.people, k=self.initial_infected):
-            if p.is_susceptible() :
-                p.infect(0)
-                self.infected_list.add(p)
+        self._add_people()
+        self._infect_cities()
         self.susceptible_list = people_list([ p for p in self.people if p.is_susceptible() ])
         self.setup_time = time.time() - start_time
         self.start_time = time.time()
@@ -123,7 +118,7 @@ class world(infection_counter) :
         pops = reciprocal(self.city_count,self.city_min_pop, self.city_max_pop, self.pop).get()
         for i, pop in enumerate(pops) :
             location = self.geometry.random_location()
-            c = city(i, location, pop, self)
+            c = city(f'C{len(self.cities)}', location, pop, self)
             self.cities.append(c)
         done = False
         while not done :
@@ -140,10 +135,44 @@ class world(infection_counter) :
         print('Adding population ', end='')
         ticks = self.pop//50
         for n in range(self.pop) :
-            p = person(n, self)
             if (n % ticks)==0 :
                 print ('.', end='')
+            p = person(f'P{len(self.people)}', self)
             self.people.append(p)
+            p.city.add_person(p)
+
+    def _infect_cities(self):
+        if self.infected_cities==0 :
+            city_count = len(self.cities)
+        elif self.infected_cities<1 :
+            city_count = int(len(self.cities) * self.infected_cities)
+        else :
+            city_count = int(self.infected_cities)
+        if self.infected_cities==len(self.cities) :
+            inf_cities = copy(self.cities)
+        else :
+            inf_cities = []
+            remaining = copy(self.cities)
+            while len(inf_cities) < city_count :
+                cc = cached_choice(remaining, lambda c: sqrt(c.target_pop))
+                c = cc.choose()
+                inf_cities.append(c)
+                del remaining[remaining.index(c)]
+        count = len(inf_cities)
+        for c in inf_cities :
+            self._infect_one_person(c)
+        cc = cached_choice(inf_cities, lambda c: c.target_pop)
+        while count < self.initial_infected :
+            self._infect_one_person(cc.choose())
+            count += 1
+
+    def _infect_one_person(self, city):
+        while True :
+            p = random.choices(city.people)[0]
+            if p.is_susceptible():
+                p.infect(0)
+                self.infected_list.add(p)
+                break
 
     def get_random_city(self) :
         return self.city_cache.choose()
@@ -164,9 +193,6 @@ class world(infection_counter) :
         self.infected_list.reset()
         self.susceptible_list.reset()
         self.gestating_list.reset()
-        self.infected_list.validate(person.is_infected)
-        self.susceptible_list.validate(person.is_susceptible)
-        self.gestating_list.validate(person.is_gestating)
         self.prev_infected = self.infected
         self.prev_recovered = self.recovered
         self.prev_total = self.total_infected
@@ -201,7 +227,9 @@ class world(infection_counter) :
         self.run_time = time.time() - self.start_time
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
-        return self.infected >= self.prev_infected or self.infected > self.pop // 1000
+        return self.infected >= self.prev_infected \
+               or (self.infected > self.pop // 1000) \
+               or self.day < 20
 
     def get_days(self):
         return [ k for k in self.daily.keys() ]
