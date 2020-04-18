@@ -3,6 +3,7 @@
 from world import world
 from properties import properties
 from cluster import cluster
+from sensitivity import sensitivity
 from utility import *
 from dynamic_table import dynamic_table
 from     plotter import plotter
@@ -68,28 +69,44 @@ def show_cities(w) :
         t.add(c.name, str(c.location), c.pop, c.size)
 
 def plot_results(w) :
-    from_ = None
-    to = len(w.get_days())
-    for d in w.get_days():
-        ti = w.get_data_point('total_infected', d)
-        if from_:
-            if w.get_data_point('infected', d) < ti // 5:
-                to = d
-                break
-        elif ti > sqrt(w.population) :
-            from_ = d
-
-    p = plotter(w, 'total_infected', 'infected')
+    from_, to = w.get_interesting()
+    p = plotter()
     title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
     title += f'\nMax Days to Double {w.days_to_double:.1f}'
-    p.plot(from_=from_, to=to, title=title)
-
-    if False :
-        p2 = plotter(w, ('Growth', 'growth'))
-        p2.plot(from_=from_, to=to, log=False)
+    x = w.get_days()[from_:to]
+    data = [ (var_to_title(v), w.get_data(v)[from_:to]) for v in ('total_infected', 'infected') ]
+    p.plot(x, *data, title=title)
 
 def run_sensitivity(args, props):
-    pass
+    sens = sensitivity(args.sensitivity)
+    cols = [(var_to_title(n), '%6.3f') for n in sens.get_variables()]
+    cols += [('Max Infected', '%6d'), ('%', "%5.2f"), ('Total Infected', '%6d'), ('%', "%5.2f"),
+             ('Days to Double', '%5.1f'), ('Days to Peak', '%3d')]
+    t = dynamic_table(cols)
+    params = []
+    results = []
+    for ss in sens :
+        params.append(ss[0])
+        props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
+        cluster.make_cluster_info(props)
+        w = world(props=props)
+        while w.one_day() : pass
+        results.append(w)
+        values = [ sss[1] for sss in ss ]
+        values += [ w.max_infected, 100*w.max_infected/w.population,
+              w.total_infected, 100*w.total_infected/w.population,
+              w.days_to_double, w.highest_day ]
+        t.add(*values)
+    if args.plot :
+        from_ = max([ w.get_interesting()[0] for w in results ])
+        to = max([ w.get_interesting()[1] for w in results ])
+        plot = plotter()
+        x = range(from_, to)
+        data = []
+        for p, w in zip(params, results) :
+            data.append((p[1], w.get_data('total_infected')[from_:to]))
+        title = f'Varying {var_to_title(p[0])}'
+        plot.plot(x, *data, title=title)
 
 
 #cProfile.run('main()')

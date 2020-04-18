@@ -11,10 +11,11 @@ class sensitivity():
             else :
                 self.mult = False
             try :
-                self.pname, self.start, self.step, self.stop, stopper = (spec.split(':') + [None, None])[:4]
+                r = spec.split(':') + [None, None]
+                self.pname, self.start, self.step, self.stop, stopper = r[:5]
                 if stopper is not None :
                     raise IndexError
-                self.start, self.step = number(self.start, self.step)
+                self.start, self.step = number(self.start), number(self.step)
                 if self.stop is not None :
                     self.stop = number(self.stop)
             except IndexError:
@@ -24,7 +25,7 @@ class sensitivity():
         def get(self):
             return (self.pname, self.value)
 
-        def step(self) -> bool:
+        def next(self) -> bool:
             """
             Advance to the next value.
             :return: True iff the value is within the stated range.
@@ -36,12 +37,13 @@ class sensitivity():
             if self.stop is None :
                 return True
             elif self.step>0 :
-                self.value <= (self.stop * 1.00001)
+                return self.value <= (self.stop * 1.00001)
             else :
-                self.value >= (self.stop * 1.00001)
+                return self.value >= (self.stop * 1.00001)
 
-    def __init__(self, fn, max_iterations: int=100):
-        self.fn = fn
+    def __init__(self, params, max_iterations: int=100):
+        self.ranges = [ sensitivity.one_param(p) for p in params.split(';') ]
+
         self.max_iterations = max_iterations
 
     def run(self, params: str):
@@ -87,3 +89,14 @@ class sensitivity():
              (self.fn)([ r.get() for r in ranges ])
              good = [ r.step() for r in ranges ][0]
              i += 1
+
+    def get_variables(self):
+        return [ r.pname for r in self.ranges ]
+
+    def __iter__(self):
+        good = True
+        i = 0
+        while (good and i < self.max_iterations):
+            yield [r.get() for r in self.ranges]
+            good = [r.next() for r in self.ranges][0]
+            i += 1

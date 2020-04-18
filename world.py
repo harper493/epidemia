@@ -132,11 +132,7 @@ class world(infection_counter) :
 
     def _add_people(self):
         self.people = []
-        print('Adding population ', end='')
-        ticks = self.pop//50
         for n in range(self.pop) :
-            if (n % ticks)==0 :
-                print ('.', end='')
             p = person(f'P{len(self.people)}', self)
             self.people.append(p)
             p.city.add_person(p)
@@ -239,6 +235,20 @@ class world(infection_counter) :
 
     def get_data_point(self, name, day):
         return self.daily[day][name]
+
+    def get_interesting(self):
+        from_ = None
+        to = len(self.daily)
+        for d in self.daily.keys():
+            ti = self.get_data_point('total_infected', d)
+            if from_:
+                if self.get_data_point('infected', d) < ti // 5:
+                    to = d
+                    break
+            elif ti > sqrt(self.population):
+                from_ = d
+        return(from_, to)
+
 
 if __name__=='__main__' :
     props = properties('p1.props')
