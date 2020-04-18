@@ -104,8 +104,15 @@ def run_sensitivity(args, props):
         x = range(from_, to)
         data = []
         for p, w in zip(params, results) :
-            data.append((p[1], w.get_data('total_infected')[from_:to]))
-        title = f'Varying {var_to_title(p[0])}'
+            d = w.get_data('total_infected')[from_:to]
+            while len(d) < len(x) :
+                d.append(d[-1])
+            data.append((f'{p[1]:.3f}', d))
+        titles = []
+        for t in ('population', 'infectiousness', 'auto_immunity') :
+            if t not in sens.get_variables() :
+                titles.append(f'{var_to_title(t)} = {getattr(results[0], t)}')
+        title = ' '.join(titles) + f'\nVarying {var_to_title(p[0])}'
         plot.plot(x, *data, title=title)
 
 

@@ -242,7 +242,7 @@ class world(infection_counter) :
         for d in self.daily.keys():
             ti = self.get_data_point('total_infected', d)
             if from_:
-                if self.get_data_point('infected', d) < ti // 5:
+                if d > self.highest_day and self.get_data_point('infected', d) < ti // 5:
                     to = d
                     break
             elif ti > sqrt(self.population):
