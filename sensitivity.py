@@ -5,22 +5,37 @@ class sensitivity():
     class one_param() :
 
         def __init__(self, spec: str):
-            if '*' in spec:
-                self.mult = True
-                spec.replace('*', ':')
+            self.pname, details = spec.split(':', 1)
+            if ':' in details :
+                if '*' in details:
+                    self.mult = True
+                    details = details.replace('*', ':')
+                else:
+                    self.mult = False
+                self.values = None
+                try :
+                    r = details.split(':') + [None, None]
+                    self.start, self.step, self.stop, stopper = r[:4]
+                    if stopper is not None :
+                        raise IndexError
+                    self.start, self.step = number(self.start), number(self.step)
+                    if self.stop is not None :
+                        self.stop = number(self.stop)
+                except IndexError:
+                    raise ValueError(f"Incorrect parameter range '{spec}'")
             else :
-                self.mult = False
-            try :
-                r = spec.split(':') + [None, None]
-                self.pname, self.start, self.step, self.stop, stopper = r[:5]
-                if stopper is not None :
-                    raise IndexError
-                self.start, self.step = number(self.start), number(self.step)
-                if self.stop is not None :
-                    self.stop = number(self.stop)
-            except IndexError:
-                raise ValueError(f"Incorrect parameter range '{str}'")
-            self.value = self.start
+                self.values = []
+                for v in details.split(',') :
+                    vv, m = (v.split('*') + [1])[:2]
+                    self.values += [number(vv)] * number(m)
+                self.start = 0
+                self.index = 0
+                self.step = 1
+                self.stop = None
+            if self.values :
+                self.value = self.values[0]
+            else :
+                self.value = self.start
 
         def get(self):
             return (self.pname, self.value)
@@ -30,6 +45,13 @@ class sensitivity():
             Advance to the next value.
             :return: True iff the value is within the stated range.
             """
+            if self.values :
+                self.index += 1
+                try :
+                    self.value = self.values[self.index]
+                except IndexError :
+                    self.value = self.values[-1]
+                return self.index < len(self.values)
             if self.mult :
                 self.value *= self.step
             else :
@@ -100,3 +122,10 @@ class sensitivity():
             yield [r.get() for r in self.ranges]
             good = [r.next() for r in self.ranges][0]
             i += 1
+
+if __name__=='__main__' :
+    s = sensitivity('foo:1:0.1:2')
+    s = sensitivity('foo:1*2:16')
+    s = sensitivity('foo:1,2,3,4')
+    s = sensitivity('foo:1*10')
+    s = sensitivity('foo:1,2*10,3')

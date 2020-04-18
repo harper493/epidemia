@@ -500,11 +500,14 @@ def make_safe_string(ustr, subst='.') :
 #
 # number() - convert a string to int or flat
 #
-def number(s: str) :
-    if '.' in s or 'e' in s.lower() :
-        return float(s)
+def number(s) :
+    if isinstance(s, str) :
+        if '.' in s or 'e' in s.lower() :
+            return float(s)
+        else :
+            return int(s)
     else :
-        return int(s)
+        return s
 #
 # make_dict - given an object and a list of attributes, create a dict where
 # each attribute's value is identified by its name

@@ -90,7 +90,7 @@ def run_sensitivity(args, props):
         props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
         cluster.make_cluster_info(props)
         w = world(props=props)
-        while w.one_day() : pass
+        w.run()
         results.append(w)
         values = [ sss[1] for sss in ss ]
         values += [ w.max_infected, 100*w.max_infected/w.population,

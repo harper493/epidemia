@@ -227,6 +227,13 @@ class world(infection_counter) :
                or (self.infected > self.pop // 1000) \
                or self.day < 20
 
+    def run(self, pred=None):
+        good = True
+        while good :
+            good = self.one_day()
+            if pred :
+                good = pred(self)
+
     def get_days(self):
         return [ k for k in self.daily.keys() ]
 
@@ -247,7 +254,7 @@ class world(infection_counter) :
                     break
             elif ti > sqrt(self.population):
                 from_ = d
-        return(from_, to)
+        return(from_ or 0, to)
 
 
 if __name__=='__main__' :
