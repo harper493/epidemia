@@ -34,6 +34,7 @@ class argparser(object) :
         arg('-L', '--log-path', type=str, default=None, help='path for writing log files')
         arg('-a', '--auto-immunity*', type=float, default=None, \
                        help='level of non-infectious immunity (0-1)')
+        arg('-Q', '--ignore', type=str)
         a = p.parse_args()
         if a.sensitivity and a.repeat :
             self.error("Can't combine --sensitivity and --repeat in a single command")
