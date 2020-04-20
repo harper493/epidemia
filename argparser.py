@@ -29,7 +29,7 @@ class argparser(object) :
         arg('-N', '--infected_cities*', type=str, default=None,
                        help='number or proportion of cities to be initially infected')
         arg('-i', '--infectiousness*',type=float, default=None, \
-                       help='level of infectiousness (0-1)')
+                       help='level of infectiousness')
         arg('-S', '--sensitivity', type=str, default=None, help='perform sensitivity analysis')
         arg('-L', '--log-path', type=str, default=None, help='path for writing log files')
         arg('-a', '--auto-immunity*', type=float, default=None, \

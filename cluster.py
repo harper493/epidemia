@@ -44,7 +44,7 @@ class cluster(infection_counter) :
         self.exposure_good = False
 
     def expose(self):
-        inf = self.world_.get_infectiousness()
+        inf = self.world_.get_infection_prob()
         self.exposure += inf
         p = self.parent
         while p :
@@ -138,6 +138,10 @@ class cluster(infection_counter) :
             for c in cluster.cluster_info.values() :
                 if dname not in c :
                     c[dname] = dvalue
+        for c in cluster.cluster_info.values() :
+            r = reciprocal(100, c['min_pop'], c['max_pop'], c['average_pop']*100)
+            r.get()
+            c['rms'] = r.rms()
 
     @staticmethod
     def make_one_cluster(props, pname, cvalue) :

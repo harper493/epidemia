@@ -58,7 +58,7 @@ class world(infection_counter) :
         'size_y' : (float, DEFAULT_SIZE),
         'auto_immunity' : (float, 0.0),
         'travel' : (float,0.01),
-        'infectiousness' : (float, 0.01),
+        'infectiousness' : (float, 2),
         'city_exposure' : (float, 1e-5),
         'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
@@ -85,6 +85,7 @@ class world(infection_counter) :
         self.daily = {}
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
+        self._make_infection_prob()
         self.city_exposure *= self.infectiousness
         self._add_cities()
         self.untouched_cities = len(self.cities)
@@ -92,10 +93,10 @@ class world(infection_counter) :
         self.susceptible_clusters = sum([c.get_susceptible_clusters() for c in self.cities])
         self.city_cache = cached_choice(self.cities, lambda c: c.target_pop)
         cluster.nest_clusters(self)
-        self.total_clusters = sum([c.get_leaf_clusters() for c in self.cities])
         self.infected_list = people_list()
         self.gestating_list = people_list()
         self._add_people()
+        self.total_clusters = sum([c.get_leaf_clusters() for c in self.cities])
         self._infect_cities()
         self.susceptible_list = people_list([ p for p in self.people if p.is_susceptible() ])
         self.setup_time = time.time() - start_time
@@ -173,6 +174,11 @@ class world(infection_counter) :
                 self.infected_list.add(p)
                 break
 
+    def _make_infection_prob(self):
+        exposure_time = self.props.get(int, 'recovery_time') - self.props.get(int, 'gestating_time')
+        cluster_factor = sum([ cl['rms'] for cl in cluster.cluster_info.values() ])
+        self.infection_prob = self.infectiousness / (exposure_time * cluster_factor)
+
     def get_random_city(self) :
         return self.city_cache.choose()
 
@@ -187,6 +193,9 @@ class world(infection_counter) :
 
     def get_infectiousness(self):
         return self.infectiousness
+
+    def get_infection_prob(self):
+        return self.infection_prob
 
     def one_day(self):
         self.infected_list.reset()

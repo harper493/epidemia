@@ -93,9 +93,9 @@ class main() :
         t = dynamic_table(log_fields, file=self.log_file, console=self.args.console)
         w.run(logger=lambda w: t.add_line(w))
         t.write((f'\nMax Infected: {w.max_infected:d}',
-                f'({100*w.max_infected/w.population:.2f}%),'
+                f'({100*w.max_infected/w.population:.2f}%)',
                 f'Total Infected: {w.total_infected:d}',
-                f'({w.total_infected/w.population:.2f}%)',
+                f'({100*w.total_infected/w.population:.2f}%)',
                 f'Max Growth: {100*(w.max_growth-1):.2f}%',
                 f'Days to Double: {w.days_to_double:.1f}',
                 f'Days to Peak: {w.highest_day:%}'))
