@@ -2,7 +2,7 @@ __all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'var_to_title', '
             'splice', 'column_layout', 'format_columns', \
             'get_console_width', 'show_time', 'get_user_ip', \
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
-            'contains_any', 'get_random_member',
+            'contains_any', 'get_random_member', 'float_to_str',
             'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict',
             'assert_', 'count' )
 
@@ -47,7 +47,19 @@ def sround(value, digits=1, round_up=True) :
         if round_up and result < value :
             result += one_digit
     return result
-        
+
+#
+# float_to_str - convert a number to a string, representing it as a whole
+# number if possible, as as a decimal with the minimum number of
+# decimal points
+#
+
+def float_to_str(value) :
+    if value==int(value) :
+        return f'{int(value)}'
+    else :
+        return f'{value}'
+
 #
 # cmpfn - given any two comparable objects, return a cmp-like comparison result for them
 #
@@ -90,7 +102,7 @@ def var_to_title(text) :
     result = ''
     up = True
     for ch in text :
-        if ch=='_' :
+        if ch in ('_', '.') :
             ch = ' '
             up = True
         elif up :

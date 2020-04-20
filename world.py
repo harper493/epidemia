@@ -81,15 +81,18 @@ class world(infection_counter) :
         self.max_infected = 0
         self.immune = 0
         self.growth = self.max_growth = 1
-        self.highest_day = 0
         self.days_to_double = 0
         self.daily = {}
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
         self.city_exposure *= self.infectiousness
         self._add_cities()
+        self.untouched_cities = len(self.cities)
+        self.untouched_clusters = sum([c.get_untouched_clusters() for c in self.cities])
+        self.susceptible_clusters = sum([c.get_susceptible_clusters() for c in self.cities])
         self.city_cache = cached_choice(self.cities, lambda c: c.target_pop)
         cluster.nest_clusters(self)
+        self.total_clusters = sum([c.get_leaf_clusters() for c in self.cities])
         self.infected_list = people_list()
         self.gestating_list = people_list()
         self._add_people()
@@ -220,6 +223,9 @@ class world(infection_counter) :
             self.max_growth = self.growth
         if self.max_growth > 1 :
             self.days_to_double = log(2) / log(self.max_growth)
+        self.untouched_cities = sum([1 for c in self.cities if c.is_untouched()])
+        self.untouched_clusters = sum([c.get_untouched_clusters() for c in self.cities])
+        self.susceptible_clusters = sum([c.get_susceptible_clusters() for c in self.cities])
         self.run_time = time.time() - self.start_time
         self.daily[self.day] = make_dict(self, 'day', 'infected', 'total_infected', 'recovered', 'immune',
                                                'growth')
@@ -227,10 +233,12 @@ class world(infection_counter) :
                or (self.infected > self.pop // 1000) \
                or self.day < 20
 
-    def run(self, pred=None):
+    def run(self, pred=None, logger=None):
         good = True
         while good :
             good = self.one_day()
+            if logger :
+                logger(self)
             if pred :
                 good = pred(self)
 
@@ -268,8 +276,3 @@ if __name__=='__main__' :
         if p.clusters.values() :
             for c in p.clusters.values() :
                 print(indent(c.show_detail(), size=2))
-
-
-
-
-

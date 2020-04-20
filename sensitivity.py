@@ -5,7 +5,8 @@ class sensitivity():
     class one_param() :
 
         def __init__(self, spec: str):
-            self.pname, details = spec.split(':', 1)
+            self.pname, self.text = spec.split(':', 1)
+            details = self.text
             if ':' in details :
                 if '*' in details:
                     self.mult = True
@@ -37,6 +38,9 @@ class sensitivity():
             else :
                 self.value = self.start
 
+        def __str__(self):
+            return self.text
+
         def get(self):
             return (self.pname, self.value)
 
@@ -63,10 +67,15 @@ class sensitivity():
             else :
                 return self.value >= (self.stop * 1.00001)
 
+        def will_stop(self):
+            return self.values or self.stop is not None
+
     def __init__(self, params, max_iterations: int=100):
         self.ranges = [ sensitivity.one_param(p) for p in params.split(';') ]
-
+        self.named_ranges = { r.pname : r for r in self.ranges }
         self.max_iterations = max_iterations
+        if not self.ranges[0].will_stop() :
+            raise ValueError(f"First range must have a termination condition '{str(self.ranges[0])}'")
 
     def run(self, params: str):
          """
@@ -85,7 +94,9 @@ class sensitivity():
 
                     param_name:1,2,3,4,...
 
-                        Run through the listed values
+                        Run through the listed values. A value can also be of the form '2*3' which
+                        is equivalent to repeating the value 2, 3 times. If a list is too short,
+                        the last number is repeated as necessary.
 
                     param_name:start:step
                     param_name*start:step
@@ -102,6 +113,8 @@ class sensitivity():
                 auto_immunity:0.2,0.5,0.6,0.7
                 infectiousness:0.005:0.001:0.01;auto_immunity:0.5:0.05
 
+                For more examples, see the unit tests at the end of this file.
+
          :return: a list of the results from each individual run
          """
          ranges = [ sensitivity.one_param(p) for p in params.split(';') ]
@@ -115,6 +128,9 @@ class sensitivity():
     def get_variables(self):
         return [ r.pname for r in self.ranges ]
 
+    def get_one(self, p):
+        return self.named_ranges[p].value
+
     def __iter__(self):
         good = True
         i = 0
@@ -123,9 +139,18 @@ class sensitivity():
             good = [r.next() for r in self.ranges][0]
             i += 1
 
+def _test_one(s) :
+    sens = sensitivity(s)
+    print(s, end=': ')
+    for ss in sens :
+        print(ss, end=' ')
+    print('\n')
+
 if __name__=='__main__' :
-    s = sensitivity('foo:1:0.1:2')
-    s = sensitivity('foo:1*2:16')
-    s = sensitivity('foo:1,2,3,4')
-    s = sensitivity('foo:1*10')
-    s = sensitivity('foo:1,2*10,3')
+    _test_one('foo:1:0.1:2')
+    _test_one('foo:1*2:16')
+    _test_one('foo:1,2,3,4')
+    _test_one('foo:1*10')
+    _test_one('foo:1,2*10,3')
+    _test_one('foo:1:1:10;bah:2:2')
+    _test_one('foo:1,2,3,4,5;bah:2,4')

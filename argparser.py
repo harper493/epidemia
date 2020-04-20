@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 class argparser(object) :
 
@@ -10,12 +11,14 @@ class argparser(object) :
                 long_ = long_[:-1]
             p.add_argument(short, long_, **kwargs)
         self.argnames = []
+        self.command_line = ' '.join(sys.argv)
         self.extra_props = {}
         self.props_file = None
         p = argparse.ArgumentParser()
         p.add_argument('stuff', nargs='*', help='property file or property assignments')
         arg('-c', '--console', action='store_true', help='send output to console')
         arg('-C', '--city_count*', type=int, help='number of cities')
+        arg('-R', '--repeat', type=int, default=0, help='run repeatedly with the same parameters')
         arg('-o', '--output', type=str, default=None, help='output file name')
         arg('-P', '--plot', action='store_true',  help='plot results as graph')
         arg('-X', '--profile', action='store_true',  help='run cProfile')
@@ -28,9 +31,12 @@ class argparser(object) :
         arg('-i', '--infectiousness*',type=float, default=None, \
                        help='level of infectiousness (0-1)')
         arg('-S', '--sensitivity', type=str, default=None, help='perform sensitivity analysis')
+        arg('-L', '--log-path', type=str, default=None, help='path for writing log files')
         arg('-a', '--auto-immunity*', type=float, default=None, \
                        help='level of non-infectious immunity (0-1)')
         a = p.parse_args()
+        if a.sensitivity and a.repeat :
+            self.error("Can't combine --sensitivity and --repeat in a single command")
         if not a.output :
             a.console = True
         if a.very_verbose :
@@ -50,6 +56,11 @@ class argparser(object) :
                     self.extra_props[an] = v
             else :
                 setattr(self, an, getattr(a, an))
+
+    def error(self, text) :
+        print(text)
+        sys.exit(1)
+
 
 if __name__=='__main__' :
     p = argparser()

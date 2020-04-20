@@ -3,11 +3,11 @@ cluster.family.max_pop = 10
 cluster.family.average_pop = 4
 
 cluster.friends.min_pop = 5
-cluster.friends.max_pop = 50
-cluster.friends.average_pop = 10
+cluster.friends.max_pop = 20
+cluster.friends.average_pop = 8
 
 cluster.work.min_pop = 1
-cluster.work.max_pop = 100
+cluster.work.max_pop = 20
 cluster.work.average_pop = 10
 cluster.work.same_city = 0.9
 

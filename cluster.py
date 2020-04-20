@@ -3,6 +3,7 @@ from reciprocal import reciprocal
 from infection_counter import infection_counter
 import random
 from functools import partial
+from math import sqrt
 
 from cached_choice import cached_choice
 
@@ -73,6 +74,8 @@ class cluster(infection_counter) :
             min_pop = cprops['min_pop']
             max_pop = min(cprops['max_pop'], obj.target_pop * cprops['max_proportion'])
             avg_pop = cprops['average_pop']
+            bound = min(2, sqrt(max_pop/min_pop))
+            avg_pop = max(min(avg_pop, int(max_pop/bound)), int(min_pop*bound))
             count = obj.target_pop // avg_pop
             obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', obj, 0, count, min_pop, max_pop, obj.target_pop)
             depth = cprops['depth']
