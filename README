@@ -1,0 +1,6 @@
+Epidemia is a program to simulate an epidemic, exploring realistic infection processes.
+
+It is written in Python3.8, and also requires a few non-default packages: numpy, matplotlib and
+TkInter.
+
+To run it from the command line
