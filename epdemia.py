@@ -51,7 +51,7 @@ summary_fields = (
     _f('Days to Peak', '%3d', lambda w: w.highest_day),
 )
 
-class main() :
+class epidemia() :
     
     def __init__(self):
         self.args = argparser()
@@ -172,4 +172,4 @@ class main() :
                 detail_log.close()
 
 
-main().run()
+epidemia().run()
