@@ -37,8 +37,9 @@ log_fields = (
 city_fields = (
     _f('City', '%6s', lambda c: c.name),
     _f('location', '%20s'),
-    _f('population', '%6d'),
+    _f('pop', '%6d'),
     _f('size', '%6.2f'),
+    _f('infected', '%6d')
 )
 
 summary_fields = (
@@ -110,7 +111,7 @@ class main() :
         print('\n')
         t = dynamic_table(city_fields, file=self.log_file, console=self.args.console)
         for c in w.cities :
-            t.add(c.name, str(c.location), c.pop, c.size)
+            t.add_line(c)
 
     def plot_results(self, w) :
         from_, to = w.get_interesting()
