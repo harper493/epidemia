@@ -36,10 +36,10 @@ recovery_time = 15
 recovery_sd = 2
 gestating_time = 4
 gestating_sd = 1.5
-infectiousness = 2
-cluster_exposure = 0.007
+infectiousness = 2.5
+cluster_exposure = 0.002
 initial_infected = 20
 city_count = 0
-infected_cities = 0
+infected_cities = 0.5
 travel = 0.005 # useful range is 0 - 0.05 or so
 
