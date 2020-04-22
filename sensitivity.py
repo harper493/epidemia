@@ -1,10 +1,67 @@
 from utility import *
 from math import fsum
-import re
+import regex
 
 class sensitivity():
+    """
+    This class generates a list of values according to the given specification, via an
+    iterator which delivers one set of values each time it yields.
+
+    The pattern is described as follows.
+
+    It consists of one or more parameter specifications, separated by specs separated by ';' or '+'.
+    Each of them is of one of the forms:
+
+       param_name:start:step:end
+
+           Run the parameter from 'start' by 'increments of 'step' up to (including) 'stop'.
+           If the list is too short (for a second or subsequent parameter), the step is
+           reapplied as needed.
+
+       param_name*start:mult:end
+
+           As above but multiply each time instead of adding
+
+       param_name:1,2,3,4,...
+
+           Run through the listed values. A value can also be of the form '2*3' which
+           is equivalent to repeating the value 2, 3 times. If a list is too short,
+           the last number is repeated as necessary.
+
+       param_name:start:step
+       param_name*start:step
+
+           As above. Can only be used for the second or subsequent parameter, where the end is
+           determined by the first parameter.
+
+       If multiple parameters are specified using ':', they will be increased in step. If the ranges
+       are not the same length, the first one wins.
+
+       If multiple parameters are separated by '+', they will be increased as in a nested for loop, i.e.
+       the last one runs over its whole range, then the last but one is incremented and the last one
+       repeats, and so on.
+
+       It's possible to mix the two. ':' binds tighter than '+', so within each iteration the
+       parameters connected by ':' are incremented together.
+
+       Examples:
+
+       infectiousness:0.005:0.001:0.01
+       city_count:10*2:80
+       auto_immunity:0.2,0.5,0.6,0.7
+       infectiousness:0.005:0.001:0.01;auto_immunity:0.5:0.05
+
+       For more examples, see the unit tests at the end of this file.
+
+    Each yield returns a tuple of (parameter-name, parameter-value).
+
+    For a demonstration, run this module as a stand-alone script.
+    """
 
     class one_param() :
+        """
+        one_param - internal; class to represent a single parameter
+        """
 
         def __init__(self, spec: str):
             try :
@@ -68,7 +125,7 @@ class sensitivity():
             if self.mult :
                 self.value *= self.step
             else :
-                self.value = self.start + self.step * self.index#fsum([self.start] + [self.step] * self.index)
+                self.value = self.start + self.step * self.index
             if self.stop is None :
                 return True
             elif self.step>0 :
@@ -80,6 +137,11 @@ class sensitivity():
             return self.values or self.stop is not None
 
     def __init__(self, params, max_iterations: int=100):
+        """
+        :param params: see class description above.
+        :param max_iterations: do not iterate more times than this. Default is 100. Intended to
+                               protecet against silly mistakes.
+        """
         r = ['+'] + re.split(r'([+;])', params)
         if '' in r :
             raise ValueError(f"Syntax error in sensitivity description: '{params}'")
@@ -90,59 +152,11 @@ class sensitivity():
         if not self.ranges[0].will_stop() :
             raise ValueError(f"First range must have a termination condition '{str(self.ranges[0])}'")
 
-    def run(self, params: str):
-         """
-         Call the given function repeatedly with a single parameter which is a list of
-         tuples of the form (parameter name, parameter value)
-         Run sensitivity analysis over given parameter range(s)
-         :param string describing the parameters to be varied. One or more param specs separated by ';'.
-                Each of them is of one of the forms:
-                    param_name:start:step:end
-
-                        Run the parameter from 'start' by 'increments of 'step' up to (including) 'stop'
-
-                    param_name*start:mult:end
-
-                        As above but multiply each time instead of adding
-
-                    param_name:1,2,3,4,...
-
-                        Run through the listed values. A value can also be of the form '2*3' which
-                        is equivalent to repeating the value 2, 3 times. If a list is too short,
-                        the last number is repeated as necessary.
-
-                    param_name:start:step
-                    param_name*start:step
-
-                        As above. Can only be used for the second or subsequent parameter.
-
-                    If multiple parameters are specified, they will be increased in step. If the ranges
-                    are not the same length, the first one wins.
-
-                Examples:
-
-                infectiousness:0.005:0.001:0.01
-                city_count:10*2:80
-                auto_immunity:0.2,0.5,0.6,0.7
-                infectiousness:0.005:0.001:0.01;auto_immunity:0.5:0.05
-
-                For more examples, see the unit tests at the end of this file.
-
-         :return: a list of the results from each individual run
-         """
-         ranges = [ sensitivity.one_param(p) for p in params.split(';') ]
-         good = True
-         i = 0
-         while (good and i<self.max_iterations) :
-             (self.fn)([ r.get() for r in ranges ])
-             good = [ r.step() for r in ranges ][0]
-             i += 1
-
     def get_variables(self):
+        """
+        :return: a list of the parameter names
+        """
         return [ r.pname for r in self.ranges ]
-
-    def get_one(self, p):
-        return self.named_ranges[p].value
 
     def __iter__(self):
         good = True
@@ -171,7 +185,6 @@ def _test_one(s) :
     print('\n')
 
 if __name__=='__main__' :
-    _test_one('foo:1,2+bah:10,11+bim:100,101;boo:1000')
     _test_one('foo:1:0.1:2')
     _test_one('foo:1*2:16')
     _test_one('foo:1,2,3,4')
@@ -180,3 +193,4 @@ if __name__=='__main__' :
     _test_one('foo:1:1:10;bah:2:2')
     _test_one('foo:1,2,3,4,5;bah:2,4')
     _test_one('foo:1:1:3+bah:10:1:12')
+    _test_one('foo:1,2+bah:10,11+bim:100,101;boo:1000')
