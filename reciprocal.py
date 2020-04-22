@@ -22,18 +22,25 @@ MAX_POWER = 10000000
 
 class reciprocal(object) :
 
-    def __init__(self, count, min_, max_, sum_):
+    def __init__(self, count, min_, max_, sum_, pow_=False):
         self.count, self.min_, self.max_, self.sum_ = count, min_, max_, sum_
-        if ((self.sum_ - self.max_ - self.min_) // (self.count-2) < self.min_ +1) \
-            or (self.max_ * self.count < self.sum_) :
-            raise ValueError('incompatible arguments')
-        self.min_ = min(self.min_, self.sum_ / (self.count*1.1))
+        self.pow_ = pow_
+        if self.min_ :
+            if ((self.sum_ - self.max_ - self.min_) // (self.count-2) < self.min_ +1) \
+                or (self.max_ * self.count < self.sum_) :
+                raise ValueError('incompatible arguments')
+            self.min_ = min(self.min_, self.sum_ / (self.count*1.1))
         self.tolerance = 1 + DEFAULT_TOLERANCE/100
+        self.values = None
 
     def get(self) :
         """
         get() - get a sequence matching the parameters specified when the object was created
         """
+        if self.values :
+            return self.values
+        if self.pow_ :
+            return self.get2()
         r = self.max_/self.min_
         good = False
         while not good:
@@ -67,6 +74,32 @@ class reciprocal(object) :
         self.values = self._make_result(ss)
         self._adjust_total()
         self.power = p
+        return self.values
+
+    def get2(self):
+        if self.min_ is None :
+            self.min_ = pow(self.max_, 0.6)
+            while True :
+                s = sum(self.get3())
+                if abs(s - self.sum_) <= 10 : # self.sum_ * 0.001 :
+                    break
+                elif s > self.sum_ :
+                    self.min_ *= 0.9
+                else :
+                    self.min_ *= 1.1
+            self.min_ = None
+            return self.values
+        else :
+            return self.get3()
+
+
+    def get3(self):
+        maxx = pow(1/self.min_, 1/self.pow_)
+        minx = pow(1/self.max_, 1/self.pow_)
+        delta = (maxx - minx) / (self.count - 1)
+        self.recips = [ minx + i*delta for i in range(self.count) ]
+        self.power = self.pow_
+        self.values = [ int(1/(pow(s, self.pow_))) for s in self.recips ]
         return self.values
 
     def _make_result(self, s):
@@ -106,11 +139,21 @@ class reciprocal(object) :
 
 
 if __name__=="__main__" :
-    for i in range(10) :
-        rr = reciprocal(100, 1000, 20000,300000)
-        print(f"sum {sum(rr.get())} mean {rr.mean()} stddev {rr.stddev():.0f} harmonic mean {rr.harmonic_mean():.0f}" +\
+    for p in range(5,20) :
+        pop = 1000000
+        biggest_ratio = 3
+        ncr = 15
+        n = 50#int(math.sqrt(pop)/ncr)
+        alpha = 2 * n / biggest_ratio - 1
+        maxp = int(pop/biggest_ratio)
+        minp = int((maxp / alpha) / 3.3)
+        print(f"n {n} minp {minp} maxp {maxp} alpha {alpha} ", end='')
+        rr = reciprocal(n, None ,maxp, pop, pow_=p/10)
+        rr.get()
+        hm = int(rr.harmonic_mean())
+        print(f" sum {sum(rr.get())} act_min {min(rr.get())} mean {rr.mean():.0f} stddev {rr.stddev():.0f} harmonic mean {hm}" +\
               f" geometric mean {rr.geometric_mean():.0f} median {rr.median():.0f} rms {rr.rms():.0f}" +\
-              f" hmrms {math.sqrt(rr.harmonic_mean()*rr.rms()):.0f} power {rr.power:5f} {rr.get()}")
+              f" hmrms {math.sqrt(hm*rr.rms()):.0f} hm/min {hm/minp:.3f} power {rr.power:5f} {rr.get()}")
     sys.exit(0)
     mean = 9
     sd = 2
