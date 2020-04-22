@@ -31,6 +31,8 @@ apt install python3-tk
 
 Once you've done this, the above command line will run epidemia.
 
+For other systems, and other Linux variants, do whatever results in the same effect.
+
 Documentation
 -------------
 
