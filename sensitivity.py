@@ -1,6 +1,4 @@
 from utility import *
-from math import fsum
-import regex
 
 class sensitivity():
     """
