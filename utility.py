@@ -4,7 +4,7 @@ __all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'var_to_title', '
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
             'contains_any', 'get_random_member', 'float_to_str',
             'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict',
-            'assert_', 'count' )
+            'assert_', 'count', 'add_probability' )
 
 import math
 import string
@@ -540,3 +540,9 @@ def assert_(p) :
 #
 def count(coll, pred) :
     return sum([ 1 for c in coll if pred(c)])
+
+#
+# add_probability - "add" two probabilities by multiplying their inverses
+#
+def add_probability(p1: float, p2: float) -> float:
+    return 1 - ((1 - p1) * (1 - p2))

@@ -22,6 +22,8 @@ class city(infection_counter) :
         self.exposure = 0
         self.pop = 0
         self.people = []
+        self.exposure = 0
+        self.exposure_per_person = None
         self._make_size()
         cluster.make_clusters(world_, self)
         self.cluster_count = None
@@ -69,11 +71,17 @@ class city(infection_counter) :
     def touches(self, other: 'city'):
         return self.size + other.size > self.distance(other)
 
+    def set_exposure(self):
+        pr = self.pop / self.world_.get_smallest_city().pop
+        self.pop_ratio =  1/ (pr ** self.world_.props.get(float, 'city', 'pop_ratio_power'))
+        self.exposure_per_person = self.world_.get_infection_prob() * \
+                                   self.world_.props.get(float, 'city', 'exposure') * self.pop_ratio
+
     def expose(self):
-        self.exposure = 1 - (((1 - self.exposure) * (1 -self.world_.get_city_exposure())))
+        self.exposure = add_probability(self.exposure, self.exposure_per_person)
 
     def get_exposure(self):
-        return self.exposure
+        return self.exposure * self.pop_ratio
 
     def get_leaf_clusters(self):
         if self.cluster_count is None :

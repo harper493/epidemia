@@ -59,8 +59,7 @@ class world(infection_counter) :
         'auto_immunity' : (float, 0.0),
         'travel' : (float,0.01),
         'infectiousness' : (float, 2),
-        'city_exposure' : (float, 1e-5),
-        'cluster_exposure' : (float, 0.01),
+Add city exposure, scaled by city size        'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
         'initial_infected' : (int, 20),
         'infected_cities' : (float, 0.5)
@@ -86,7 +85,6 @@ class world(infection_counter) :
         self.props = props
         self.geometry = geometry(self.size_x, self.size_y)
         self._make_infection_prob()
-        self.city_exposure *= self.infectiousness
         self._add_cities()
         self.untouched_cities = len(self.cities)
         self.untouched_clusters = sum([c.get_untouched_clusters() for c in self.cities])
@@ -97,6 +95,9 @@ class world(infection_counter) :
         self.gestating_list = people_list()
         self._add_people()
         self.total_clusters = sum([c.get_leaf_clusters() for c in self.cities])
+        self.cities_by_pop = sorted(self.cities, key=lambda c: c.pop, reverse=True)
+        for c in self.cities :
+            c.set_exposure()
         self._infect_cities()
         self.susceptible_list = people_list([ p for p in self.people if p.is_susceptible() ])
         self.setup_time = time.time() - start_time
@@ -182,11 +183,14 @@ class world(infection_counter) :
     def get_random_city(self) :
         return self.city_cache.choose()
 
+    def get_biggest_city(self):
+        return self.cities_by_pop[0]
+
+    def get_smallest_city(self):
+        return self.cities_by_pop[-1]
+
     def get_auto_immunity(self):
         return self.auto_immunity
-
-    def get_city_exposure(self):
-        return self.city_exposure
 
     def get_cluster_exposure(self):
         return self.cluster_exposure

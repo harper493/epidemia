@@ -28,6 +28,8 @@ city.max_pop = 0
 city.min_pop = 0
 city.min_count = 5
 city.min_size_multiplier = 2.5
+city.pop_ratio_power = 0.5
+city.exposure = 0.001 # useful range is 0 - 0.01
 
 recovery_time = 15
 recovery_sd = 2
@@ -37,6 +39,5 @@ infectiousness = 2
 cluster_exposure = 0.007
 initial_infected = 20
 city_count = 0
-city_exposure = 1e-5
 infected_cities = 0
 
