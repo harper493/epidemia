@@ -2,15 +2,14 @@ from cluster import cluster
 from infection_counter import infection_counter
 from geometry import *
 from utility import *
-import math
+from math import sqrt, sin, cos, pi
 import random
-from functools import partial
 
 from cached_choice import cached_choice
 
-class city(infection_counter) :
 
-    class neighbor(object) :
+class city(infection_counter):
+    class neighbor(object):
 
         def __init__(self, city_, dist):
             self.city_, self.dist = city_, dist
@@ -30,17 +29,18 @@ class city(infection_counter) :
 
     def __str__(self):
         return '%3d %16s pop %6d size %.3f nbrs %s' % (self.name, str(self.location), self.pop, self.size,
-              ', '.join([ '%s:%.1f' % (n.city_.name, n.dist) for n in self.neighbors ]))
+                                                       ', '.join(['%s:%.1f' % (n.city_.name, n.dist) for n in
+                                                                  self.neighbors]))
 
     def reset(self):
         self.exposure = 0
-        for cl in self.iter_clusters() :
+        for cl in self.iter_clusters():
             cl.reset()
 
     def get_random_location(self):
-        bearing = random.uniform(0, 2*math.pi)
-        radius = random.uniform(0,1)**2 * self.size
-        return self.location + point(radius * math.sin(bearing), radius * math.cos(bearing))
+        bearing = random.uniform(0, 2 * pi)
+        radius = random.uniform(0, 1) ** 2 * self.size
+        return self.location + point(radius * sin(bearing), radius * cos(bearing))
 
     def add_person(self, p):
         self.pop += 1
@@ -51,29 +51,41 @@ class city(infection_counter) :
 
     def pick_clusters(self, location):
         result = {}
-        for cname, c in self.clusters.items() :
+        for cname, c in self.clusters.items():
             result[cname] = c[0].choose()
         return result
 
     def make_neighbors(self):
         self.neighbors = []
-        for c in self.world_.cities :
-            if c is not self :
-                self.neighbors.append(city.neighbor(c, self.distance(c)))
+        self.neighbors_by_appeal = []
+        for c in self.world_.cities:
+            if c is not self:
+                dist = self.distance(c)
+                self.neighbors.append(city.neighbor(c, dist))
+                self.neighbors_by_appeal.append(city.neighbor(c, self.world_.get_appeal_factor(c) / sqrt(dist)))
         self.neighbors.sort(key=lambda c: c.dist)
+        self.neighbors_by_appeal.sort(key=lambda n: n.dist, reverse=True)
+        self.travel_chooser = cached_choice(self.neighbors_by_appeal, lambda n: n.dist)
+        if False:
+            s = '   '.join([f'{n.city_.name} dist {self.distance(n.city_):.0f} appeal {n.dist:.4f}' for n in
+                            self.neighbors_by_appeal])
+            print(f'*** {self.name} {s}')
 
     def get_random_neighbor(self):
-        return get_random_member(self.neighbors, lambda n: 1/n.dist)
+        return get_random_member(self.neighbors, lambda n: 1 / n.dist)
 
     def get_random_person(self):
         return random.choices(self.people)
+
+    def get_destination(self):
+        return self.travel_chooser.choose().city_
 
     def touches(self, other: 'city'):
         return self.size + other.size > self.distance(other)
 
     def set_exposure(self):
         pr = self.pop / self.world_.get_smallest_city().pop
-        self.pop_ratio =  1/ (pr ** self.world_.props.get(float, 'city', 'pop_ratio_power'))
+        self.pop_ratio = 1 / (pr ** self.world_.props.get(float, 'city', 'pop_ratio_power'))
         self.exposure_per_person = self.world_.get_infection_prob() * \
                                    self.world_.props.get(float, 'city', 'exposure') * self.pop_ratio
 
@@ -84,25 +96,25 @@ class city(infection_counter) :
         return self.exposure * self.pop_ratio
 
     def get_leaf_clusters(self):
-        if self.cluster_count is None :
-            self.cluster_count = count(self.iter_leaf_clusters(), lambda cl: cl.pop>0)
+        if self.cluster_count is None:
+            self.cluster_count = count(self.iter_leaf_clusters(), lambda cl: cl.pop > 0)
         return self.cluster_count
 
     def get_untouched_clusters(self):
-        return count(self.iter_leaf_clusters(), lambda cl: cl.pop>0 and cl.is_untouched())
+        return count(self.iter_leaf_clusters(), lambda cl: cl.pop > 0 and cl.is_untouched())
 
     def get_susceptible_clusters(self):
-        return count(self.iter_leaf_clusters(), lambda cl: cl.pop>0 and cl.is_susceptible())
+        return count(self.iter_leaf_clusters(), lambda cl: cl.pop > 0 and cl.is_susceptible())
 
     def iter_clusters(self):
-        for c1 in self.clusters.values() :
-            for c2 in c1.values() :
-                for c3 in c2 :
+        for c1 in self.clusters.values():
+            for c2 in c1.values():
+                for c3 in c2:
                     yield c3
 
     def iter_leaf_clusters(self):
-        for c1 in self.clusters.values() :
-            for c2 in c1[0] :
+        for c1 in self.clusters.values():
+            for c2 in c1[0]:
                 yield c2
 
     def _make_size(self):
@@ -112,12 +124,11 @@ class city(infection_counter) :
         maxd = self.world_.props.get(int, 'city', 'max_density')
         z1 = self.target_pop - minp
         z2 = maxp - minp
-        z3 = z1/z2
+        z3 = z1 / z2
         z4 = maxd - mind
-        z5 = z3*z4
+        z5 = z3 * z4
         z6 = z5 + mind
-        z = ((self.target_pop-minp) / (maxp-minp)) * (maxd-mind) + mind
-        area = self.target_pop /z6
-        z8 = math.sqrt(area / math.pi)
+        z = ((self.target_pop - minp) / (maxp - minp)) * (maxd - mind) + mind
+        area = self.target_pop / z6
+        z8 = sqrt(area / pi)
         self.size = z8
-

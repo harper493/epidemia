@@ -59,7 +59,7 @@ class world(infection_counter) :
         'auto_immunity' : (float, 0.0),
         'travel' : (float,0.01),
         'infectiousness' : (float, 2),
-Add city exposure, scaled by city size        'cluster_exposure' : (float, 0.01),
+        'cluster_exposure' : (float, 0.01),
         'recovery_time' : (int, 7),
         'initial_infected' : (int, 20),
         'infected_cities' : (float, 0.5)
@@ -98,6 +98,7 @@ Add city exposure, scaled by city size        'cluster_exposure' : (float, 0.01)
         self.cities_by_pop = sorted(self.cities, key=lambda c: c.pop, reverse=True)
         for c in self.cities :
             c.set_exposure()
+            c.make_neighbors()
         self._infect_cities()
         self.susceptible_list = people_list([ p for p in self.people if p.is_susceptible() ])
         self.setup_time = time.time() - start_time
@@ -132,8 +133,6 @@ Add city exposure, scaled by city size        'cluster_exposure' : (float, 0.01)
                 if c1.touches(c2) :
                     c2.location = self.geometry.random_location()
                     done = False
-        for c in self.cities :
-            c.make_neighbors()
 
     def _add_people(self):
         self.people = []
@@ -180,14 +179,17 @@ Add city exposure, scaled by city size        'cluster_exposure' : (float, 0.01)
         cluster_factor = sum([ cl['rms'] for cl in cluster.cluster_info.values() ])
         self.infection_prob = self.infectiousness / (exposure_time * cluster_factor)
 
-    def get_random_city(self) :
+    def get_random_city(self) -> city:
         return self.city_cache.choose()
 
-    def get_biggest_city(self):
+    def get_biggest_city(self) -> city:
         return self.cities_by_pop[0]
 
     def get_smallest_city(self):
         return self.cities_by_pop[-1]
+
+    def get_appeal_factor(self, c: city) :
+        return pow(c.pop / self.get_biggest_city().pop, self.props.get(float, 'city', 'appeal_power'))
 
     def get_auto_immunity(self):
         return self.auto_immunity

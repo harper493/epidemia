@@ -42,7 +42,7 @@ class person(object) :
     def is_immune(self) -> bool:
         return self.state==person.state.X
 
-    def infectious(self, day: int) -> bool:
+    def infectious(self, day: int):
         assert (self.is_infected())
         if day - self.infected >= self.world_.recovery_dist.get() :
             self.recover()
@@ -50,13 +50,19 @@ class person(object) :
         else :
             for cl in self.clusters.values() :
                 cl.expose()
-            self.city.expose()
+            if random.random() < self.world_.travel :
+                self.city.get_destination().expose()
+            else :
+                self.city.expose()
             assert (self.is_infected())
 
     def expose(self, day: int):
         if self.is_susceptible() :
+            if random.random() < self.world_.travel :
+                risk = self.city.get_destination().get_exposure()
+            else :
+                risk = self.city.get_exposure()
             r = random.random()
-            risk = self.city.get_exposure()
             for cl in self.clusters.values() :
                 risk += cl.get_exposure()
             auto_immunity = self.world_.get_auto_immunity()
