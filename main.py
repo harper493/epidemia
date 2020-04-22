@@ -66,6 +66,7 @@ class main() :
             self.log_filename = 'epidemia_{}'.format(datetime.now().strftime('%Y%m%dT%H%M%S_%f')[:-3])
             self.log_file = open(f'{self.log_path}{self.log_filename}.log', 'w')
         else :
+            self.log_path = None
             self.log_filename = None
             self.log_file = None
 
@@ -98,7 +99,7 @@ class main() :
                 f'({100*w.total_infected/w.population:.2f}%)',
                 f'Max Growth: {100*(w.max_growth-1):.2f}%',
                 f'Days to Double: {w.days_to_double:.1f}',
-                f'Days to Peak: {w.highest_day:%}'))
+                f'Days to Peak: {w.highest_day}'))
         t.write((f'Population: {w.population:d}',
                  f'Setup Time: {w.setup_time:.2f}S',
                  f'Days: {w.day:d} in {w.run_time:.2f}S { w.run_time/w.day:.3f} S/day'))
