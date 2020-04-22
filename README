@@ -1,6 +1,37 @@
-Epidemia is a program to simulate an epidemic, exploring realistic infection processes.
+Epidemia is a program to simulate an epidemic, exploring realistic infection processes. It
+is licensed under GPLv3.
 
 It is written in Python3.8, and also requires a few non-default packages: numpy, matplotlib and
 TkInter.
 
-To run it from the command line
+To run it from the command line:
+
+python3.8 edpidemia.py [-p population] [-i infectiousness] -P
+
+will run for the specified population (in the range 10000-1000000) and infectiousness (default is 2.5,
+anything in the range 1.5-4 should produce interesting results). It will show what is going on day by
+day and when it has finished it will plot a graph (thanks to -P).
+
+Many more options to control how it runs are described in the documentation.
+
+Installation
+------------
+
+First clone or copy the files from github to some suitable directory. Then cd to the directory.
+
+Now you will need python3.8, a Python virtual environment for it, and all the needed packages. Do
+the following while running as sudo.
+
+apt install python3.8
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install numpy
+pip3 install matplotlib
+apt install python3-tk
+
+Once you've done this, the above command line will run epidemia.
+
+Documentation
+-------------
+
+Documentation is a work in progress. It is at doc/epidemia.html.
