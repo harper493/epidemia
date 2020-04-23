@@ -15,7 +15,7 @@ cluster.locale.min_pop = 20
 cluster.locale.max_pop = 100
 cluster.locale.average_pop = 40
 cluster.locale.same_city = 1
-cluster.locale.influence = 0.2
+cluster.locale.influence = 0.5
 
 cluster.*.min_pop = 2
 cluster.*.max_proportion = 0.3

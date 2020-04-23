@@ -50,16 +50,18 @@ class cluster(infection_counter) :
         p = self.parent
         while p :
             inf *= self.world_.get_cluster_exposure()
-            p.exposure += inf
+            p.exposure = add_probability(p.exposure, inf)
             p = p.parent
 
     def get_exposure(self):
         if not self.exposure_good :
             p = self.parent
             while p :
-                self.exposure += p.exposure
+                self.exposure = add_probability(self.exposure, p.exposure)
                 p = p.parent
             self.exposure_good = True
+            #if self.name=='C1.locale.0.1' or self.name=='C1.family.0.1':
+            #   print(f'### {self.exposure=:.6f} {self.influence=}')
         return self.exposure * self.influence
 
     def enroll(self, p: 'person'):
