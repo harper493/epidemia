@@ -6,7 +6,7 @@ TkInter.
 
 To run it from the command line:
 
-python3.8 edpidemia.py [-p population] [-i infectiousness] -P
+python3.8 epidemia.py [-p population] [-i infectiousness] -P
 
 will run for the specified population (in the range 10000-1000000) and infectiousness (default is 2.5,
 anything in the range 1.5-4 should produce interesting results). It will show what is going on day by
