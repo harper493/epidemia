@@ -33,6 +33,36 @@ Once you've done this, the above command line will run epidemia.
 
 For other systems, and other Linux variants, do whatever results in the same effect.
 
+More Options
+------------
+
+You can get a list of command line options by typing:
+
+python3.8 epidemia.py -h
+
+The most useful ones are as follows:
+
+-a n       Set the auto-immunity, i.e. the probability that someone exposed to the disease will
+           become immune without becoming infectious. It must be a value between 0 and 1. The default is 0.
+-i n       Set the "infectiousness". This corresponds very roughly to the R0 number for the infection,
+           i.e. the number of people who will be infected by a single victim, but that is also
+           highly dependent on the "social" conditions. A value in the range 1.5-4 typically gives
+           interesting results.
+-L path    Set the path for log files. If this is specified, detailed daily logs of the simulation
+           are created in the directory, and the graph is saved as a .png file.
+-N n       Set the proportion of cities to be infected initially. Must be a number in the range
+           0-1. The default is 0.5.
+-n n       Set the number of poeple initially infected. The default is 20, but that can make the first
+           few days slow and boring.
+-P         Plot results.
+-p n       Set population.
+-R n       Run n times with same parameters, graphing the results. This shows how much the results
+           change due to the randomness of the simulation.
+
+Many more simulation parameters are accessible through a Java style properties file. The file base.props
+contains all of them. To change just a few, create a file in the same format and append its name to the
+command line after the options.
+
 Documentation
 -------------
 
