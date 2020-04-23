@@ -1,4 +1,5 @@
 from utility import *
+import re
 
 class sensitivity():
     """
@@ -124,6 +125,7 @@ class sensitivity():
                 self.value *= self.step
             else :
                 self.value = self.start + self.step * self.index
+            self.value = round(self.value, 6)
             if self.stop is None :
                 return True
             elif self.step>0 :
@@ -155,6 +157,14 @@ class sensitivity():
         :return: a list of the parameter names
         """
         return [ r.pname for r in self.ranges ]
+
+    def get_one(self, p):
+        """
+        Get the value of a single parameter
+        :param p: parameter name
+        :return: current value of parameter
+        """
+        return self.named_ranges[p].value
 
     def __iter__(self):
         good = True

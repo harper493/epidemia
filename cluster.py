@@ -11,8 +11,8 @@ class cluster(infection_counter) :
 
     cluster_id = 1
 
-    def __init__(self, name, city_, world_, size: int=0, depth: int=0):
-        self.name, self.city, self.world_, self.size = name, city_, world_, size
+    def __init__(self, name, type_, city_, world_, size: int=0, depth: int=0):
+        self.name, self.type_, self.city, self.world_, self.size = name, type_, city_, world_, size
         infection_counter.__init__(self)
         self.depth = depth
         self.pop = 0
@@ -21,6 +21,7 @@ class cluster(infection_counter) :
         self.parent = None
         self.exposure = 0
         self.exposure_good = False
+        self.influence = self.world_.props.get(float, 'cluster', self.type_, 'influence')
         self.location = self.city.get_random_location()
         #print(str(self))
 
@@ -44,7 +45,7 @@ class cluster(infection_counter) :
         self.exposure_good = False
 
     def expose(self):
-        inf = self.world_.get_infection_prob()
+        inf = self.world_.get_infection_prob() * self.influence
         self.exposure += inf
         p = self.parent
         while p :
@@ -59,7 +60,7 @@ class cluster(infection_counter) :
                 self.exposure += p.exposure
                 p = p.parent
             self.exposure_good = True
-        return self.exposure
+        return self.exposure * self.influence
 
     def enroll(self, p: 'person'):
         assert(p not in self.people)
@@ -77,7 +78,7 @@ class cluster(infection_counter) :
             bound = min(2, sqrt(max_pop/min_pop))
             avg_pop = max(min(avg_pop, int(max_pop/bound)), int(min_pop*bound))
             count = obj.target_pop // avg_pop
-            obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', obj, 0, count, min_pop, max_pop, obj.target_pop)
+            obj.clusters[cname][0] = cluster_collection(f'{obj.name}.{cname}', cname, obj, 0, count, min_pop, max_pop, obj.target_pop)
             depth = cprops['depth']
             nest_avg = cprops['nest_average']
             nest_min = cprops['nest_min']
@@ -90,7 +91,7 @@ class cluster(infection_counter) :
                 sum_ = count*nest_avg
                 max_ = min(nest_max, sum_ - count * nest_min)
                 d += 1
-                obj.clusters[cname][d] = cluster_collection(f'{obj.name}.{cname}', obj, d, count, nest_min, max_, sum_)
+                obj.clusters[cname][d] = cluster_collection(f'{obj.name}.{cname}', cname, obj, d, count, nest_min, max_, sum_)
 
     @staticmethod
     def nest_clusters(world_):
@@ -161,9 +162,9 @@ class cluster(infection_counter) :
 
 class cluster_collection(object) :
 
-    def __init__(self, name, city_, depth, count=0, min_pop=0, max_pop=0, total=0):
+    def __init__(self, name, type_, city_, depth, count=0, min_pop=0, max_pop=0, total=0):
         self.name = name
-        self.city_, self.depth = city_, depth
+        self.type_, self.city_, self.depth = type_, city_, depth
         self.count, self.min_pop, self.max_pop, self.total = count, min_pop, max_pop, total
         self.world_ = self.city_.world_
         self.content = {}
@@ -173,7 +174,7 @@ class cluster_collection(object) :
 
     def build(self, count=0, min_pop=0, max_pop=0, total=0):
         sizes = reciprocal(count or self.count, min_pop or self.min_pop, max_pop or self.max_pop, total or self.total).get()
-        self.content = [cluster(f'{self.name}.{self.depth}.{i}', self.city_, self.world_, size=s, depth=self.depth) \
+        self.content = [cluster(f'{self.name}.{self.depth}.{i}', self.type_, self.city_, self.world_, size=s, depth=self.depth) \
                                   for i,s in enumerate(sizes) ]
         self.rebuild_cache()
 

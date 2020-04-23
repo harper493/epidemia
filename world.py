@@ -176,7 +176,7 @@ class world(infection_counter) :
 
     def _make_infection_prob(self):
         exposure_time = self.props.get(int, 'recovery_time') - self.props.get(int, 'gestating_time')
-        cluster_factor = sum([ cl['rms'] for cl in cluster.cluster_info.values() ])
+        cluster_factor = sum([ cl['rms'] * (cl['influence']**2) for cl in cluster.cluster_info.values() ])
         self.infection_prob = self.infectiousness / (exposure_time * cluster_factor)
 
     def get_random_city(self) -> city:
