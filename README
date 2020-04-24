@@ -23,7 +23,8 @@ Now you will need python3.8, a Python virtual environment for it, and all the ne
 the following while running as sudo.
 
 apt install python3.8
-python3 -m venv .venv
+sudo apt-get install python3.8-venv
+python3.8 -m venv .venv
 source .venv/bin/activate
 pip3 install numpy
 pip3 install matplotlib
@@ -52,7 +53,7 @@ The most useful ones are as follows:
            are created in the directory, and the graph is saved as a .png file.
 -N n       Set the proportion of cities to be infected initially. Must be a number in the range
            0-1. The default is 0.5.
--n n       Set the number of poeple initially infected. The default is 20, but that can make the first
+-n n       Set the number of people initially infected. The default is 20, but that can make the first
            few days slow and boring.
 -P         Plot results.
 -p n       Set population.
