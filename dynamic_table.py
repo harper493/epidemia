@@ -1,6 +1,8 @@
 import re
 from utility import *
 
+default_field_width = 6
+
 class dynamic_table() :
     """
     Class to produce a pretty table which is added to during the run. Headings are
@@ -29,7 +31,7 @@ class dynamic_table() :
         :param f: file-like object (supports .write() ) to receive the
                   output. stdout is used if not supplied.
         """
-        self.fields, self.underline, self.console = fields, file, console
+        self.fields, self.underline, self.console = fields, underline, console
         if isinstance(file, (list, tuple)) :
             self.file = file
         elif file :
@@ -40,11 +42,17 @@ class dynamic_table() :
         self.headings = []
         self.widths = []
         max_lines = 1
-        for f in self.fields :
+        new_fields = []
+        for ff in self.fields :
+            if isinstance(ff, (tuple, list)) :
+                f = dynamic_table.field(*ff)
+            else :
+                f = ff
+            new_fields.append(f)
             text = f.text
             fmt = f.fmt
-            m = re.match(r'%(\d+)(.*)', fmt)
-            w = int(m.group(1))
+            m = re.match(r'%(\d*)(.*)', fmt)
+            w = int(m.group(1) or default_field_width)
             if len(text) <= w :
                 tt = [text]
             else :
@@ -76,6 +84,7 @@ class dynamic_table() :
                 hi = ' ' * (w - len(h)) + h
                 hl.append(hi)
             self.write(hl)
+        self.fields = new_fields
         if self.underline :
             self.write(['-'*w for w in self.widths])
 
