@@ -120,8 +120,8 @@ class epidemia() :
         title += f'\nMax Days to Double {w.days_to_double:.1f}'
         x = w.get_days()[from_:to]
         data = [ (var_to_title(v), w.get_data(v)[from_:to]) for v in ('total_infected', 'infected') ]
-        plotfile = f'{self.log_path}{self.log_filename}.png' if self.log_path else None
-        p.plot(x, *data, title=title, file=plotfile, show=self.args.plot)
+        plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
+        p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format)
 
     def run_sensitivity(self):
         s = f'repeat:1*{self.args.repeat}' if self.args.repeat else self.args.sensitivity
@@ -166,8 +166,9 @@ class epidemia() :
             title = ' '.join(titles)
             if not self.args.repeat :
                 title += '\nVarying {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
-            plotfile = f'{self.log_path}{self.log_filename}.png' if self.log_path else None
-            plot.plot(x, *data, title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot)
+            plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
+            plot.plot(x, *data, title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
+                      format=self.args.format)
             if detail_log :
                 detail_log.close()
 

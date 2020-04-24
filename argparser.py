@@ -20,6 +20,7 @@ class argparser(object) :
         arg('-C', '--city_count*', type=int, help='number of cities')
         arg('-R', '--repeat', type=int, default=0, help='run repeatedly with the same parameters')
         arg('-o', '--output', type=str, default=None, help='output file name')
+        arg('-F', '--format', type=str, default=None, help='graphics file format')
         arg('-P', '--plot', action='store_true',  help='plot results as graph')
         arg('-X', '--profile', action='store_true',  help='run cProfile')
         arg('-v', '--verbose', action='store_true',  help="describe what's going on")
