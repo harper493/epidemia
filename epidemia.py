@@ -64,7 +64,8 @@ class epidemia() :
             self.log_path = self.args.log_path
             if self.log_path[-1] != '/' :
                 self.log_path += '/'
-            self.log_filename = 'epidemia_{}'.format(datetime.now().strftime('%Y%m%dT%H%M%S_%f')[:-3])
+            self.log_filename = self.args.output or \
+                                'epidemia_{}'.format(datetime.now().strftime('%Y%m%dT%H%M%S_%f')[:-3])
             self.log_file = open(f'{self.log_path}{self.log_filename}.log', 'w')
         else :
             self.log_path = None
