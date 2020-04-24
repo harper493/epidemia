@@ -60,8 +60,8 @@ class epidemia() :
             propfiles.append(self.args.props_file)
         self.props = properties(*propfiles, cmd_args=self.args.extra_props)
         cluster.make_cluster_info(self.props)
-        if self.args.log_path :
-            self.log_path = self.args.log_path
+        if self.args.log_path or self.args.output:
+            self.log_path = self.args.log_path or '.'
             if self.log_path[-1] != '/' :
                 self.log_path += '/'
             self.log_filename = self.args.output or \
