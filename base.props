@@ -39,6 +39,8 @@ city.pop_ratio_power = 0.5
 city.exposure = 0.001 # useful range is 0 - 0.01
 city.appeal_power = 0.4
 
+world_size = 100
+
 recovery_time = 15
 recovery_sd = 2
 gestating_time = 4

@@ -5,33 +5,33 @@
 #include "geometry.h"
 #include "random.h"
 
-#define PROPERTIES                         \
-    _P(float, , , auto_immunity)             \
-    _P(float, , , travel_prob)               \
-    _P(float, , , infectiousness)            \
-    _P(float, , , appeal_factor)             \
-    _P(float, , , recovery_time)             \
-    _P(float, , , recovery_sd)               \
-    _P(float, , , gestating_time)            \
-    _P(float, , , gestating_sd)              \
-    _P(float, , , initial_infected)          \
-    _P(U32, , ,   city_count)                \
-    _P(U32, , ,   population)                \
-    _P(U32, , ,   world_size)                \
-    _P(float, , , infected_cities)           \
-    _P(float, , , travel)                    \
-    _P(float, city, _, max_density)         \
-    _P(float, city, _, min_density)         \
-    _P(float, city, _, auto_power)          \
-    _P(float, city, _, auto_divider)        \
-    _P(float, city, _, max_pop)             \
-    _P(float, city, _, min_pop)             \
-    _P(float, city, _, min_count)           \
-    _P(float, city, _, min_size_multiplier) \
-    _P(float, city, _, pop_ratio_power)     \
-    _P(float, city, _, exposure)            \
-    _P(float, city, _, appeal_power)        \
-    _P(float, city, _, auto_max_pop)        \
+#define PROPERTIES                                                      \
+    _P(float, , , auto_immunity, 0)                                     \
+    _P(float, , , travel_prob, 0)                                       \
+    _P(float, , , infectiousness, 2.5)                                  \
+    _P(float, , , appeal_factor, 0.5)                                   \
+    _P(float, , , recovery_time, 12)                                    \
+    _P(float, , , recovery_sd, 5)                                       \
+    _P(float, , , gestating_time, 5)                                    \
+    _P(float, , , gestating_sd, 2)                                      \
+    _P(float, , , initial_infected, 100)                                \
+    _P(U32, , ,   city_count, 0)                                        \
+    _P(U32, , ,   population, 10000)                                    \
+    _P(U32, , ,   world_size, 100)                                      \
+    _P(float, , , infected_cities, 0.5)                                 \
+    _P(float, , , travel, 0)                                            \
+    _P(float, city, _, max_density, 5000)                               \
+    _P(float, city, _, min_density, 1000)                               \
+    _P(float, city, _, auto_power, 0.67)                                \
+    _P(float, city, _, auto_divider, 250)                               \
+    _P(float, city, _, max_pop, 0)                                      \
+    _P(float, city, _, min_pop, 0)                                      \
+    _P(float, city, _, min_count, 5)                                    \
+    _P(float, city, _, min_size_multiplier, 2.5)                        \
+    _P(float, city, _, pop_ratio_power, 0.5)                            \
+    _P(float, city, _, exposure, 0.001)                                 \
+    _P(float, city, _, appeal_power, 0.4)                               \
+    _P(float, city, _, auto_max_pop, 1)                                 \
     
 class world
 {
@@ -45,7 +45,7 @@ private:
     // Cached properties
     //
 #undef _P
-#define _P(TYPE, PREFIX, DELIM, NAME) TYPE PREFIX##DELIM##NAME;
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT) TYPE PREFIX##DELIM##NAME;
     PROPERTIES
 public:
     world(properties *props);
@@ -59,13 +59,13 @@ public:
     float get_infection_prob() const { return infection_prob; };
     properties *get_props() const { return my_props; };
 #undef _P
-#define _P(TYPE, PREFIX, DELIM, NAME)           \
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT)          \
     TYPE get_##PREFIX##DELIM##NAME() const      \
     { return PREFIX##DELIM##NAME; };
     PROPERTIES
 private:
     void load_props();
-    float get_one_prop(const string &prefix, const string &name);
+    float get_one_prop(const string &prefix, const string &name, float dflt);
     void add_cities();
     void make_infection_prob();
 };

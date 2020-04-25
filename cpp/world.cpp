@@ -22,19 +22,19 @@ world::world(properties *props)
  * load_props - load static parameters from properties file
  ***********************************************************************/
 
-float world::get_one_prop(const string &prefix, const string &name)
+float world::get_one_prop(const string &prefix, const string &name, float dflt)
 {
     if (prefix.empty()) {
-        return my_props->get_numeric(name);
+        return my_props->get_numeric(name, dflt);
     } else {
-        return my_props->get_numeric(vector<string>{prefix, name});
+        return my_props->get_numeric(vector<string>{prefix, name}, dflt);
     }
 }
 
 void world::load_props()
 {
 #undef _P
-#define _P(TYPE, PREFIX, DELIM, NAME) PREFIX##DELIM##NAME = get_one_prop(#PREFIX, #NAME);
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT) PREFIX##DELIM##NAME = get_one_prop(#PREFIX, #NAME, DFLT);
     PROPERTIES
     gestation_generator.reset(gestating_time, gestating_sd);
     recovery_generator.reset(recovery_time, recovery_sd);
