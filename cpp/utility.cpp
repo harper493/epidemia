@@ -20,7 +20,7 @@ string join(const vector<string> &vec, const string &delim)
 {
     string result;
     for (const string &s : vec) {
-        if (result.empty()) {
+        if (!result.empty()) {
             result += delim;
         }
         result += s;

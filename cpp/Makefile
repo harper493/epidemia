@@ -7,7 +7,7 @@ DEP_DIR  := dep
 TARGET   := epidemia_fast
 INCLUDE  := -I.
 LIBS     := -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_date_time
-DEBUG_FLAG := $(strip $(wildcard $(_MK_ROOT_DIR)/DEBUG))
+DEBUG_FLAG := $(strip $(wildcard DEBUG))
 ifdef DEBUG_FLAG
 OPT    := -O0 -DDEBUG
 else
@@ -31,6 +31,13 @@ DEPS     := $(SRC:%.cpp=$(DEP_DIR)/%.d)
 
 all: build $(APP_DIR)/$(TARGET)
 
+$(OBJ_DIR)/%.o: $(DEP_DIR)/%.d
+
+$(DEP_DIR)/%.d: %.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(OPT) $(INCLUDE) -MM -MF $@ $<
+	sed -i 's#.*\.o:#$(OBJ_DIR)/&#' $@
+
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(OPT) $(INCLUDE) -c $< -o $@
@@ -38,11 +45,6 @@ $(OBJ_DIR)/%.o: %.cpp
 $(APP_DIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS) $(LIBS)
-
-$(DEP_DIR)/%.d: %.cpp
-	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(OPT) $(INCLUDE) -MM -MF $@ $<
-	sed -i 's#.*\.o:#$(OBJ_DIR)&#' $@
 
 .PHONY: all build clean debug release
 
@@ -59,4 +61,6 @@ release: all
 clean:
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
+
+-include $(DEPS)
 

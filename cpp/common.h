@@ -159,5 +159,43 @@ ISTR &operator>>(ISTR &istr, C &c)
     return istr;
 }
 
+/************************************************************************
+ * Civilized versions of min and max that will compare any two types
+ * that can be compared. Note the conditional trick to deduce the
+ * most appropriate return type: http://www.artima.com/cppsource/foreach.html
+ ***********************************************************************/
+
+template<class T1, class T2>
+decltype(true?T1():T2()) min(T1 t1, T2 t2) 
+{
+    if (t1<t2) {
+        return t1;
+    } else {
+        return t2;
+    }
+}
+
+template<class T1, class T2>
+decltype(true?T1():T2()) max(T1 t1, T2 t2) 
+{
+    if (t1>t2)  {
+        return t1;
+    } else {
+        return t2;
+    }
+}
+
+template<class T1, class T2, typename... ARGS>
+decltype(true?T1():T2()) min(T1 t1, T2 t2, ARGS ...args) 
+{
+    return min(min(t1, t2), args...);
+}
+
+template<class T1, class T2, typename... ARGS>
+decltype(true?T1():T2()) max(T1 t1, T2 t2, ARGS ...args) 
+{
+    return max(max(t1, t2), args...);
+}
+
 
 #endif

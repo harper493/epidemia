@@ -56,14 +56,22 @@ void world::build()
 
 void world::add_cities()
 {
+    //
+    // Figure out a good value for the number of cities, if this
+    // was not in the spec, and the min and max populations
+    //
     if (city_count==0 || city_max_pop==0) {
         if (city_count==0) {
-            city_count = pow(population, city_auto_power) / city_auto_divider;
+            city_count = max(pow(population, city_auto_power) / city_auto_divider,
+                             min_city_count);
         }
-        city_max_pop = round_sig(population / city_auto_max_pop, 2);
+        city_max_pop = round_sig(population * city_auto_max_pop, 2);
         city_min_pop = round_sig((population - city_max_pop) /
                                  (city_count * city_min_size_multiplier), 2);
     }
+    //
+    // Now generate city populations that fit the criteria
+    //
     vector<size_t> city_pops;
     city_pops.reserve(city_count);
     random::reciprocal cpr(city_min_pop, city_max_pop, city_count, population/city_count);
@@ -71,7 +79,8 @@ void world::add_cities()
         city_pops.push_back(cpr());
     }
     std::sort(city_pops.begin(), city_pops.end(), [](size_t a, size_t b){ return a>b; });
-    city_pops.back() = city_max_pop;
+    city_pops.front() = city_max_pop;
+    city_pops.back() = city_min_pop;
     replace_if(city_pops.begin(), city_pops.end(), [&](size_t sz){ return sz<city_min_pop; }, city_min_pop);
     size_t total = std::accumulate(city_pops.begin(), city_pops.end(), 0) - city_max_pop - city_min_pop;
     size_t center_pop = population - city_max_pop - city_min_pop;
@@ -80,6 +89,9 @@ void world::add_cities()
         city_pops[i] *= ratio;
     }
     size_t final_pop = std::accumulate(city_pops.begin(), city_pops.end(), 0);
+    //
+    // Finally, create the cities
+    //
     for (size_t i=0; i<city_count; ++i) {    
         string cname = formatted("C%d", i);
         city *c = new city(cname, this, city_pops[i], get_random_location());

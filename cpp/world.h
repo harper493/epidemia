@@ -16,6 +16,7 @@
     _P(float, , , gestating_sd, 2)                                      \
     _P(float, , , initial_infected, 100)                                \
     _P(U32, , ,   city_count, 0)                                        \
+    _P(U32, , ,   min_city_count, 10)                                   \
     _P(U32, , ,   population, 10000)                                    \
     _P(U32, , ,   world_size, 100)                                      \
     _P(float, , , infected_cities, 0.5)                                 \
@@ -31,7 +32,7 @@
     _P(float, city, _, pop_ratio_power, 0.5)                            \
     _P(float, city, _, exposure, 0.001)                                 \
     _P(float, city, _, appeal_power, 0.4)                               \
-    _P(float, city, _, auto_max_pop, 1)                                 \
+    _P(float, city, _, auto_max_pop, 0.3)                                 \
     
 class world
 {

@@ -30,9 +30,11 @@ void properties::add_property(const string &str)
         }
         if (wc) {
             string re = join(name_parts, "\\.");
-            wild_properties.emplace_back(name, re, value, wc);
+            wild_property *w = new wild_property(name, re, value, wc);
+            wild_properties.emplace_back(w);
+            my_properties[name] = w;
         } else {
-            my_properties[name] = property_value(value, NULL);
+            my_properties[name] = new property_value(name, value, NULL);
         }
     }
 }
@@ -83,13 +85,13 @@ string properties::get(const string &prop, const string &dflt) const
     if (iter==my_properties.end()) {
         const wild_property *wp = find_wild(prop);
         if (wp) {
-            my_properties[prop] = property_value("", wp);
+            my_properties[prop] = new property_value(prop, "", wp);
+            result = wp->value;
         }
-        result = wp->value;
-    } else if (iter->second.wild) {
-        result = iter->second.wild->value;
+    } else if (iter->second->wild) {
+        result = iter->second->wild->value;
     } else {
-        result = iter->second.value;
+        result = iter->second->value;
     }
     return result;
 }
@@ -132,13 +134,42 @@ float properties::get_numeric(const vector<string> &pname, float dflt) const
 const properties::wild_property *properties::find_wild(const string &name) const
 {
     const wild_property *result = NULL;
-    for (const wild_property &wp : wild_properties) {
+    for (const wild_property *wp : wild_properties) {
         smatch m;
-        if (regex_match(name, m, wp.re_form)
-            && (result==NULL || wp.wild_count < result->wild_count)) {
-            result = &wp;            
+        if (regex_match(name, m, wp->re_form)
+            && (result==NULL || wp->wild_count < result->wild_count)) {
+            result = wp;            
         }
     }
     return result;
 }
 
+/************************************************************************
+ * Iterator functions
+ ***********************************************************************/
+
+properties::const_iterator::const_iterator(const properties *p)
+    : my_props(p), my_iter(p->my_properties.begin())
+{
+}
+
+bool properties::const_iterator::operator==(const const_iterator &other) const
+{
+    return (my_props==NULL && other.my_props==NULL)
+        || my_iter==other.my_iter;
+}
+    
+properties::const_iterator &properties::const_iterator::operator++()
+{
+    if (my_props) {
+        while (my_iter!=my_props->my_properties.end()) {
+            ++my_iter;
+        }
+        if (my_iter!=my_props->my_properties.end()) {
+            return *this;
+        } else {
+            my_props = NULL;
+        }
+    }
+    return *this;
+}

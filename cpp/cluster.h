@@ -27,6 +27,7 @@ public:
     void refresh(properties *props);
     static cluster_type *find_cluster_type(const string &n);
     static void refresh_all(properties *props);
+    static void build(properties *props);
     static const cluster_type_map_t &get_cluster_types() { return cluster_types; };
 friend class cluster;
 friend class world;

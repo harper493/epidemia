@@ -25,7 +25,7 @@ size_t binary_search(const COLL &coll, const C &value)
     size_t lb = 0;
     size_t ub = coll.size();
     size_t mid;
-    while (lb!=ub) {
+    while (lb+1 < ub) {
         mid = (lb + ub)/2;
         C v = coll[mid];
         if (value < v) {

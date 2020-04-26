@@ -51,4 +51,5 @@ initial_infected = 20
 city_count = 0
 infected_cities = 0.5
 travel = 0.005 # useful range is 0 - 0.05 or so
+auto_immunity = 0
 
