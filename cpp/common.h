@@ -127,7 +127,7 @@ struct streamable_traits { };
  * debug_assert macro
  ***********************************************************************/
 
-#ifdef DEBUG_ASSERT
+#ifdef DEBUG
 #define debug_assert(PRED) assert(PRED)
 #else
 #define debug_assert(PRED)

@@ -16,15 +16,19 @@ public:
         property_value() { };
         property_value(const string &n, const string &str, const wild_property *w)
             : name(n), value(str), wild(w) { };
+        virtual ~property_value() { };
         const string &get_name() const { return name; };
         string get_value() const;
+        vector<string> get_elements() const;
+        virtual bool is_wild() const { return wild!=NULL; };
     };
     struct wild_property : public property_value
     {
         regex re_form;
         U32 wild_count=0;
         wild_property(const string &s, const string &r, const string &v, U32 wc)
-            : property_value(s, "", this), re_form(r), wild_count(wc) { };
+            : property_value(s, v, this), re_form(r), wild_count(wc) { };
+        virtual bool is_wild() const override { return true; };
     };
     typedef map<string, property_value*> property_map_t;
     class const_iterator : public std::forward_iterator_tag
@@ -54,6 +58,8 @@ public:
         value_type operator->() const { return this->operator*(); };
         const_iterator &operator++();
         const_iterator operator++(int) { const_iterator result=*this; ++*this; return result; };
+    private:
+        bool ended() const { return my_iter==my_props->my_properties.end(); };
     friend class properties;
     };
 private:

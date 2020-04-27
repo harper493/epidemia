@@ -1,7 +1,7 @@
 #ifndef __STRING_EXCEPTION
 #define __STRING_EXCEPTION
 
-#include "type_definitions.h"
+#include "common.h"
 #include "formatted.h"
 #include <boost/type_traits.hpp>
 

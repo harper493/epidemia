@@ -26,19 +26,26 @@ private:
     vector<K> keys;
     vector<float> boundaries;
 public:
+    chooser() { };
+    template<class COLL, typename enable_if<boost::is_same<typename COLL::value_type, C*>, int>::type=0>
+    chooser(const COLL &coll, key_fn_t key_fn)
+    {
+        create(coll, key_fn);
+    }
+        
     /************************************************************************
      * create - given a collection of objects, and a key function
      * for extractng the weight, build the structures that will
      * allow efficient choice
      ***********************************************************************/
     
-    template<class COLL, typename enable_if<boost::is_same<typename COLL::value_type, C>, int>::type=0>
-    void create(COLL &coll, key_fn_t key_fn)
+    template<class COLL, typename enable_if<boost::is_same<typename COLL::value_type, C*>, int>::type=0>
+    void create(const COLL &coll, key_fn_t key_fn)
     {
         float total = 0;
-        for (C &c : coll) {
-            targets.push_back(&c);
-            K key = key_fn(&c);
+        for (C *c : coll) {
+            targets.push_back(c);
+            K key = key_fn(c);
             keys.push_back(key);
             total += key;
         }
@@ -58,7 +65,7 @@ public:
     
     C *choose() const
     {
-        K k = random::get_random();
+        float k = random::get_random();
         return targets[binary_search(boundaries, k)];
     }
 

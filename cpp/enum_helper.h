@@ -66,7 +66,6 @@
  ***********************************************************************/
 
 #include "common.h"
-#include "string_exception.h"
 #include <boost/algorithm/string.hpp>
 
 #define FORBIDDEN_MARKER '!'

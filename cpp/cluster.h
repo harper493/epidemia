@@ -21,10 +21,14 @@ private:
     float same_city;
     float nest_influence;
     float size_rms;
+    float proximality;
     static cluster_type_map_t cluster_types;
 public:
     cluster_type(const string &n) : name(n) { };
+    const string &get_name() const { return name; };
     void refresh(properties *props);
+    cluster *make_clusters(city *c) const;
+    bool is_local() const { return proximality==1; };
     static cluster_type *find_cluster_type(const string &n);
     static void refresh_all(properties *props);
     static void build(properties *props);
@@ -57,6 +61,7 @@ public:
         vector<cluster::list::iterator> my_iterators;
         bool leaf_only = false;
         bool pre_order = true;
+        size_t count = 0;
     public:
         iterator() : my_state(state::st_end) { };
         iterator(cluster *r, bool lo, bool po);
@@ -97,7 +102,7 @@ public:
     };
 private:
     string name;
-    cluster_type *my_type;
+    const cluster_type *my_type;
     cluster *my_parent;
     city *my_city;
     U32 size = 0;
@@ -110,16 +115,20 @@ private:
     static map<string,cluster_type> cluster_types;
     static vector<string> clsuter_type_names;
 public:
-    cluster(const string &n, cluster_type *t, city *c, U16 d, const point &loc)
-        : name(n), my_type(t), my_city(c), depth(d), location(loc) { };
+    cluster(const string &n, const cluster_type *t, city *c, U32 sz, U16 d, const point &loc)
+        : name(n), my_type(t), my_city(c), size(sz), depth(d), location(loc) { };
     void reset();
     void expose();
+    U32 get_size() const { return size; };
+    U16 get_depth() const { return depth; };
     float get_exposure();
+    const point &get_location() const { return location; };
     void add_person(person *p);
     void add_child(cluster *cl);
     void expose_parent();
     void gather_exposure();
     bool is_leaf() const { return depth==0; };
+    bool is_full() const { return my_children.size() > size+1; };
     iterator_controller iter_all() { return iterator_controller(this, false, false); };
     iterator_controller iter_pre() { return iterator_controller(this, false, true); };
     iterator_controller iter_leaves() { return iterator_controller(this, true, false); };    
@@ -127,6 +136,8 @@ public:
     static const string &get_cluster_name(cluster_type &t);
 private:
     world *get_world();
+    void set_parent(cluster *p);
+friend class cluster_type;
 };
 
 #endif

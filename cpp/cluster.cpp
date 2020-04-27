@@ -1,6 +1,7 @@
 #include "cluster.h"
 #include "city.h"
 #include "world.h"
+#include "formatted.h"
 #include "utility.h"
 #include "properties.h"
 
@@ -58,6 +59,16 @@ void cluster::add_child(cluster *cl)
 }
 
 /************************************************************************
+ * set_parent - set our parent
+ ***********************************************************************/
+
+void cluster::set_parent(cluster *p)
+{
+    my_parent = p;
+    p->add_child(this);
+}
+
+/************************************************************************
  * expose_parent - pass on our exposure to parent
  ***********************************************************************/
 
@@ -93,6 +104,9 @@ cluster::iterator::iterator(cluster *r, bool lo, bool po)
     : my_state(state::st_pre), leaf_only(lo), pre_order(po)
 {
     my_iterators.push_back(r->my_children.begin());
+    while (!is_ended() && (leaf_only && !((*this)->is_leaf()))) {
+        advance();
+    }
 }
 
 /************************************************************************
@@ -101,7 +115,12 @@ cluster::iterator::iterator(cluster *r, bool lo, bool po)
 
 bool cluster::iterator::operator==(const cluster::iterator &other) const
 {
-    return *this==other;
+    return my_iterators.empty()
+        ? other.my_iterators.empty()
+        : other.my_iterators.empty()
+          ? false
+          : my_iterators.size()==other.my_iterators.size()
+            && my_iterators.back()==other.my_iterators.back();
 }
 
 /************************************************************************
@@ -127,7 +146,8 @@ cluster::iterator &cluster::iterator::operator++()
 {
     while (!is_ended()) {
         advance();
-        if (!leaf_only || (*this)->is_leaf()) {
+        if (!is_ended() && (!leaf_only || (*this)->is_leaf())) {
+            debug_assert(!leaf_only || (*this)->is_leaf());
             break;
         }
     }
@@ -154,22 +174,26 @@ cluster::iterator &cluster::iterator::operator++()
 
 void cluster::iterator::advance()
 {
+    ++count;
     while (true) {
+        assert(is_ended() || !my_iterators.empty());
         switch (my_state) {
         case state::st_pre:
             if (pre_order && ((*this)->depth==0 || !leaf_only)) {
                 my_state = state::st_start;
                 return;
             };
+            my_state = state::st_start;
             break;
         case state::st_start:
             {
                 cluster *cl = **this;
                 if (!cl->my_children.empty()) {
                     my_iterators.push_back(cl->my_children.begin());
-                    return;
+                    my_state = state::st_pre;
+                } else {
+                    my_state = state::st_post;
                 }
-                my_state = state::st_post;
             }
             break;
         case state::st_mid:
@@ -185,14 +209,16 @@ void cluster::iterator::advance()
                         my_state = state::st_post;
                     }
                 } else {
-                    return;
+                    my_state = state::st_pre;
                 }
             }
+            break;
         case state::st_post:
             if (!pre_order && ((*this)->depth==0 || !leaf_only)) {
                 my_state = state::st_mid;
                 return;
             }
+            my_state = state::st_mid;
             break;
         case state::st_end:
         default:
@@ -219,6 +245,7 @@ void cluster_type::refresh(properties *props)
     refresh_one(nest_average);
     refresh_one(same_city);
     refresh_one(nest_max);
+    refresh_one(proximality);
 }
 
 /************************************************************************
@@ -249,3 +276,83 @@ cluster_type *cluster_type::find_cluster_type(const string &n)
     }
     return result;        
 }
+
+/************************************************************************
+ * cluster_type member functions
+ ***********************************************************************/
+
+/************************************************************************
+ * build - read the properties and determine what exists
+ ***********************************************************************/
+
+void cluster_type::build(properties *props)
+{
+    for (const auto *prop : *props) {
+        if (!prop->is_wild()) {
+            auto elems = prop->get_elements();
+            if (elems[0]=="cluster"
+                && elems.size()>=3
+                && cluster_types.find(elems[1])==cluster_types.end()) {
+                cluster_types[elems[1]] = new cluster_type(elems[1]);
+            }
+        }
+    }
+    refresh_all(props);
+}
+
+/************************************************************************
+ * make_clusters - build a nest of clusters according to the given
+ * parameters for the given city. Return the root cluster,
+ * from which all the others can be found using the iterator.
+ ***********************************************************************/
+
+cluster *cluster_type::make_clusters(city *c) const
+{
+    vector<vector<cluster*>> clusters;
+    float this_min = min_pop;
+    float this_max = max_pop;
+    float this_average = average_pop;
+    for (size_t depth=0; true; ++depth) {
+        U32 count = max(1, (depth==0 ? c->get_target_population() : clusters[depth-1].size()) / this_average);
+        if (count<5) {
+            count = 1;          // make this the top
+        }
+        this_max = min(this_max, ((count * this_average) - this_min) / count);
+        vector<U32> sizes;
+        if (count==1) {
+            sizes.push_back(clusters.back().size());
+        } else {
+            random::reciprocal recip(this_min, this_max, count, this_average);
+            sizes = recip.get_values_int();
+        }
+        clusters.emplace_back();
+        clusters[depth].reserve(count);
+        for (size_t i=0; i<count; ++i) {
+            string clname = formatted("%s.%s.%d.%d", c->get_name(), name, depth, i);
+            assert(sizes[i]<1000000);
+            clusters[depth].push_back(new cluster(clname, this, c, sizes[i], depth, c->get_random_location()));
+        }
+        if (depth > 0) {
+            chooser<cluster, U32> choose(clusters[depth], &cluster::get_size);
+            for (cluster *child : clusters[depth-1]) {
+                cluster *parent = NULL;
+                if (count==1) {
+                    parent = clusters[depth][0];
+                } else {
+                    do {
+                        parent = choose.choose();
+                    } while (parent->is_full());
+                }
+                child->set_parent(parent);
+            }
+        }
+        if (count==1) {         // we're done
+            break;
+        }
+        this_min = nest_min;
+        this_max = nest_max;
+        this_average = nest_average;
+    }
+    return clusters.back()[0];
+}
+

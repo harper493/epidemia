@@ -1,6 +1,7 @@
 cluster.family.min_pop = 2
 cluster.family.max_pop = 10
 cluster.family.average_pop = 4
+cluster.family.proximality = 1
 
 cluster.friends.min_pop = 5
 cluster.friends.max_pop = 20
@@ -26,6 +27,7 @@ cluster.*.nest_average = 8
 cluster.*.same_city = 0.95
 cluster.*.min_nested_cluster_count = 3
 cluster.*.influence = 1
+cluster.*.proximality = 0.9
 
 city.max_density = 5000
 city.min_density = 1000
@@ -34,7 +36,7 @@ city.auto_divider = 250
 city.max_pop = 0
 city.min_pop = 0
 city.min_count = 5
-city.min_size_multiplier = 2.5
+city.min_size_multiplier = 2
 city.pop_ratio_power = 0.5
 city.exposure = 0.001 # useful range is 0 - 0.01
 city.appeal_power = 0.4

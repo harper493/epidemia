@@ -98,7 +98,7 @@ string properties::get(const string &prop, const string &dflt) const
 
 string properties::get(const vector<string> &prop, const string &dflt) const
 {
-    return get(join(prop), dflt);
+    return get(join(prop, "."), dflt);
 }
 
 
@@ -122,7 +122,7 @@ float properties::get_numeric(const string &pname, float dflt) const
 
 float properties::get_numeric(const vector<string> &pname, float dflt) const
 {
-    return get_numeric(join(pname), dflt);
+    return get_numeric(join(pname, "."), dflt);
 }
 
 /************************************************************************
@@ -145,6 +145,20 @@ const properties::wild_property *properties::find_wild(const string &name) const
 }
 
 /************************************************************************
+ * property_type functions
+ ***********************************************************************/
+
+/************************************************************************
+ * get_elements - return the name decomposed into a vector of 
+ * elements
+ ***********************************************************************/
+
+vector<string> properties::property_value::get_elements() const
+{
+    return split(name, ".");
+}
+
+/************************************************************************
  * Iterator functions
  ***********************************************************************/
 
@@ -161,11 +175,11 @@ bool properties::const_iterator::operator==(const const_iterator &other) const
     
 properties::const_iterator &properties::const_iterator::operator++()
 {
-    if (my_props) {
-        while (my_iter!=my_props->my_properties.end()) {
+    if (my_props && !ended()) {
+        do {
             ++my_iter;
-        }
-        if (my_iter!=my_props->my_properties.end()) {
+        } while (!ended() && (my_iter->second)->wild!=NULL);
+        if (!ended()) {
             return *this;
         } else {
             my_props = NULL;

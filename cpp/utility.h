@@ -34,7 +34,7 @@ size_t binary_search(const COLL &coll, const C &value)
             lb = mid;
         }
     }
-    return mid;
+    return lb;
 }
 
 /************************************************************************

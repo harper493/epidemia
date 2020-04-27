@@ -10,10 +10,9 @@
  * -- assign self to random clusters within the city
  ***********************************************************************/
 
-person::person(const string &n, city *c, const cluster::list &clusters)
-    : name(n), my_city(c)
+person::person(const string &n, city *c, const point &loc, const cluster::list &clusters)
+    : name(n), my_city(c), my_location(loc)
 {
-    my_location = my_city->get_random_location();
     for (cluster *cl : clusters) {
         cl->add_person(this);
         my_clusters.push_back(cl);

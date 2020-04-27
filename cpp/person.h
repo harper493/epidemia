@@ -28,7 +28,7 @@ private:
     day_number infected_time;
     day_number next_transition;
 public:
-    person(const string &n, city *c, const cluster::list &clusters);
+    person(const string &n, city *c, const point &loc, const cluster::list &clusters);
     const string &get_name() const { return name; };
     state get_state() const { return my_state; };
     bool is_susceptible() const { return my_state==state::susceptible; };

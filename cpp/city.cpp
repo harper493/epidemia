@@ -3,6 +3,7 @@
 #include "world.h"
 #include "properties.h"
 #include "utility.h"
+#include "formatted.h"
 #include <tgmath.h>
 
 /************************************************************************
@@ -48,7 +49,7 @@ void city::finalize()
         if (other!=this) {
             float inv_dist = 1 / distance(other);
             float appeal = sqrt(inv_dist) * my_world->get_appeal_factor();
-            my_neighbors.emplace_back(other, inv_dist, appeal);
+            my_neighbors.push_back(new neighbor(other, inv_dist, appeal));
         }
     }
     neighbors_by_distance.create(my_neighbors, bind(&neighbor::get_dist, _1));
@@ -63,7 +64,7 @@ void city::one_day_1()
 {
     exposure = 0;
     for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second.root->iter_all())  {
+        for (cluster *cl : iter.second->root->iter_all())  {
             cl->reset();
         }
     }
@@ -76,12 +77,12 @@ void city::one_day_1()
 void city::one_day_2()
 {
     for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second.root->iter_all())  {
+        for (cluster *cl : iter.second->root->iter_all())  {
             cl->expose_parent();
         }
     }
     for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second.root->iter_pre())  {
+        for (cluster *cl : iter.second->root->iter_pre())  {
             cl->gather_exposure();
         }
     }
@@ -96,7 +97,7 @@ void city::one_day_3()
     susceptible_cluster_count = 0;
     untouched_cluster_count = 0;
     for (auto iter : my_cluster_families) {
-        for (const cluster *cl : iter.second.root->iter_leaves())  {
+        for (const cluster *cl : iter.second->root->iter_leaves())  {
             if (cl->is_susceptible()) {
                 ++susceptible_cluster_count;
             }
@@ -120,6 +121,26 @@ point city::get_random_location() const
     return my_location + off;
 }
 
+/************************************************************************
+ * build_clusters - build the nest of clusters for each cluster type
+ ***********************************************************************/
+
+void city::build_clusters()
+{
+    for (const auto &iter : cluster_type::get_cluster_types()) {
+        const cluster_type *clt = iter.second;
+        cluster_family *cf = new cluster_family(clt);
+        cf->root = clt->make_clusters(this);
+        my_cluster_families[clt] = cf;
+        auto ii = cf->root->iter_leaves();
+        for (auto i=ii.begin(); i!=ii.end(); ++i) {
+            cluster *lcl = *i;
+            debug_assert(lcl->is_leaf());
+            cf->leaf_clusters.push_back(lcl);
+        }
+        cf->my_chooser.create(cf->leaf_clusters, &cluster::get_size);
+    }
+}
 
 /************************************************************************
  * add_people - add people to the city, including assigning them
@@ -132,11 +153,18 @@ void city::add_people()
     my_people.reserve(target_pop);
     for (U32 n=1; n<=target_pop; ++n) {
         string pname = formatted("%s-P%d", name, n);
+        point location;
         cluster::list clusters;
         for (auto &i : my_cluster_families) {
-            clusters.push_back(i.second.my_chooser.choose());
+            cluster_family *cf = i.second;
+            cluster *cl = cf->my_chooser.choose();
+            debug_assert(cl->is_leaf());
+            clusters.push_back(cl);
+            if (cf->my_type->is_local()) {
+                location = cl->get_location();
+            }
         }
-        person *p = new person(pname, this, my_clusters);
+        person *p = new person(pname, this, location, clusters);
         my_people.push_back(p);
     }
     

@@ -29,15 +29,19 @@ public:
         float max_value = 0;
         float min_x = 0;
         float max_x = 0;
+        U32 count = 0;
+        float mean = 0;
         float power = 1;
     public:
         reciprocal() { };
-        reciprocal(float min_, float max_, U32 count, float mean)
+        reciprocal(float min_, float max_, U32 count_, float mean_)
         {
-            reset(min_, max_, count, mean);
+            reset(min_, max_, count_, mean_);
         }
-        void reset(float min_, float max_, U32 count, float mean);
+        void reset(float min_, float max_, U32 count_, float mean_);
         float operator()() const;
+        vector<U32> get_values_int() const;
+    private:
         static interpolator<float> power_table;
     };
 private:
@@ -48,6 +52,11 @@ public:
     static int uniform_int(int minimum, int maximum);
     static float uniform_real(float minimum, float maximum);
     static U32 true_random();
+    template<class C>
+    const typename C::value_type &uniform_choice(const C &coll)
+    {
+        return coll[uniform_int(0, coll.size()-1)];
+    }
 };
 
 #endif
