@@ -6,7 +6,7 @@
 #include "geometry.h"
 #include "cluster.h"
 
-class person : public bintr::list_base_hook<>
+class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>>
 {
 public:
     enum class state: U8 {
@@ -17,7 +17,7 @@ public:
             dead,
             immune,
     };
-    typedef bintr::list<person> list;
+    typedef bintr::list<person, bintr::constant_time_size<false>> list;
 private:
     string name;
     state my_state = state::susceptible;

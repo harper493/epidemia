@@ -7,7 +7,7 @@ void infection_counter::infect_one(person *p)
         susceptible -= 1;
     } else {
         debug_assert(p->is_gestating());
-        gestating += 1;
+        gestating -= 1;
     }
     infected += 1;
 }

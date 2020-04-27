@@ -52,6 +52,7 @@ void world::build()
         c->add_people();
     }
     make_infection_prob();
+    infect_cities();
 }
 
 /************************************************************************
@@ -87,6 +88,69 @@ void world::add_cities()
         my_cities.push_back(c);
         c->build_clusters();
         c->add_people();
+    }
+}
+
+/************************************************************************
+ * infect_cities - create the initial number of infections
+ ***********************************************************************/
+
+void world::infect_cities()
+{
+    //
+    // first decide how many people will be infected
+    //
+    if (initial_infected==0) {
+        initial_infected = round_sig(pow(population, initial_infected_power), 1);
+    } else {
+        initial_infected = min(initial_infected, round_sig(sqrt(population), 1));
+    }
+    //
+    // now decide how many cities will be infected
+    //
+    U32 city_count = 0;
+    if (infected_cities==0) {
+        city_count = my_cities.size();
+    } else if (infected_cities>1) {
+        city_count = infected_cities;
+    } else {
+        city_count = my_cities.size() * infected_cities;
+    }
+    //
+    // now decide which ones will be infected
+    //
+    vector<city*> infectees;
+    copy_container(my_cities, infectees);
+    if (city_count<my_cities.size()) {
+        std::random_shuffle(infectees.begin()+1, infectees.end());
+        infectees.resize(city_count);
+    }
+    //
+    // make sure each has at least one infected
+    //
+    for (city *c : infectees) {
+        c->get_random_person()->force_infect(0);
+    }
+    //
+    // now randomly infect others, biassed by city size. The while loops
+    // are to make sure we don't try to infect too many in one city,
+    // and that we don't re-infect the same person
+    //
+    chooser<city, U32> city_chooser(infectees, &city::get_population);
+    for (size_t i=0; i<(initial_infected - city_count); ++i) {
+        while (true) {
+            city *target = city_chooser.choose();
+            if (target->get_infected() < target->get_population() / 2) {
+                while (true) {
+                    person *victim = target->get_random_person();
+                    if (victim->is_susceptible()) {
+                        victim->force_infect(0);
+                    }
+                    break;
+                }
+                break;
+            }
+        }
     }
 }
 

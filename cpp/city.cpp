@@ -63,6 +63,7 @@ void city::finalize()
 void city::one_day_1()
 {
     exposure = 0;
+    foreign_exposure = 0;
     for (auto iter : my_cluster_families) {
         for (cluster *cl : iter.second->root->iter_all())  {
             cl->reset();
@@ -122,6 +123,15 @@ point city::get_random_location() const
 }
 
 /************************************************************************
+ * get_random_person
+ ***********************************************************************/
+
+person *city::get_random_person() const
+{
+    return random::uniform_choice(my_people);
+}
+
+/************************************************************************
  * build_clusters - build the nest of clusters for each cluster type
  ***********************************************************************/
 
@@ -152,7 +162,7 @@ void city::add_people()
     my_people.clear();
     my_people.reserve(target_pop);
     for (U32 n=1; n<=target_pop; ++n) {
-        string pname = formatted("%s-P%d", name, n);
+        string pname = formatted("%s.P%d", name, n);
         point location;
         cluster::list clusters;
         for (auto &i : my_cluster_families) {
@@ -212,9 +222,24 @@ bool city::is_close(const city *other) const
  * expose - expose the city to an infected person 
  ***********************************************************************/
 
-void city::expose()
+void city::expose(city *owner)
 {
-    exposure = add_probability(exposure, exposure_per_person);
+    if (owner==this) {
+        exposure = add_probability(exposure, exposure_per_person);
+    } else {
+        foreign_expose();
+    }
+}
+
+/************************************************************************
+ * foreign_expose - expose the city to an infected person, for an agent
+ * that does not own this city
+ ***********************************************************************/
+
+void city::foreign_expose()
+{
+    mutex::scoped_lock sl(foreign_exposure_lock);
+    foreign_exposure = add_probability(exposure, exposure_per_person);
 }
 
 /************************************************************************

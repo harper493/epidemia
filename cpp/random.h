@@ -53,7 +53,7 @@ public:
     static float uniform_real(float minimum, float maximum);
     static U32 true_random();
     template<class C>
-    const typename C::value_type &uniform_choice(const C &coll)
+    static const typename C::value_type &uniform_choice(const C &coll)
     {
         return coll[uniform_int(0, coll.size()-1)];
     }

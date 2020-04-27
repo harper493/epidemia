@@ -15,6 +15,7 @@ OPT     := -O3
 endif
 
 SRC      := \
+	agent.cpp \
 	city.cpp \
 	cluster.cpp \
 	geometry.cpp \

@@ -38,6 +38,18 @@ size_t binary_search(const COLL &coll, const C &value)
 }
 
 /************************************************************************
+ * copy - copy one container to another
+ ***********************************************************************/
+
+template<class COLL1, class COLL2,
+         typename enable_if<boost::is_same<typename COLL1::value_type,
+                                           typename COLL2::value_type>,int>::type=0>
+inline void copy_container(const COLL1 &src, COLL2 &dst)
+{
+    std::copy(src.begin(), src.end(), std::back_inserter(dst));
+}
+
+/************************************************************************
  * round_sig - round and integer to a given number of significant figures
  ***********************************************************************/
 

@@ -14,12 +14,13 @@
     _P(float, , , recovery_sd, 5)                                       \
     _P(float, , , gestating_time, 5)                                    \
     _P(float, , , gestating_sd, 2)                                      \
-    _P(float, , , initial_infected, 100)                                \
+    _P(U32  , , , initial_infected, 100)                                \
     _P(U32, , ,   city_count, 0)                                        \
     _P(U32, , ,   min_city_count, 10)                                   \
     _P(U32, , ,   population, 10000)                                    \
     _P(U32, , ,   world_size, 100)                                      \
     _P(float, , , infected_cities, 0.5)                                 \
+    _P(float, , , initial_infected_power, 0.4)                          \
     _P(float, , , travel, 0)                                            \
     _P(float, city, _, max_density, 5000)                               \
     _P(float, city, _, min_density, 1000)                               \
@@ -32,7 +33,7 @@
     _P(float, city, _, pop_ratio_power, 0.5)                            \
     _P(float, city, _, exposure, 0.001)                                 \
     _P(float, city, _, appeal_power, 0.4)                               \
-    _P(float, city, _, auto_max_pop, 0.3)                                 \
+    _P(float, city, _, auto_max_pop, 0.3)                               \
     
 class world
 {
@@ -68,6 +69,7 @@ private:
     void load_props();
     float get_one_prop(const string &prefix, const string &name, float dflt);
     void add_cities();
+    void infect_cities();
     void make_infection_prob();
 };
 

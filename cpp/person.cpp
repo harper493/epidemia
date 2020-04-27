@@ -58,7 +58,7 @@ bool person::one_day(day_number day)
             result = true;
             recover();
         } else {
-            get_today_city()->expose();
+            get_today_city()->expose(my_city);
             for (auto *cl : my_clusters) {
                 cl->expose();
             }
@@ -78,11 +78,11 @@ void person::gestate(day_number day)
 {
     infected_time = day;
     next_transition = day + get_world()->get_gestation_interval();
-    my_state = state::gestating;
     my_city->gestate_one(this);
     for (auto *cl : my_clusters) {
         cl->gestate_one(this);
     }
+    my_state = state::gestating;
 }
 
 /************************************************************************
@@ -92,11 +92,11 @@ void person::gestate(day_number day)
 void person::infect(day_number day)
 {
     next_transition = day + get_world()->get_recovery_interval();
-    my_state = state::infected;
     my_city->infect_one(this);
     for (auto *cl : my_clusters) {
         cl->infect_one(this);
     }
+    my_state = state::infected;
 }
 
 /************************************************************************
@@ -105,11 +105,11 @@ void person::infect(day_number day)
 
 void person::recover()
 {
-    my_state = state::recovered;
     my_city->recover_one(this);
     for (auto *cl : my_clusters) {
         cl->recover_one(this);
     }
+    my_state = state::recovered;
 }
 
 /************************************************************************
@@ -118,11 +118,11 @@ void person::recover()
 
 void person::immunise(day_number day)
 {
-    my_state = state::immune;
     my_city->immunise_one(this);
     for (auto *cl : my_clusters) {
         cl->immunise_one(this);
     }
+    my_state = state::immune;
 }
 
 /************************************************************************
