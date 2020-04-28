@@ -68,6 +68,7 @@ public:
     U32 get_gestation_interval() const;
     U32 get_recovery_interval() const;
     point get_random_location() const;
+    day_number get_day() const { return day; };
     U32 make_city_size(U32 population) const;
     float get_city_pop_ratio(U32 population);
     float get_infection_prob() const { return infection_prob; };
