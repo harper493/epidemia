@@ -24,8 +24,9 @@ void cluster::reset()
  * expose - expose a leaf cluster to a single infected person
  ***********************************************************************/
 
-void cluster::expose()
+void cluster::expose(const person *p)
 {
+    debug_assert(contains(my_people, const_cast<person*>(p)));
     exposure = add_probability(exposure,
                                get_world()->get_infection_prob() * my_type->influence);
 }
@@ -46,6 +47,7 @@ float cluster::get_exposure()
 void cluster::add_person(person *p)
 {
     my_people.push_back(p);
+    this->infection_counter::add_person(p);
 }
 
 /************************************************************************
@@ -243,6 +245,7 @@ void cluster_type::refresh(properties *props)
     refresh_one(nest_min);
     refresh_one(nest_max);
     refresh_one(nest_average);
+    refresh_one(nest_influence);
     refresh_one(same_city);
     refresh_one(nest_max);
     refresh_one(proximality);
@@ -291,13 +294,28 @@ void cluster_type::build(properties *props)
         if (!prop->is_wild()) {
             auto elems = prop->get_elements();
             if (elems[0]=="cluster"
-                && elems.size()>=3
-                && cluster_types.find(elems[1])==cluster_types.end()) {
-                cluster_types[elems[1]] = new cluster_type(elems[1]);
+                && elems.size()>=3) {
+                string cname = elems[1];
+                if (cluster_types.find(cname)==cluster_types.end()) {
+                    cluster_type *ct = new cluster_type(cname);
+                    ct->build_one(props);
+                    cluster_types[cname] = ct;
+                }
             }
         }
     }
-    refresh_all(props);
+}
+
+/************************************************************************
+ * build_one - build the information for a single cluster type
+ ***********************************************************************/
+
+void cluster_type::build_one(properties *props)
+{
+    refresh(props);
+    random::reciprocal trial(min_pop, max_pop, 100, average_pop);
+    auto trial_values = trial.get_values_int();
+    size_rms = make_rms(trial_values);
 }
 
 /************************************************************************
@@ -329,7 +347,6 @@ cluster *cluster_type::make_clusters(city *c) const
         clusters[depth].reserve(count);
         for (size_t i=0; i<count; ++i) {
             string clname = formatted("%s.%s.%d.%d", c->get_name(), name, depth, i);
-            assert(sizes[i]<1000000);
             clusters[depth].push_back(new cluster(clname, this, c, sizes[i], depth, c->get_random_location()));
         }
         if (depth > 0) {

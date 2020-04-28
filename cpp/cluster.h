@@ -33,6 +33,8 @@ public:
     static void refresh_all(properties *props);
     static void build(properties *props);
     static const cluster_type_map_t &get_cluster_types() { return cluster_types; };
+private:
+    void build_one(properties *props);
 friend class cluster;
 friend class world;
 };
@@ -118,7 +120,7 @@ public:
     cluster(const string &n, const cluster_type *t, city *c, U32 sz, U16 d, const point &loc)
         : name(n), my_type(t), my_city(c), size(sz), depth(d), location(loc) { };
     void reset();
-    void expose();
+    void expose(const person *p);
     U32 get_size() const { return size; };
     U16 get_depth() const { return depth; };
     float get_exposure();

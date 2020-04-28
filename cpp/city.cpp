@@ -77,6 +77,7 @@ void city::one_day_1()
 
 void city::one_day_2()
 {
+    exposure = add_probability(exposure, foreign_exposure);
     for (auto iter : my_cluster_families) {
         for (cluster *cl : iter.second->root->iter_all())  {
             cl->expose_parent();
@@ -176,6 +177,7 @@ void city::add_people()
         }
         person *p = new person(pname, this, location, clusters);
         my_people.push_back(p);
+        this->infection_counter::add_person(p);
     }
     
 }

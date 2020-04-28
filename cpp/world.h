@@ -4,6 +4,7 @@
 #include "common.h"
 #include "geometry.h"
 #include "random.h"
+#include "agent.h"
 
 #define PROPERTIES                                                      \
     _P(float, , , auto_immunity, 0)                                     \
@@ -22,6 +23,9 @@
     _P(float, , , infected_cities, 0.5)                                 \
     _P(float, , , initial_infected_power, 0.4)                          \
     _P(float, , , travel, 0)                                            \
+    _P(float, , , thread_count, 0)                                      \
+    _P(float, , , min_days, 0)                                          \
+    _P(float, , , max_days, 0)                                          \
     _P(float, city, _, max_density, 5000)                               \
     _P(float, city, _, min_density, 1000)                               \
     _P(float, city, _, auto_power, 0.67)                                \
@@ -40,9 +44,16 @@ class world
 private:
     vector<city*> my_cities;
     properties *my_props;
+    vector<agent*> my_agents;
     random::lognormal gestation_generator;
     random::lognormal recovery_generator;
     float infection_prob;
+    day_number day = 0;
+    U32 infected = 0;
+    U32 total_infected = 0;
+    U32 prev_infected = 0;
+    U32 prev_total = 0;
+    U32 immune = 0;
     //
     // Cached properties
     //
@@ -52,6 +63,7 @@ private:
 public:
     world(properties *props);
     void build();
+    void run();
     const vector<city*> get_cities() const { return my_cities; };
     U32 get_gestation_interval() const;
     U32 get_recovery_interval() const;
@@ -60,6 +72,7 @@ public:
     float get_city_pop_ratio(U32 population);
     float get_infection_prob() const { return infection_prob; };
     properties *get_props() const { return my_props; };
+    bool worth_continuing() const;
 #undef _P
 #define _P(TYPE, PREFIX, DELIM, NAME, DFLT)          \
     TYPE get_##PREFIX##DELIM##NAME() const      \
@@ -71,6 +84,7 @@ private:
     void add_cities();
     void infect_cities();
     void make_infection_prob();
+    void make_agents();
 };
 
 #endif

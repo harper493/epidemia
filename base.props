@@ -6,17 +6,18 @@ cluster.family.proximality = 1
 cluster.friends.min_pop = 5
 cluster.friends.max_pop = 20
 cluster.friends.average_pop = 8
+cluster.friends.same_city = 0.9
 
-cluster.work.min_pop = 1
+cluster.work.min_pop = 2
 cluster.work.max_pop = 20
-cluster.work.average_pop = 10
+cluster.work.average_pop = 8
 cluster.work.same_city = 0.9
 
 cluster.locale.min_pop = 20
 cluster.locale.max_pop = 100
 cluster.locale.average_pop = 40
 cluster.locale.same_city = 1
-cluster.locale.influence = 0.5
+cluster.locale.influence = 0.01
 
 cluster.*.min_pop = 2
 cluster.*.max_proportion = 0.3
@@ -27,6 +28,7 @@ cluster.*.nest_average = 8
 cluster.*.same_city = 0.95
 cluster.*.min_nested_cluster_count = 3
 cluster.*.influence = 1
+cluster.*.nest_influence = 0.05
 cluster.*.proximality = 0.9
 
 city.max_density = 5000
@@ -47,11 +49,11 @@ recovery_time = 15
 recovery_sd = 2
 gestating_time = 4
 gestating_sd = 1.5
-infectiousness = 2.5
+infectiousness = 3
 cluster_exposure = 0.002
-initial_infected = 20
+initial_infected = 0
 city_count = 0
 infected_cities = 0.5
 travel = 0.005 # useful range is 0 - 0.05 or so
-auto_immunity = 0
+auto_immunity = 0.5
 

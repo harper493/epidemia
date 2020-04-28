@@ -60,7 +60,7 @@ bool person::one_day(day_number day)
         } else {
             get_today_city()->expose(my_city);
             for (auto *cl : my_clusters) {
-                cl->expose();
+                cl->expose(this);
             }
         }
         break;

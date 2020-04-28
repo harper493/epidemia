@@ -10,5 +10,6 @@ int main(int argc, const char **argv)
     cluster_type::build(props);
     world *the_world = new world(props);
     the_world->build();
+    the_world->run();
     return 0;
 }

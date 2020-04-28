@@ -53,6 +53,10 @@ void world::build()
     }
     make_infection_prob();
     infect_cities();
+    for (city *c : my_cities) {
+        c->finalize();
+    }
+    make_agents();
 }
 
 /************************************************************************
@@ -168,6 +172,78 @@ void world::make_infection_prob()
         cluster_factor += ct->size_rms * pow(ct->influence, 2);        
     }
     infection_prob = ((float)infectiousness) / (exposure_time * cluster_factor);
+}
+
+/************************************************************************
+ * make_agents - create the appropriate number of agents
+ ***********************************************************************/
+
+void world::make_agents()
+{
+    size_t agent_count = thread_count;
+    if (thread_count==0) {
+        thread_count = 1;
+    }
+    for (size_t i=0; i<thread_count; ++i) {
+        string name = formatted("agent-%d", i);
+        agent *a = new agent(name, (agent_count>1));
+        a->run();
+        my_agents.push_back(a);
+    }
+    for (city *c : my_cities) {
+        my_agents[0]->add_city(c);
+    }
+}
+
+/************************************************************************
+ * run - run until no longer interesting
+ ***********************************************************************/
+
+void world::run()
+{
+    do {
+        ++day;
+        std::cout << formatted("Day %3d infected %6d total %6d growth %8.2f%% immune %6d\n",
+                               day, infected, total_infected,
+                               100*((((float)total_infected)/(prev_total+0.001))-1),
+                               immune);
+        for (agent *a : my_agents) {
+            a->one_day_first(day);
+        }
+        for (agent *a : my_agents) {
+            a->one_day_second(day);
+        }
+        prev_infected = infected;
+        prev_total = total_infected;
+        infected = 0;
+        total_infected = 0;
+        immune = 0;
+        for (city *c : my_cities) {
+            infected += c->get_infected();
+            total_infected += c->get_total_infected();
+            immune += c->get_immune();
+        }
+    } while (worth_continuing());
+}
+
+/************************************************************************
+ * worth_continuing - evaluate whether we should continue
+ ***********************************************************************/
+
+bool world::worth_continuing() const
+{
+    bool result = true;
+    if (min_days > 0 && day < min_days) {
+        result = true;
+    } else if (max_days > 0 && day > max_days) {
+        result = false;
+    } else {
+        result = infected>0
+            && ((infected > prev_infected)
+                || (infected > population / 1000)
+                || (total_infected + immune < population / 4));
+    }
+    return result;
 }
 
 /************************************************************************

@@ -11,7 +11,9 @@
 
 inline float add_probability(float p1, float p2)
 {
-    return 1 - ((1 - p1) * (1 - p2));
+    float result =  1 - ((1 - p1) * (1 - p2));
+    debug_assert(result<=1);
+    return result;
 }
 
 /************************************************************************
@@ -50,6 +52,21 @@ inline void copy_container(const COLL1 &src, COLL2 &dst)
 }
 
 /************************************************************************
+ * make_rms - compute the RMS values of a collection
+ ***********************************************************************/
+
+template<class COLL>
+typename COLL::value_type make_rms(const COLL &coll)
+{
+    typedef typename COLL::value_type value_type;
+    value_type sumsq = 0;
+    for (const value_type &c : coll) {
+        sumsq += c * c;
+    }
+    return sqrt(sumsq / coll.size());
+}
+
+/************************************************************************
  * round_sig - round and integer to a given number of significant figures
  ***********************************************************************/
 
@@ -61,6 +78,17 @@ inline C round_sig(C value, U32 digits)
     int p10 = pow(10, log - digits + 1);
     C result = (S64(value / p10)) * p10;
     return value>0 ? result : -result;
+}
+
+/************************************************************************
+ * contains - return true iff the given object is in the given container
+ ***********************************************************************/
+
+template<class COLL>
+bool contains(const COLL &coll, const typename COLL::value_type &key)
+{
+    typedef typename COLL::value_type key_type;
+    return std::find(coll.begin(), coll.end(), const_cast<key_type>(key)) != coll.end();
 }
 
 /************************************************************************
