@@ -24,20 +24,24 @@ void cluster::reset()
  * expose - expose a leaf cluster to a single infected person
  ***********************************************************************/
 
-void cluster::expose(const person *p)
+void cluster::expose(day_number day, const person *p)
 {
     debug_assert(contains(my_people, const_cast<person*>(p)));
-    exposure = add_probability(exposure,
-                               get_world()->get_infection_prob() * my_type->influence);
+    if (exposure_day==day) {
+        exposure = my_type->exposure;
+        exposure_day = day;
+    } else {
+        exposure = add_probability(exposure, my_type->exposure);
+    }
 }
 
 /************************************************************************
  * get_exposure - get the exposure for a single member of the cluster
  ***********************************************************************/
 
-float cluster::get_exposure()
+float cluster::get_exposure(day_number day)
 {
-    return exposure * my_type->influence;
+    return exposure_day==day ? exposure * my_type->influence : 0;
 }
 
 /************************************************************************
@@ -58,6 +62,7 @@ void cluster::add_child(cluster *cl)
 {
     debug_assert(cl->depth+1==depth);
     my_children.push_back(cl);
+    has_children = true;
 }
 
 /************************************************************************
@@ -74,8 +79,12 @@ void cluster::set_parent(cluster *p)
  * expose_parent - pass on our exposure to parent
  ***********************************************************************/
 
-void cluster::expose_parent()
+void cluster::expose_parent(day_number day)
 {
+    if (my_parent->exposure_day!=day) {
+        my_parent->exposure = 0;
+        my_parent->exposure_day = day;
+    }
     my_parent->exposure = add_probability(my_parent->exposure, exposure * my_type->nest_influence);
 }
 
@@ -83,9 +92,11 @@ void cluster::expose_parent()
  * gather_exposure - inherit the exposure from parent
  ***********************************************************************/
 
-void cluster::gather_exposure()
+void cluster::gather_exposure(day_number day)
 {
-    exposure = add_probability(exposure, my_parent->exposure * my_type->nest_influence);
+    if (my_parent->exposure_day==day) {
+        exposure = add_probability(exposure, my_parent->exposure * my_type->nest_influence);
+    }
 }
 
 /************************************************************************
@@ -190,8 +201,9 @@ void cluster::iterator::advance()
         case state::st_start:
             {
                 cluster *cl = **this;
-                if (!cl->my_children.empty()) {
+                if (cl->has_children) {
                     my_iterators.push_back(cl->my_children.begin());
+                    debug_assert(my_iterators.back()!=cl->my_children.end());
                     my_state = state::st_pre;
                 } else {
                     my_state = state::st_post;
@@ -288,9 +300,9 @@ cluster_type *cluster_type::find_cluster_type(const string &n)
  * build - read the properties and determine what exists
  ***********************************************************************/
 
-void cluster_type::build(properties *props)
+void cluster_type::build(world *w)
 {
-    for (const auto *prop : *props) {
+    for (const auto *prop : *(w->get_props())) {
         if (!prop->is_wild()) {
             auto elems = prop->get_elements();
             if (elems[0]=="cluster"
@@ -298,7 +310,7 @@ void cluster_type::build(properties *props)
                 string cname = elems[1];
                 if (cluster_types.find(cname)==cluster_types.end()) {
                     cluster_type *ct = new cluster_type(cname);
-                    ct->build_one(props);
+                    ct->build_one(w);
                     cluster_types[cname] = ct;
                 }
             }
@@ -310,12 +322,13 @@ void cluster_type::build(properties *props)
  * build_one - build the information for a single cluster type
  ***********************************************************************/
 
-void cluster_type::build_one(properties *props)
+void cluster_type::build_one(world *w)
 {
-    refresh(props);
+    refresh(w->get_props());
     random::reciprocal trial(min_pop, max_pop, 100, average_pop);
     auto trial_values = trial.get_values_int();
     size_rms = make_rms(trial_values);
+    exposure = w->get_infection_prob() * influence;
 }
 
 /************************************************************************

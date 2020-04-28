@@ -4,6 +4,7 @@
 #include "common.h"
 #include "infection_counter.h"
 #include "geometry.h"
+#include "prefetcher.h"
 
 class cluster_type
 {
@@ -22,6 +23,7 @@ private:
     float nest_influence;
     float size_rms;
     float proximality;
+    float exposure;
     static cluster_type_map_t cluster_types;
 public:
     cluster_type(const string &n) : name(n) { };
@@ -31,10 +33,10 @@ public:
     bool is_local() const { return proximality==1; };
     static cluster_type *find_cluster_type(const string &n);
     static void refresh_all(properties *props);
-    static void build(properties *props);
+    static void build(world *w);
     static const cluster_type_map_t &get_cluster_types() { return cluster_types; };
 private:
-    void build_one(properties *props);
+    void build_one(world *w);
 friend class cluster;
 friend class world;
 };
@@ -45,6 +47,7 @@ public:
     typedef function<void(cluster*)> visitor_fn;
     typedef vector<cluster*> list;
     typedef map<cluster_type, list> list_map;
+    static const int prefetch_depth = 8;
     class iterator : public std::forward_iterator_tag
     {
     public:
@@ -103,32 +106,34 @@ public:
         iterator end() const { return iterator(); }
     };
 private:
+    day_number exposure_day = 0;
+    float exposure = 0;
+    const cluster_type *my_type; // keep these three in the first cache line
     string name;
-    const cluster_type *my_type;
     cluster *my_parent;
     city *my_city;
     U32 size = 0;
     U16 depth = 0;
     vector<person*> my_people;
     vector<cluster*> my_children;
-    float exposure = 0;
     float influence = 0;
     point location;
+    bool has_children = false;
     static map<string,cluster_type> cluster_types;
     static vector<string> clsuter_type_names;
 public:
     cluster(const string &n, const cluster_type *t, city *c, U32 sz, U16 d, const point &loc)
         : name(n), my_type(t), my_city(c), size(sz), depth(d), location(loc) { };
     void reset();
-    void expose(const person *p);
+    void expose(day_number day, const person *p);
     U32 get_size() const { return size; };
     U16 get_depth() const { return depth; };
-    float get_exposure();
+    float get_exposure(day_number day);
     const point &get_location() const { return location; };
     void add_person(person *p);
     void add_child(cluster *cl);
-    void expose_parent();
-    void gather_exposure();
+    void expose_parent(day_number day);
+    void gather_exposure(day_number day);
     bool is_leaf() const { return depth==0; };
     bool is_full() const { return my_children.size() > size+1; };
     iterator_controller iter_all() { return iterator_controller(this, false, false); };
@@ -136,10 +141,27 @@ public:
     iterator_controller iter_leaves() { return iterator_controller(this, true, false); };    
     static cluster_type get_cluster_type(const string &type_name);
     static const string &get_cluster_name(cluster_type &t);
+    static void prefetch_one(cluster *cl, int slot);
 private:
     world *get_world();
     void set_parent(cluster *p);
+public:
+    typedef prefetcher<cluster::list, prefetch_depth, &prefetch_one> cluster_prefetcher;
 friend class cluster_type;
 };
+
+inline void cluster::prefetch_one(cluster *cl, int slot)
+{
+    switch(slot) {
+    case prefetch_depth-1:
+        prefetch(cl);
+        break;
+    case prefetch_depth-4:
+        prefetch(cl->my_parent);
+        break;
+    default:
+        break;
+    }
+}
 
 #endif

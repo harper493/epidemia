@@ -29,7 +29,9 @@ public:
     {
         const cluster_type *my_type = NULL;
         cluster *root = NULL;
-        vector<cluster*> leaf_clusters;
+        cluster::list leaf_clusters;
+        cluster::list preorder_clusters;
+        cluster::list postorder_clusters;
         chooser<cluster,float> my_chooser;
         cluster_family(const cluster_type *type_) : my_type(type_) { };
     };

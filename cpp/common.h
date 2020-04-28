@@ -160,6 +160,26 @@ ISTR &operator>>(ISTR &istr, C &c)
 }
 
 /************************************************************************
+ * Compiler specific macros
+ ***********************************************************************/
+
+#define likely(x)    __builtin_expect (!!(x), 1)
+#define unlikely(x)  __builtin_expect (!!(x), 0)
+#define _aligned(sz) __attribute__((aligned(sz)))
+#define _packed __attribute__((packed))
+#define _always_inline __attribute__((always_inline))
+#define _flatten // __attribute__((flatten))
+#define CACHE_LINE_SIZE 64
+#define _cache_aligned __attribute__((aligned(CACHE_LINE_SIZE)))
+#define MAKE_CACHE_ALIGNED(SIZE) ((SIZE + CACHE_LINE_SIZE - 1) & ~(CACHE_LINE_SIZE - 1))
+#define IS_CACHE_ALIGNED(ADDRESS) ((((U64)(ADDRESS)) & (CACHE_LINE_SIZE-1))==0)
+#define CACHE_LINES_IN(SIZE) (((SIZE + CACHE_LINE_SIZE -1)/CACHE_LINE_SIZE))
+struct _cache_aligner { } _cache_aligned;
+#define CACHE_BARRIER(NAME) _cache_aligner NAME;
+#define POINTERS_PER_CACHE_LINE (CACHE_LINE_SIZE / sizeof(void*))
+#define MEMORY_BARRIER __asm__ __volatile__("":::"memory")
+
+/************************************************************************
  * Civilized versions of min and max that will compare any two types
  * that can be compared. Note the conditional trick to deduce the
  * most appropriate return type: http://www.artima.com/cppsource/foreach.html

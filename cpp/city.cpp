@@ -64,11 +64,6 @@ void city::one_day_1()
 {
     exposure = 0;
     foreign_exposure = 0;
-    for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second->root->iter_all())  {
-            cl->reset();
-        }
-    }
 }
 
 /************************************************************************
@@ -77,15 +72,21 @@ void city::one_day_1()
 
 void city::one_day_2()
 {
+    day_number day = my_world->get_day();
     exposure = add_probability(exposure, foreign_exposure);
     for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second->root->iter_all())  {
-            cl->expose_parent();
+        cluster_family *cf = iter.second;
+        for (cluster *cl : cluster::cluster_prefetcher(cf->leaf_clusters))  {
+            cl->expose_parent(day);
         }
-    }
-    for (auto iter : my_cluster_families) {
-        for (cluster *cl : iter.second->root->iter_pre())  {
-            cl->gather_exposure();
+        for (cluster *cl : cluster::cluster_prefetcher(cf->postorder_clusters))  {
+            cl->expose_parent(day);
+        }
+        for (cluster *cl : cluster::cluster_prefetcher(cf->preorder_clusters))  {
+            cl->gather_exposure(day);
+        }
+        for (cluster *cl : cluster::cluster_prefetcher(cf->leaf_clusters))  {
+            cl->gather_exposure(day);
         }
     }
 }
@@ -99,7 +100,8 @@ void city::one_day_3()
     susceptible_cluster_count = 0;
     untouched_cluster_count = 0;
     for (auto iter : my_cluster_families) {
-        for (const cluster *cl : iter.second->root->iter_leaves())  {
+        cluster::cluster_prefetcher pf(iter.second->leaf_clusters);
+        for (cluster *cl : pf) {
             if (cl->is_susceptible()) {
                 ++susceptible_cluster_count;
             }
@@ -143,11 +145,23 @@ void city::build_clusters()
         cluster_family *cf = new cluster_family(clt);
         cf->root = clt->make_clusters(this);
         my_cluster_families[clt] = cf;
-        auto ii = cf->root->iter_leaves();
-        for (auto i=ii.begin(); i!=ii.end(); ++i) {
-            cluster *lcl = *i;
-            debug_assert(lcl->is_leaf());
-            cf->leaf_clusters.push_back(lcl);
+        //
+        // Build cluster lists
+        //
+        for (auto iter : my_cluster_families) {
+            cluster_family *cf = iter.second;
+            for (cluster *cl : cf->root->iter_all()) {
+                if (cl->is_leaf()) {
+                    cf->leaf_clusters.push_back(cl);
+                } else {
+                    cf->postorder_clusters.push_back(cl);
+                }
+            }
+            for (cluster *cl : cf->root->iter_pre()) {
+                if (!cl->is_leaf()) {
+                    cf->preorder_clusters.push_back(cl);
+                }
+            }
         }
         cf->my_chooser.create(cf->leaf_clusters, &cluster::get_size);
     }

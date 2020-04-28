@@ -35,7 +35,7 @@ bool person::one_day(day_number day)
             float r = random::get_random();
             float risk = get_today_city()->get_exposure();
             for (auto *cl : my_clusters) {
-                risk += cl->get_exposure();
+                risk += cl->get_exposure(day);
             }
             if (r < risk) {
                 result = true;
@@ -60,7 +60,7 @@ bool person::one_day(day_number day)
         } else {
             get_today_city()->expose(my_city);
             for (auto *cl : my_clusters) {
-                cl->expose(this);
+                cl->expose(day, this);
             }
         }
         break;

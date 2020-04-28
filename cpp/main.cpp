@@ -9,10 +9,10 @@ using boost::posix_time::microsec_clock;
 int main(int argc, const char **argv)
 {
     properties *props = new properties();
-    props->add_from_file(argv[1]);
-    cluster_type::build(props);
+    props->add_from_file(argc>1 ? argv[1] : "../base.props");
     ptime start_time(microsec_clock::local_time());
     world *the_world = new world(props);
+    cluster_type::build(the_world);
     the_world->build();
     ptime build_time(microsec_clock::local_time());
     the_world->run();

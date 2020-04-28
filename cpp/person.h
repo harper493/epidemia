@@ -18,6 +18,7 @@ public:
             immune,
     };
     typedef bintr::list<person, bintr::constant_time_size<false>> list;
+    static const int prefetch_depth = 8;
 private:
     string name;
     state my_state = state::susceptible;
@@ -46,6 +47,22 @@ private:
     void recover();
     void immunise(day_number day);
     city *get_today_city();
+public:
+    static void prefetch(person *p, int slot)
+    {
+        switch(slot) {
+        case prefetch_depth-1:
+            ::prefetch(p);
+            break;
+        case prefetch_depth-4:
+            for (cluster *cl : p->my_clusters) {
+                ::prefetch_n<1>(cl);
+            }
+            break;
+        default:
+            break;
+        }
+    }
 };
 
 #endif
