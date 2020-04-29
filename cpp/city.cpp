@@ -5,6 +5,7 @@
 #include "utility.h"
 #include "formatted.h"
 #include <tgmath.h>
+#include <boost/range/adaptors.hpp>
 
 /************************************************************************
  * Static data
@@ -54,6 +55,32 @@ void city::finalize()
     }
     neighbors_by_distance.create(my_neighbors, bind(&neighbor::get_dist, _1));
     neighbors_by_appeal.create(my_neighbors, bind(&neighbor::get_appeal, _1));
+    //
+    // Make some leaf clusters have foreign parents
+    //
+    for (auto i : my_cluster_families) {
+        cluster_family *cf = i.second;
+        if (cf->my_type->same_city < 1) {
+            const auto &leafs = cf->get_leaf_clusters();
+            for (U32 target_count = leafs.size() * (1 - cf->my_type->same_city);
+                 target_count > 0;
+                 --target_count) {
+                while (true) {
+                    cluster *victim = random::uniform_choice(leafs);
+                    if (!victim->is_foreign_exposure()) {
+                        city *foreign = my_world->get_random_city();
+                        if (foreign!=this) {
+                            cluster *foreign_cluster = foreign->get_random_parent_cluster(victim);
+                            if (foreign_cluster) {
+                                victim->set_exposure_parent(foreign_cluster);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /************************************************************************
@@ -76,17 +103,15 @@ void city::one_day_2()
     exposure = add_probability(exposure, foreign_exposure);
     for (auto iter : my_cluster_families) {
         cluster_family *cf = iter.second;
-        for (cluster *cl : cluster::cluster_prefetcher(cf->leaf_clusters))  {
-            cl->expose_parent(day);
+        for (cluster::list &cll : cf->clusters) {
+            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+                cl->expose_parent(day);
+            }
         }
-        for (cluster *cl : cluster::cluster_prefetcher(cf->postorder_clusters))  {
-            cl->expose_parent(day);
-        }
-        for (cluster *cl : cluster::cluster_prefetcher(cf->preorder_clusters))  {
-            cl->gather_exposure(day);
-        }
-        for (cluster *cl : cluster::cluster_prefetcher(cf->leaf_clusters))  {
-            cl->gather_exposure(day);
+        for (cluster::list &cll : cf->clusters | boost::adaptors::reversed) {
+            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+                cl->gather_exposure(day);
+            }
         }
     }
 }
@@ -100,7 +125,7 @@ void city::one_day_3()
     susceptible_cluster_count = 0;
     untouched_cluster_count = 0;
     for (auto iter : my_cluster_families) {
-        cluster::cluster_prefetcher pf(iter.second->leaf_clusters);
+        cluster::cluster_prefetcher pf(iter.second->get_leaf_clusters());
         for (cluster *cl : pf) {
             if (cl->is_susceptible()) {
                 ++susceptible_cluster_count;
@@ -151,19 +176,13 @@ void city::build_clusters()
         for (auto iter : my_cluster_families) {
             cluster_family *cf = iter.second;
             for (cluster *cl : cf->root->iter_all()) {
-                if (cl->is_leaf()) {
-                    cf->leaf_clusters.push_back(cl);
-                } else {
-                    cf->postorder_clusters.push_back(cl);
+                while (cl->get_depth() >= cf->clusters.size()) {
+                    cf->clusters.emplace_back();
                 }
-            }
-            for (cluster *cl : cf->root->iter_pre()) {
-                if (!cl->is_leaf()) {
-                    cf->preorder_clusters.push_back(cl);
-                }
+                cf->clusters[cl->get_depth()].push_back(cl);
             }
         }
-        cf->my_chooser.create(cf->leaf_clusters, &cluster::get_size);
+        cf->my_chooser.create(cf->get_leaf_clusters(), &cluster::get_size);
     }
 }
 
@@ -212,6 +231,24 @@ float city::distance(const city *other) const
 city *city::get_random_neighbor() const
 {
     return neighbors_by_distance.choose()->my_city;
+}
+
+/************************************************************************
+ * get_random_parent_cluster - given a cluster from another city,
+ * choose a random cluster to be its "exposure parent". Must bein
+ * the same family and at one greater depth. Return NULL if there is
+ * no such cluster.
+ ***********************************************************************/
+
+cluster *city::get_random_parent_cluster(cluster *cl) const
+{
+    cluster *result = NULL;
+    U32 depth = cl->get_depth();
+    cluster_family *cf = find_in_map(my_cluster_families, cl->get_type());
+    if (cf && cf->clusters.size() > depth+1) {
+        result = random::uniform_choice(cf->clusters[depth+1]);
+    }
+    return result;
 }
 
 /************************************************************************

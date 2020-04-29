@@ -92,6 +92,18 @@ bool contains(const COLL &coll, const typename COLL::value_type &key)
 }
 
 /************************************************************************
+ * find_in_map - find a given key in a map, or return NULL. Assumes
+ * that the map's data type is a pointer
+ ***********************************************************************/
+
+template<class M, typename enable_if<boost::is_pointer<typename M::mapped_type>, int>::type=0>
+inline typename M::mapped_type find_in_map(const M &m, const typename M::key_type &k)
+{
+    auto i = m.find(k);
+    return i==m.end() ? NULL : i->second;
+}
+
+/************************************************************************
  * string functions
  ***********************************************************************/
 

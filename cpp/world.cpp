@@ -47,12 +47,17 @@ void world::load_props()
 
 void world::build()
 {
+    cluster_type::build(this);
     add_cities();
     for (city *c : my_cities) {
         c->add_people();
     }
     make_infection_prob();
     infect_cities();
+    for (auto i : cluster_type::get_cluster_types()) {
+        cluster_type *ct = i.second;
+        ct->finalize(this);
+    }
     for (city *c : my_cities) {
         c->finalize();
     }
@@ -93,7 +98,12 @@ void world::add_cities()
         c->build_clusters();
         c->add_people();
     }
+    //
+    // populate the population-based chooser
+    //
+    city_chooser.create(my_cities, &city::get_population);
 }
+
 
 /************************************************************************
  * infect_cities - create the initial number of infections
@@ -203,10 +213,11 @@ void world::run()
 {
     do {
         ++day;
-        std::cout << formatted("Day %3d infected %6d total %6d growth %8.2f%% immune %6d\n",
+        std::cout << formatted("Day %3d infected %6d total %6d growth %8.2f%% immune %6d untouched %4d\n",
                                day, infected, total_infected,
                                100*((((float)total_infected)/(prev_total+0.001))-1),
-                               immune);
+                               immune,
+                               untouched_cities);
         for (agent *a : my_agents) {
             a->one_day_first(day);
         }
@@ -218,10 +229,14 @@ void world::run()
         infected = 0;
         total_infected = 0;
         immune = 0;
+        untouched_cities = 0;
         for (city *c : my_cities) {
             infected += c->get_infected();
             total_infected += c->get_total_infected();
             immune += c->get_immune();
+            if (c->is_untouched()) {
+                ++untouched_cities;
+            }
         }
     } while (worth_continuing());
 }
@@ -298,4 +313,13 @@ float world::get_city_pop_ratio(U32 population)
 point world::get_random_location() const
 {
     return point(random::uniform_int(1, world_size-1), random::uniform_int(1, world_size-1));
+}
+
+/************************************************************************
+ * get_random_city - get a random city, weighted by size
+ ***********************************************************************/
+
+city *world::get_random_city() const
+{
+    return city_chooser.choose();
 }

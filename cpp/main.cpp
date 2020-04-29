@@ -9,10 +9,13 @@ using boost::posix_time::microsec_clock;
 int main(int argc, const char **argv)
 {
     properties *props = new properties();
-    props->add_from_file(argc>1 ? argv[1] : "../base.props");
+    string props_path = argc>1 ? argv[1] : "../base.props";
+    if (!props->add_from_file(props_path)) {
+        std::cerr << formatted("error reading properties file '%s'\n", props_path);
+        return 1;
+    }
     ptime start_time(microsec_clock::local_time());
     world *the_world = new world(props);
-    cluster_type::build(the_world);
     the_world->build();
     ptime build_time(microsec_clock::local_time());
     the_world->run();

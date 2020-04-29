@@ -30,6 +30,7 @@ public:
     const string &get_name() const { return name; };
     void refresh(properties *props);
     cluster *make_clusters(city *c) const;
+    void finalize(world *w);
     bool is_local() const { return proximality==1; };
     static cluster_type *find_cluster_type(const string &n);
     static void refresh_all(properties *props);
@@ -37,6 +38,7 @@ public:
     static const cluster_type_map_t &get_cluster_types() { return cluster_types; };
 private:
     void build_one(world *w);
+friend class city;
 friend class cluster;
 friend class world;
 };
@@ -109,8 +111,13 @@ private:
     day_number exposure_day = 0;
     float exposure = 0;
     const cluster_type *my_type; // keep these three in the first cache line
+    day_number foreign_exposure_day = 0;
+    float foreign_exposure = 0;
+    day_number child_exposure_day = 0;
+    float child_exposure = 0;
     string name;
     cluster *my_parent;
+    cluster *my_exposure_parent;
     city *my_city;
     U32 size = 0;
     U16 depth = 0;
@@ -119,6 +126,7 @@ private:
     float influence = 0;
     point location;
     bool has_children = false;
+    mutex foreign_lock;
     static map<string,cluster_type> cluster_types;
     static vector<string> clsuter_type_names;
 public:
@@ -127,6 +135,7 @@ public:
     void reset();
     void expose(day_number day, const person *p);
     U32 get_size() const { return size; };
+    const cluster_type *get_type() const { return my_type; };
     U16 get_depth() const { return depth; };
     float get_exposure(day_number day);
     const point &get_location() const { return location; };
@@ -134,8 +143,10 @@ public:
     void add_child(cluster *cl);
     void expose_parent(day_number day);
     void gather_exposure(day_number day);
+    void set_exposure_parent(cluster *cl);
     bool is_leaf() const { return depth==0; };
     bool is_full() const { return my_children.size() > size+1; };
+    bool is_foreign_exposure() const { return my_parent != my_exposure_parent; };
     iterator_controller iter_all() { return iterator_controller(this, false, false); };
     iterator_controller iter_pre() { return iterator_controller(this, false, true); };
     iterator_controller iter_leaves() { return iterator_controller(this, true, false); };    
@@ -145,6 +156,8 @@ public:
 private:
     world *get_world();
     void set_parent(cluster *p);
+    void add_child_exposure(day_number day, cluster *cl);
+    float get_child_exposure(day_number day);
 public:
     typedef prefetcher<cluster::list, prefetch_depth, &prefetch_one> cluster_prefetcher;
 friend class cluster_type;

@@ -29,11 +29,10 @@ public:
     {
         const cluster_type *my_type = NULL;
         cluster *root = NULL;
-        cluster::list leaf_clusters;
-        cluster::list preorder_clusters;
-        cluster::list postorder_clusters;
+        vector<cluster::list> clusters;
         chooser<cluster,float> my_chooser;
         cluster_family(const cluster_type *type_) : my_type(type_) { };
+        cluster::list &get_leaf_clusters() { return clusters[0]; };
     };
     typedef map<const cluster_type*,cluster_family*> cluster_map_t;
 private:
@@ -80,9 +79,8 @@ public:
     U32 get_leaf_cluster_count() const { return cluster_count; };
     U32 get_untouched_cluster_count() const { return untouched_cluster_count; };
     U32 get_susceptible_cluster_count() const { return susceptible_cluster_count; };
+    cluster *get_random_parent_cluster(cluster *cl) const;
     const vector<person*> &get_people() const { return my_people; };
-    void visit_all_clusters(cluster::visitor_fn fn);
-    void visit_leaf_clusters(cluster::visitor_fn fn);
     world *get_world() const { return my_world; };
     void one_day_1();
     void one_day_2();

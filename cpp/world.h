@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "random.h"
 #include "agent.h"
+#include "chooser.h"
 
 #define PROPERTIES                                                      \
     _P(float, , , auto_immunity, 0)                                     \
@@ -54,6 +55,8 @@ private:
     U32 prev_infected = 0;
     U32 prev_total = 0;
     U32 immune = 0;
+    U32 untouched_cities = 0;
+    chooser<city, U32> city_chooser;
     //
     // Cached properties
     //
@@ -68,6 +71,7 @@ public:
     U32 get_gestation_interval() const;
     U32 get_recovery_interval() const;
     point get_random_location() const;
+    city *get_random_city() const;
     day_number get_day() const { return day; };
     U32 make_city_size(U32 population) const;
     float get_city_pop_ratio(U32 population);

@@ -32,6 +32,7 @@ public:
     person(const string &n, city *c, const point &loc, const cluster::list &clusters);
     const string &get_name() const { return name; };
     state get_state() const { return my_state; };
+    city *get_city() const { return my_city; };
     bool is_susceptible() const { return my_state==state::susceptible; };
     bool is_gestating() const { return my_state==state::gestating; };
     bool is_infected() const { return my_state==state::infected; };

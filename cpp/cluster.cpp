@@ -26,8 +26,7 @@ void cluster::reset()
 
 void cluster::expose(day_number day, const person *p)
 {
-    debug_assert(contains(my_people, const_cast<person*>(p)));
-    if (exposure_day==day) {
+    if (exposure_day!=day) {
         exposure = my_type->exposure;
         exposure_day = day;
     } else {
@@ -41,6 +40,9 @@ void cluster::expose(day_number day, const person *p)
 
 float cluster::get_exposure(day_number day)
 {
+    if (my_city->get_infected()==0 && exposure>0 && exposure_day==day) {
+        int a = 1;
+    }
     return exposure_day==day ? exposure * my_type->influence : 0;
 }
 
@@ -72,7 +74,18 @@ void cluster::add_child(cluster *cl)
 void cluster::set_parent(cluster *p)
 {
     my_parent = p;
+    my_exposure_parent = p;
     p->add_child(this);
+}
+
+/************************************************************************
+ * set_exposure_parent - set the exposur eparent if this is different 
+ * from the structural parent
+ ***********************************************************************/
+
+void cluster::set_exposure_parent(cluster *cl)
+{
+    my_exposure_parent =cl;
 }
 
 /************************************************************************
@@ -81,11 +94,52 @@ void cluster::set_parent(cluster *p)
 
 void cluster::expose_parent(day_number day)
 {
-    if (my_parent->exposure_day!=day) {
-        my_parent->exposure = 0;
-        my_parent->exposure_day = day;
+    my_exposure_parent->add_child_exposure(day, this);
+}
+
+/************************************************************************
+ * get_child_exposure - get the exposure value to pass on to a child.
+ * Also integrate the foreign exposure if present.
+ ***********************************************************************/
+
+float cluster::get_child_exposure(day_number day)
+{
+    if (child_exposure_day!=day) {
+        if (foreign_exposure_day==day) {
+            exposure = add_probability(exposure, foreign_exposure);
+        }
+        child_exposure_day = day;
+        child_exposure = exposure * my_type->nest_influence;
     }
-    my_parent->exposure = add_probability(my_parent->exposure, exposure * my_type->nest_influence);
+    return child_exposure;
+}
+
+/************************************************************************
+ * add_child_exposure - add the exposure from a child, which may
+ * not be in the same city
+ ***********************************************************************/
+
+void cluster::add_child_exposure(day_number day, cluster *cl)
+{
+    float e = cl->exposure * my_type->nest_influence;
+    if (e > 0) {
+        if (cl->my_city==my_city) {
+            if (exposure_day!=day) {
+                exposure = e;
+                exposure_day = day;
+            } else {
+                exposure = add_probability(exposure, e);
+            }
+        } else {
+            mutex::scoped_lock sl(foreign_lock);
+            if (foreign_exposure_day!=day) {
+                foreign_exposure = e;
+                foreign_exposure_day = day;
+            } else {
+                foreign_exposure = add_probability(foreign_exposure, e);
+            }
+        }
+    }
 }
 
 /************************************************************************
@@ -94,9 +148,11 @@ void cluster::expose_parent(day_number day)
 
 void cluster::gather_exposure(day_number day)
 {
-    if (my_parent->exposure_day==day) {
-        exposure = add_probability(exposure, my_parent->exposure * my_type->nest_influence);
+    if (exposure_day!=day) {
+        exposure = 0;
+        exposure_day = day;
     }
+    exposure = add_probability(exposure, my_exposure_parent->get_child_exposure(day));
 }
 
 /************************************************************************
@@ -328,6 +384,15 @@ void cluster_type::build_one(world *w)
     random::reciprocal trial(min_pop, max_pop, 100, average_pop);
     auto trial_values = trial.get_values_int();
     size_rms = make_rms(trial_values);
+}
+
+/************************************************************************
+ * finalize - set things taht can only be done once the rest of the
+ * world has been built
+ ***********************************************************************/
+
+void cluster_type::finalize(world *w)
+{
     exposure = w->get_infection_prob() * influence;
 }
 
