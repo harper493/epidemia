@@ -3,16 +3,27 @@
 #include "properties.h"
 #include "cluster.h"
 #include "formatted.h"
+#include "command.h"
 
 using boost::posix_time::microsec_clock;
 
 int main(int argc, const char **argv)
 {
-    properties *props = new properties();
-    string props_path = argc>1 ? argv[1] : "../base.props";
-    if (!props->add_from_file(props_path)) {
-        std::cerr << formatted("error reading properties file '%s'\n", props_path);
+    command args;
+    try {
+        if (!args.parse(argc, argv)) {
+            return 0;
+        }
+    } catch (std::exception &exc) {
+        std::cerr << exc.what() << std::endl;
         return 1;
+    }
+    properties *props = new properties();
+    for (const string &p : args.get_props_files()) {
+        props->add_from_file(p);
+    }
+    for (auto i : args.get_props()) {
+        props->add_property(i.first, i.second);
     }
     ptime start_time(microsec_clock::local_time());
     world *the_world = new world(props);

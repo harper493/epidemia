@@ -67,6 +67,7 @@ private:
     vector<wild_property*> wild_properties;
 public:
     void add_property(const string &str);
+    void add_property(const string &name, const string &value);
     void add_properties(const vector<string> &props);
     bool add_from_file(const string &filename);
     float get_numeric(const vector<string> &pname, float dflt=0) const;

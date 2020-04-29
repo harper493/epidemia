@@ -20,22 +20,27 @@ void properties::add_property(const string &str)
         if (name[0]=='#') {
             return;
         }
-        vector<string> name_parts = split(name, ".");
-        U32 wc = 0;
-        for (string &np : name_parts) {
-            if (np=="*") {
-                ++wc;
-                np = ".*?";
-            }
+        add_property(name, value);
+    }
+}
+
+void properties::add_property(const string &name, const string &value)
+{
+    vector<string> name_parts = split(name, ".");
+    U32 wc = 0;
+    for (string &np : name_parts) {
+        if (np=="*") {
+            ++wc;
+            np = ".*?";
         }
-        if (wc) {
-            string re = join(name_parts, "\\.");
-            wild_property *w = new wild_property(name, re, value, wc);
-            wild_properties.emplace_back(w);
-            my_properties[name] = w;
-        } else {
-            my_properties[name] = new property_value(name, value, NULL);
-        }
+    }
+    if (wc) {
+        string re = join(name_parts, "\\.");
+        wild_property *w = new wild_property(name, re, value, wc);
+        wild_properties.emplace_back(w);
+        my_properties[name] = w;
+    } else {
+        my_properties[name] = new property_value(name, value, NULL);
     }
 }
 

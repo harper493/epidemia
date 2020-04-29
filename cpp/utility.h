@@ -110,4 +110,9 @@ inline typename M::mapped_type find_in_map(const M &m, const typename M::key_typ
 vector<string> split(const string &str, const string &delims);
 string join(const vector<string> &vec, const string &delim="");
 
+inline bool contains(const string &str, const string &key)
+{
+    return str.find(key) != string::npos;
+}
+
 #endif
