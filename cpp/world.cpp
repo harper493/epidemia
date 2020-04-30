@@ -92,7 +92,7 @@ void world::add_cities()
     // Finally, create the cities
     //
     for (size_t i=0; i<city_count; ++i) {    
-        string cname = formatted("C%d", i);
+        string cname = formatted("C%d", i+1);
         city *c = new city(cname, this, city_pops[i], get_random_location());
         my_cities.push_back(c);
         c->build_clusters();
@@ -209,15 +209,12 @@ void world::make_agents()
  * run - run until no longer interesting
  ***********************************************************************/
 
-void world::run()
+void world::run(log_output &logger)
 {
     do {
         ++day;
-        std::cout << formatted("Day %3d infected %6d total %6d growth %8.2f%% immune %6d untouched %4d\n",
-                               day, infected, total_infected,
-                               100*((((float)total_infected)/(prev_total+0.001))-1),
-                               immune,
-                               untouched_cities);
+        float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
+        logger.put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
         for (agent *a : my_agents) {
             a->one_day_first(day);
         }

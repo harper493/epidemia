@@ -6,6 +6,7 @@
 #include "random.h"
 #include "agent.h"
 #include "chooser.h"
+#include "log_output.h"
 
 #define PROPERTIES                                                      \
     _P(float, , , auto_immunity, 0)                                     \
@@ -66,7 +67,7 @@ private:
 public:
     world(properties *props);
     void build();
-    void run();
+    void run(log_output &logger);
     const vector<city*> get_cities() const { return my_cities; };
     U32 get_gestation_interval() const;
     U32 get_recovery_interval() const;

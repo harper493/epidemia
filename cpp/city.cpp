@@ -122,16 +122,18 @@ void city::one_day_2()
 
 void city::one_day_3()
 {
-    susceptible_cluster_count = 0;
-    untouched_cluster_count = 0;
-    for (auto iter : my_cluster_families) {
-        cluster::cluster_prefetcher pf(iter.second->get_leaf_clusters());
-        for (cluster *cl : pf) {
-            if (cl->is_susceptible()) {
-                ++susceptible_cluster_count;
-            }
-            if (cl->is_untouched()) {
-                ++untouched_cluster_count;
+    if (false) {
+        susceptible_cluster_count = 0;
+        untouched_cluster_count = 0;
+        for (auto iter : my_cluster_families) {
+            cluster::cluster_prefetcher pf(iter.second->get_leaf_clusters());
+            for (cluster *cl : pf) {
+                if (cl->is_susceptible()) {
+                    ++susceptible_cluster_count;
+                }
+                if (cl->is_untouched()) {
+                    ++untouched_cluster_count;
+                }
             }
         }
     }

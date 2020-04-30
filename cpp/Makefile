@@ -21,6 +21,7 @@ SRC      := \
 	command.cpp \
 	geometry.cpp \
 	infection_counter.cpp \
+	log_output.cpp \
 	main.cpp \
 	person.cpp \
 	properties.cpp \

@@ -27,6 +27,7 @@ bool command::parse(int argc, const char **argv)
     visible.add_options()
         ("auto-immunity,a",   po::value<float>(),  "level of auto immunity (0-1)")
         ("help,h",                                 "show help message")
+        ("csv",                                    "output in CSV format")
         ("infectiousness,i",  po::value<float>(),  "infectiousness, typically 1-5")
         ("initial,n",         po::value<int>(),    "initial infected population")
         ("infected-cities,C", po::value<float>(),  "proportion or number of cities to infect")
@@ -58,6 +59,8 @@ bool command::parse(int argc, const char **argv)
                 thread_count = values["threads"].as<int>();
             } else if (name=="output") {
                 output_file = values["output"].as<string>();
+            } else if (name=="csv") {
+                csv = true;
             } else if (name=="positional") {
                 for (const string &p : values["positional"].as<vector<string>>()) {
                     auto pp = split(p, "=");
