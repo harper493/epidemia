@@ -24,8 +24,8 @@ private:
     state my_state = state::susceptible;
     city *my_city;
     point my_location;
-    person *visitee = NULL;
     cluster::list my_clusters;
+    float mobility = 0;
     day_number infected_time;
     day_number next_transition;
 public:
@@ -47,7 +47,7 @@ private:
     void infect(day_number day);
     void recover();
     void immunise(day_number day);
-    city *get_today_city();
+    person *get_visitee();
 public:
     static void prefetch(person *p, int slot)
     {

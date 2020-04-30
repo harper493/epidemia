@@ -29,20 +29,23 @@ person::person(const string &n, city *c, const point &loc, const cluster::list &
 bool person::one_day(day_number day)
 {
     bool result = false;
+    person *visitee = get_visitee(); // will be me if no travel
     switch(my_state) {
     case state::susceptible:
         {
-            float r = random::get_random();
-            float risk = get_today_city()->get_exposure();
-            for (auto *cl : my_clusters) {
+            float risk = visitee->get_city()->get_exposure();
+            for (auto *cl : visitee->my_clusters) {
                 risk += cl->get_exposure(day);
             }
-            if (r < risk) {
-                result = true;
-                if (r < risk * get_world()->get_auto_immunity()) {
-                    immunise(day);
-                } else {
-                    gestate(day);
+            if (risk>0) {
+                float r = random::get_random();
+                if (r < risk) {
+                    result = true;
+                    if (r < risk * get_world()->get_auto_immunity()) {
+                        immunise(day);
+                    } else {
+                        gestate(day);
+                    }
                 }
             }
         }
@@ -58,8 +61,8 @@ bool person::one_day(day_number day)
             result = true;
             recover();
         } else {
-            get_today_city()->expose(my_city);
-            for (auto *cl : my_clusters) {
+            visitee->get_city()->expose(my_city);
+            for (auto *cl : visitee->my_clusters) {
                 cl->expose(day, this);
             }
         }
@@ -137,17 +140,19 @@ void person::force_infect(day_number day)
 }
 
 /************************************************************************
- * get_today_city - get the city for today, depending on whether
- * we have travelled or not
+ * get_visitee - get the person we are going to be today. If we have
+ * not travelled, it's us, otherwise pick a random person
+ * from a random city.
  ***********************************************************************/
 
-city *person::get_today_city()
+person *person::get_visitee()
 {
-    city *result = NULL;
-    if (random::get_random() < get_world()->get_travel_prob()) {
-        result = my_city->get_destination();
-    } else {
-        result = my_city;
+    person *result = this;
+    if (mobility>0) {
+        if (random::get_random() < mobility) {
+            city *c = my_city->get_destination();
+            result = c->get_random_person();
+        }
     }
     return result;
 }
