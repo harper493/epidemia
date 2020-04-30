@@ -11,6 +11,8 @@ class fast_world(infection_counter):
     def __init__(self, props):
         self.props = props
         self.population = props.get(int, 'population')
+        self.auto_immunity = self.props.get(float, 'auto_immunity')
+        self.infectiousness = self.props.get(float, 'infectiousness')
         self.daily = {}
 
     def run(self):
@@ -20,11 +22,23 @@ class fast_world(infection_counter):
         with open(props_file,'w') as f:
             f.write(self.props.dump())
         subprocess.call(("./epidemia_fast", "--csv", "-o", csv_file, props_file))
+        self.max_infected = 0
+        self.max_growth = 0
+        self.highest_day = 0
+        self.total_infected = 0
         with open(csv_file, 'r') as infile:
             reader = csv.DictReader(infile)
             for row in reader:
                 day = int(row['day'])
-                self.daily[day] = { name_trans.get(n, n):(float(v) if '.' in v else int(v)) for n,v in row.items() }
+                today = { name_trans.get(n, n):(float(v) if '.' in v else int(v)) for n,v in row.items() }
+                infected = today['infected']
+                if infected > self.max_infected:
+                    self.max_infected = infected
+                    self.highest_day = day
+                self.max_growth = max(self.max_growth, today['growth'])
+                self.total_infected = max(self.total_infected, today['total_infected'])
+                self.daily[day] = today
+            self.days_to_double = log(2) / log(self.max_growth) if self.max_growth else 0
 
     def get_days(self):
         return [ k for k in self.daily.keys() ]
@@ -38,10 +52,6 @@ class fast_world(infection_counter):
     def get_interesting(self):
         from_ = None
         to = len(self.daily)
-        self.highest_day = max([ d["infected"] for d in self.daily.values() ])
-        self.max_growth =  max([ d["growth"] for d in self.daily.values() ])
-        if self.max_growth > 1 :
-            self.days_to_double = log(2) / log(self.max_growth)
         for d in self.daily.keys():
             ti = self.get_data_point('total_infected', d)
             if from_:

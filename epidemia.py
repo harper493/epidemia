@@ -143,15 +143,23 @@ class epidemia() :
         params = []
         results = []
         for ss in sens :
-            params.append(ss)
-            self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
-            cluster.make_cluster_info(self.props)
-            w = world(props=self.props)
-            w.run(logger=(lambda w: detail_table.add_line(w)) if detail_table else None)
-            if detail_table :
-                detail_table.write()
-            results.append(w)
-            t.add_line(w)
+            if False:
+                params.append(ss)
+                self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
+                cluster.make_cluster_info(self.props)
+                w = fast_world(props=self.props)
+                w.run(logger=(lambda w: detail_table.add_line(w)) if detail_table else None)
+                if detail_table :
+                    detail_table.write()
+                results.append(w)
+                t.add_line(w)
+            else :
+                params.append(ss)
+                self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
+                w = fast_world(props=self.props)
+                w.run()
+                results.append(w)
+                t.add_line(w)
         if self.args.plot or self.log_path:
             from_ = min([ w.get_interesting()[0] for w in results ])
             to = max([ w.get_interesting()[1] for w in results ])
