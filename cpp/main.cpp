@@ -43,7 +43,8 @@ int main(int argc, const char **argv)
     ptime build_time(microsec_clock::local_time());
     the_world->run(logger);
     ptime run_time(microsec_clock::local_time());
-    std::cout << formatted("\nBuild time %.3fS run time %.3fS (%d mS/day)\n",
+    std::cout << formatted("\nPopulation %d build time %.3fS run time %.3fS (%d mS/day)\n",
+                           the_world->get_population(),
                            (build_time-start_time).total_microseconds() / 1e6,
                            (run_time-build_time).total_microseconds() / 1e6,
                            (run_time-build_time).total_microseconds() / (1000.0 * (float)the_world->get_day()));
