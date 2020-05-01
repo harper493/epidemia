@@ -147,7 +147,7 @@ class epidemia() :
                 params.append(ss)
                 self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
                 cluster.make_cluster_info(self.props)
-                w = fast_world(props=self.props)
+                w = world(props=self.props)
                 w.run(logger=(lambda w: detail_table.add_line(w)) if detail_table else None)
                 if detail_table :
                     detail_table.write()
