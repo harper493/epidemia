@@ -168,10 +168,13 @@ class epidemia() :
             data = []
             for p, w in zip(params, results) :
                 d = w.get_data('total_infected')[from_:to]
+                d1 = w.get_data('infected')[from_:to]
                 while len(d) < len(x) :
                     d.append(d[-1])
+                    d1.append(d1[-1])
                 legend = ', '.join([ float_to_str(pp[1]) for pp in p ])
                 data.append((legend, d))
+                data.append(('', d1, '--'))
             titles = []
             for t in ('population', 'infectiousness', 'auto_immunity') :
                 if t not in sens.get_variables() :

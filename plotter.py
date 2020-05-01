@@ -11,9 +11,11 @@ class plotter():
 
     def plot(self, x, *data, title='', log=True, legend=True, file=None, show=False, format=None):
         for d in data:
-            a = len(d)
-            b = d[0]
-            plt.plot(x, d[1], label=d[0])
+            linestyle = d[2] if len(d) > 2 else '-'
+            if d[0]:
+                plt.plot(x, d[1], label=d[0], linestyle = linestyle)
+            else:
+                plt.plot(x, d[1], linestyle=linestyle)
         plt.xlabel('Days')
         plt.ylabel('People')
         if title :
@@ -21,7 +23,7 @@ class plotter():
         if log :
             plt.yscale('log')
         if legend:
-            plt.legend(loc='upper right')
+            plt.legend(loc='upper left')
         if file :
             format = format or 'png'
             if '.' not in os.path.basename(file) :
