@@ -61,6 +61,7 @@ private:
     U32 prev_total = 0;
     U32 immune = 0;
     U32 untouched_cities = 0;
+    U32 verbosity = 1;
     chooser<city, U32> city_chooser;
     //
     // Cached properties
@@ -82,6 +83,7 @@ public:
     float make_mobility();
     float get_city_pop_ratio(U32 population);
     float get_infection_prob() const { return infection_prob; };
+    U32 get_verbosity() const { return verbosity; };
     properties *get_props() const { return my_props; };
     bool worth_continuing() const;
 #undef _P

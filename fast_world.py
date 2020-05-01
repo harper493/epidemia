@@ -1,4 +1,5 @@
 import subprocess
+import os
 import csv
 from infection_counter import infection_counter
 from datetime import datetime
@@ -21,7 +22,7 @@ class fast_world(infection_counter):
         props_file = temp_file + ".props"
         with open(props_file,'w') as f:
             f.write(self.props.dump())
-        subprocess.call(("./epidemia_fast", "--csv", "-o", csv_file, props_file))
+        subprocess.call(("./epidemia_fast", "--csv", "--verbosity=0", "-o", csv_file, props_file))
         self.max_infected = 0
         self.max_growth = 0
         self.highest_day = 0
@@ -38,7 +39,9 @@ class fast_world(infection_counter):
                 self.max_growth = max(self.max_growth, today['growth'])
                 self.total_infected = max(self.total_infected, today['total_infected'])
                 self.daily[day] = today
-            self.days_to_double = log(2) / log(self.max_growth) if self.max_growth else 0
+            self.days_to_double = log(2) / log(1 + self.max_growth/100) if self.max_growth else 0
+        os.remove(csv_file)
+        os.remove(props_file)
 
     def get_days(self):
         return [ k for k in self.daily.keys() ]

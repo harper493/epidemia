@@ -179,10 +179,12 @@ void world::infect_cities()
 void world::make_infection_prob()
 {
     U32 exposure_time = recovery_time - gestating_time;
-    float cluster_factor = 0;
-    for (auto iter : cluster_type::get_cluster_types()) {
-        cluster_type *ct = iter.second;
-        cluster_factor += ct->size_rms * pow(ct->influence, 2);        
+    float cluster_factor = my_props->get_numeric("cluster_factor");
+    if (cluster_factor==0) {
+        for (auto iter : cluster_type::get_cluster_types()) {
+            cluster_type *ct = iter.second;
+            cluster_factor += ct->size_rms * pow(ct->influence, 2);
+        }
     }
     infection_prob = ((float)infectiousness) / (exposure_time * cluster_factor);
 }

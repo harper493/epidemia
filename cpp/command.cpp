@@ -36,7 +36,8 @@ bool command::parse(int argc, const char **argv)
         ("output,o",          po::value<string>(), "output file")
         ("population,p",      po::value<int>(),    "population")
         ("random,r",          po::value<float>(),  "random number seed")
-        ("threads,T",         po::value<int>(),    "number of threads to use");
+        ("threads,T",         po::value<int>(),    "number of threads to use")
+        ("verbosity,v",       po::value<int>(),    "how much output to give");
     po::options_description hidden("");
     hidden.add_options()
         ("positional",        po::value<vector<string>>(),       "positional arguments");
@@ -58,6 +59,8 @@ bool command::parse(int argc, const char **argv)
             string name = iter.first;
             if (name=="threads") {
                 thread_count = values["threads"].as<int>();
+            } else if (name=="verbosity") {
+                verbosity = values["verbosity"].as<int>();
             } else if (name=="output") {
                 output_file = values["output"].as<string>();
             } else if (name=="csv") {

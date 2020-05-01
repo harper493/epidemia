@@ -3,6 +3,7 @@ cluster.family.max_pop = 10
 cluster.family.average_pop = 4
 cluster.family.proximality = 1
 cluster.family.same_city = 0.98
+cluster.family.influence = 1
 
 cluster.friends.min_pop = 5
 cluster.friends.max_pop = 20
