@@ -28,6 +28,8 @@
     _P(float, , , thread_count, 0)                                      \
     _P(float, , , min_days, 0)                                          \
     _P(float, , , max_days, 0)                                          \
+    _P(float, , , mobility_max, 0)                                      \
+    _P(float, , , mobility_average, 0)                                  \
     _P(float, city, _, max_density, 5000)                               \
     _P(float, city, _, min_density, 1000)                               \
     _P(float, city, _, auto_power, 0.67)                                \
@@ -50,6 +52,8 @@ private:
     random::lognormal gestation_generator;
     random::lognormal recovery_generator;
     float infection_prob;
+    float mobility_threshold;
+    float mobility_multiplier;
     day_number day = 0;
     U32 infected = 0;
     U32 total_infected = 0;
@@ -75,6 +79,7 @@ public:
     city *get_random_city() const;
     day_number get_day() const { return day; };
     U32 make_city_size(U32 population) const;
+    float make_mobility();
     float get_city_pop_ratio(U32 population);
     float get_infection_prob() const { return infection_prob; };
     properties *get_props() const { return my_props; };
@@ -91,6 +96,7 @@ private:
     void infect_cities();
     void make_infection_prob();
     void make_agents();
+    void show_mobility_data();
 };
 
 #endif

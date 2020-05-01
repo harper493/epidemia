@@ -46,6 +46,8 @@ city.appeal_power = 0.4
 
 world_size = 100
 
+mobility_max = 0.1
+mobility_average = 0.001
 recovery_time = 15
 recovery_sd = 2
 gestating_time = 4

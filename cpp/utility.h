@@ -81,6 +81,15 @@ inline C round_sig(C value, U32 digits)
 }
 
 /************************************************************************
+ * Compute standard deviation given sum and sumsq.
+ ***********************************************************************/
+
+inline float compute_standard_deviation(U32 count, float sum, double sumsq)
+{
+    return max(count ? sqrt(count * sumsq - sum * sum) / count : 0, 0);
+}
+
+/************************************************************************
  * contains - return true iff the given object is in the given container
  ***********************************************************************/
 

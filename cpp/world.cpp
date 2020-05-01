@@ -48,6 +48,8 @@ void world::load_props()
 void world::build()
 {
     cluster_type::build(this);
+    mobility_threshold = 3 * mobility_average / mobility_max;
+    mobility_multiplier = pow(mobility_max, 3) / (9 * pow(mobility_average, 2));
     add_cities();
     for (city *c : my_cities) {
         c->add_people();
@@ -319,4 +321,50 @@ point world::get_random_location() const
 city *world::get_random_city() const
 {
     return city_chooser.choose();
+}
+
+/************************************************************************
+ * make_mobility - generate a random mobility figure for a person,
+ * based on the configured average andmaximum values
+ ***********************************************************************/
+
+float world::make_mobility()
+{
+    float result = 0;
+    float r = random::get_random();
+    if (r < mobility_threshold) {
+        result = r * r * mobility_multiplier;
+    }
+    return result;
+}
+
+/************************************************************************
+ * show_mobility_data - analyse mobility info for the whole
+ * population
+ ***********************************************************************/
+
+void world::show_mobility_data()
+{
+    float mob_sum = 0;
+    double mob_sumsq = 0;
+    float mob_max = 0;
+    U32 mobs = 0;
+    for (city *c : my_cities) {
+        for (person *p : c->get_people()) {
+            float m = p->get_mobility();
+            if (m>0) {
+                mobs += 1;
+                mob_sum += m;
+                mob_sumsq += m*m;
+                mob_max = max(mob_max, m);
+            }
+        }
+    }
+    float mean = mob_sum / mobs;
+    float sd = compute_standard_deviation(mobs, mob_sum, mob_sumsq);
+    float overall_mean = mob_sum / population;
+    std::cout << formatted("mobility intended mean %f max %f count %d mean %f sd %f "
+                           "overall mean %f max %f thresh %f mult %f\n",
+                           mobility_average, mobility_max,
+                           mobs, mean, sd, overall_mean, mob_max, mobility_threshold, mobility_multiplier);
 }

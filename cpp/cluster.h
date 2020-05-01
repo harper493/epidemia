@@ -115,6 +115,8 @@ private:
     float foreign_exposure = 0;
     day_number child_exposure_day = 0;
     float child_exposure = 0;
+    day_number member_exposure_day;
+    float member_exposure;
     string name;
     cluster *my_parent;
     cluster *my_exposure_parent;
@@ -137,7 +139,7 @@ public:
     U32 get_size() const { return size; };
     const cluster_type *get_type() const { return my_type; };
     U16 get_depth() const { return depth; };
-    float get_exposure(day_number day);
+    float get_member_exposure(day_number day);
     const point &get_location() const { return location; };
     void add_person(person *p);
     void add_child(cluster *cl);
@@ -157,6 +159,8 @@ private:
     world *get_world();
     void set_parent(cluster *p);
     void add_child_exposure(day_number day, cluster *cl);
+    float get_exposure(day_number day);
+    void add_exposure(day_number day, city *c, float e);
     float get_child_exposure(day_number day);
 public:
     typedef prefetcher<cluster::list, prefetch_depth, &prefetch_one> cluster_prefetcher;

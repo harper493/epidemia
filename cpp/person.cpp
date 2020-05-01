@@ -17,6 +17,7 @@ person::person(const string &n, city *c, const point &loc, const cluster::list &
         cl->add_person(this);
         my_clusters.push_back(cl);
     }
+    mobility = get_world()->make_mobility();
 }
 
 /************************************************************************
@@ -35,7 +36,7 @@ bool person::one_day(day_number day)
         {
             float risk = visitee->get_city()->get_exposure();
             for (auto *cl : visitee->my_clusters) {
-                risk += cl->get_exposure(day);
+                risk += cl->get_member_exposure(day);
             }
             if (risk>0) {
                 float r = random::get_random();

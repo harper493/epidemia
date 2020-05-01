@@ -26,24 +26,38 @@ void cluster::reset()
 
 void cluster::expose(day_number day, const person *p)
 {
-    if (exposure_day!=day) {
-        exposure = my_type->exposure;
-        exposure_day = day;
-    } else {
-        exposure = add_probability(exposure, my_type->exposure);
-    }
+    add_exposure(day, p->get_city(), my_type->exposure);
 }
 
 /************************************************************************
  * get_exposure - get the exposure for a single member of the cluster
+ * or for the parent
  ***********************************************************************/
 
 float cluster::get_exposure(day_number day)
 {
-    if (my_city->get_infected()==0 && exposure>0 && exposure_day==day) {
-        int a = 1;
+    float result = 0;
+    if (foreign_exposure_day==day) {
+        result += foreign_exposure;
     }
-    return exposure_day==day ? exposure * my_type->influence : 0;
+    if (exposure_day==day) {
+        result += exposure;
+    }
+    return result;
+}
+
+/************************************************************************
+ * get_member_exposure - get the expsoure we will give to a member
+ * of the cluster
+ ***********************************************************************/
+
+float cluster::get_member_exposure(day_number day)
+{
+    if (member_exposure_day != day) {
+        member_exposure = get_exposure(day) * my_type->influence;
+        member_exposure_day = day;
+    }
+    return member_exposure;
 }
 
 /************************************************************************
@@ -79,7 +93,7 @@ void cluster::set_parent(cluster *p)
 }
 
 /************************************************************************
- * set_exposure_parent - set the exposur eparent if this is different 
+ * set_exposure_parent - set the exposure parent if this is different 
  * from the structural parent
  ***********************************************************************/
 
@@ -121,23 +135,33 @@ float cluster::get_child_exposure(day_number day)
 
 void cluster::add_child_exposure(day_number day, cluster *cl)
 {
-    float e = cl->exposure * my_type->nest_influence;
+    float e = cl->get_exposure(day);
     if (e > 0) {
-        if (cl->my_city==my_city) {
-            if (exposure_day!=day) {
-                exposure = e;
-                exposure_day = day;
-            } else {
-                exposure = add_probability(exposure, e);
-            }
+        add_exposure(day, cl->my_city, e * my_type->nest_influence);
+    }
+}
+
+/************************************************************************
+ * add_exposure - add exposure, taking account of whether
+ * it is from the same city
+ ***********************************************************************/
+
+void cluster::add_exposure(day_number day, city *c, float e)
+{
+    if (c==my_city) {
+        if (exposure_day!=day) {
+            exposure = e;
+            exposure_day = day;
         } else {
-            mutex::scoped_lock sl(foreign_lock);
-            if (foreign_exposure_day!=day) {
-                foreign_exposure = e;
-                foreign_exposure_day = day;
-            } else {
-                foreign_exposure = add_probability(foreign_exposure, e);
-            }
+            exposure = add_probability(exposure, e);
+        }
+    } else {
+        mutex::scoped_lock sl(foreign_lock);
+        if (foreign_exposure_day!=day) {
+            foreign_exposure = e;
+            foreign_exposure_day = day;
+        } else {
+            foreign_exposure = add_probability(foreign_exposure, e);
         }
     }
 }
