@@ -11,11 +11,10 @@ class plotter():
 
     def plot(self, x, *data, title='', log=True, legend=True, file=None, show=False, format=None):
         for d in data:
-            linestyle = d[2] if len(d) > 2 else '-'
-            if d[0]:
-                plt.plot(x, d[1], label=d[0], linestyle = linestyle)
-            else:
-                plt.plot(x, d[1], linestyle=linestyle)
+            style = d.get('style', '-')
+            color = d.get('color', None)
+            label = d.get('label', None)
+            plt.plot(x, d['data'], label=label, linestyle=style, color=color)
         plt.xlabel('Days')
         plt.ylabel('People')
         if title :

@@ -11,6 +11,7 @@ from argparser import argparser
 from math import *
 from datetime import datetime
 from fast_world import fast_world
+import itertools
 
 import cProfile
 
@@ -124,7 +125,8 @@ class epidemia() :
         title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
         title += f'\nMax Days to Double {w.days_to_double:.1f}'
         x = w.get_days()[from_:to]
-        data = [ (var_to_title(v), w.get_data(v)[from_:to]) for v in ('total_infected', 'infected') ]
+        data = [ {'label': var_to_title(v),
+                  'data' : w.get_data(v)[from_:to] } for v in ('total_infected', 'infected') ]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
         p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format)
 
@@ -166,15 +168,16 @@ class epidemia() :
             plot = plotter()
             x = range(from_, to)
             data = []
-            for p, w in zip(params, results) :
+            colors = ( 'b', 'g', 'r', 'c', 'm', 'y', 'k' )
+            for p, w, c in zip(params, results, itertools.cycle(colors)) :
                 d = w.get_data('total_infected')[from_:to]
                 d1 = w.get_data('infected')[from_:to]
                 while len(d) < len(x) :
                     d.append(d[-1])
                     d1.append(d1[-1])
                 legend = ', '.join([ float_to_str(pp[1]) for pp in p ])
-                data.append((legend, d))
-                data.append(('', d1, '--'))
+                data.append({ 'label':legend, 'data':d, 'color':c})
+                data.append({ 'data': d1, 'style':'--', 'color': c})
             titles = []
             for t in ('population', 'infectiousness', 'auto_immunity') :
                 if t not in sens.get_variables() :
