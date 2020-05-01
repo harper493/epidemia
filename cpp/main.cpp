@@ -5,6 +5,7 @@
 #include "formatted.h"
 #include "command.h"
 #include "log_output.h"
+#include "random.h"
 
 using boost::posix_time::microsec_clock;
 
@@ -37,6 +38,7 @@ int main(int argc, const char **argv)
         props->add_property(i.first, i.second);
     }
     log_output logger(args.get_output_file(), args.get_csv(), true, log_columns);
+    random::initialize(props->get_numeric("random"));
     ptime start_time(microsec_clock::local_time());
     world *the_world = new world(props);
     the_world->build();

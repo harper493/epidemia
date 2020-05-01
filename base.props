@@ -33,7 +33,7 @@ cluster.*.nest_influence = 0.005
 cluster.*.proximality = 0.9
 
 city.max_density = 5000
-city.min_density = 1000
+city.min_density = 2000
 city.auto_power = 0.67
 city.auto_divider = 250
 city.max_pop = 0

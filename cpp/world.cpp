@@ -63,6 +63,7 @@ void world::build()
     for (city *c : my_cities) {
         c->finalize();
     }
+    // show_cities();
     make_agents();
 }
 
@@ -285,10 +286,12 @@ U32 world::get_recovery_interval() const
  * size
  ***********************************************************************/
 
-U32 world::make_city_size(U32 pop) const
+float world::make_city_size(U32 pop) const
 {
-    float pop_ratio = (pop - city_min_pop) / (city_max_pop - city_min_pop);
-    float density = pop_ratio * (city_max_density - city_min_density) + city_min_density;
+    float pop_ratio = ((float)(pop)) / city_max_pop;
+    //float density = sqrt(pop_ratio) * (city_max_density - city_min_density) + city_min_density;
+    float density = city_min_density + (pop - city_min_pop) *
+        ((float)(city_max_density - city_min_density)) / (city_max_pop - city_min_pop);
     float area = pop / density;
     float radius = sqrt(area/3.14);
     return radius;
@@ -311,7 +314,7 @@ float world::get_city_pop_ratio(U32 population)
 
 point world::get_random_location() const
 {
-    return point(random::uniform_int(1, world_size-1), random::uniform_int(1, world_size-1));
+    return point(random::uniform_real(1, world_size-1), random::uniform_real(1, world_size-1));
 }
 
 /************************************************************************
@@ -367,4 +370,15 @@ void world::show_mobility_data()
                            "overall mean %f max %f thresh %f mult %f\n",
                            mobility_average, mobility_max,
                            mobs, mean, sd, overall_mean, mob_max, mobility_threshold, mobility_multiplier);
+}
+
+/************************************************************************
+ * show_cities - show city information
+ ***********************************************************************/
+
+void world::show_cities()
+{
+    for (city *c : my_cities) {
+        std::cout << c->show() << std::endl;
+    }
 }

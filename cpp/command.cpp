@@ -35,6 +35,7 @@ bool command::parse(int argc, const char **argv)
         ("min_days",          po::value<int>(),    "min days to run for")
         ("output,o",          po::value<string>(), "output file")
         ("population,p",      po::value<int>(),    "population")
+        ("random,r",          po::value<float>(),  "random number seed")
         ("threads,T",         po::value<int>(),    "number of threads to use");
     po::options_description hidden("");
     hidden.add_options()

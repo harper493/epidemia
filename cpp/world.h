@@ -78,7 +78,7 @@ public:
     point get_random_location() const;
     city *get_random_city() const;
     day_number get_day() const { return day; };
-    U32 make_city_size(U32 population) const;
+    float make_city_size(U32 population) const;
     float make_mobility();
     float get_city_pop_ratio(U32 population);
     float get_infection_prob() const { return infection_prob; };
@@ -97,6 +97,7 @@ private:
     void make_infection_prob();
     void make_agents();
     void show_mobility_data();
+    void show_cities();
 };
 
 #endif

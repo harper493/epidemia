@@ -21,6 +21,7 @@ city::city(const string &n, world *w, U32 tp, const point &loc)
     : name(n), my_world(w), index(next_index++), target_pop(tp), my_location(loc)
 {
     my_people.reserve(target_pop);
+    size = my_world->make_city_size(target_pop);
 }
 
 /************************************************************************
@@ -30,10 +31,6 @@ city::city(const string &n, world *w, U32 tp, const point &loc)
 
 void city::finalize()
 {
-    //
-    // Set size
-    //
-    size = my_world->make_city_size(population);
     //
     // Set infection factors
     //
@@ -303,6 +300,7 @@ void city::foreign_expose()
 
 string city::show() const
 {
-    return formatted("%s pop %d location %s", name, get_population(), my_location);
+    return formatted("%6s pop %7d size %6.3f location %15s",
+                     name, get_population(), size, my_location);
 }
 
