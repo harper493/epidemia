@@ -1,6 +1,7 @@
 from utility import *
 import re
 
+
 class sensitivity():
     """
     This class generates a list of values according to the given specification, via an
@@ -8,7 +9,7 @@ class sensitivity():
 
     The pattern is described as follows.
 
-    It consists of one or more parameter specifications, separated by specs separated by ';' or '+'.
+    It consists of one or more parameter specifications, separated by ';' or '+'.
     Each of them is of one of the forms:
 
        param_name:start:step:end
@@ -17,7 +18,7 @@ class sensitivity():
            If the list is too short (for a second or subsequent parameter), the step is
            reapplied as needed.
 
-       param_name*start:mult:end
+       param_name:start*mult:end
 
            As above but multiply each time instead of adding
 
@@ -52,25 +53,25 @@ class sensitivity():
 
        For more examples, see the unit tests at the end of this file.
 
-    Each yield returns a tuple of (parameter-name, parameter-value).
+    Each yield returns a list of tuples of (parameter-name, parameter-value).
 
     For a demonstration, run this module as a stand-alone script.
     """
 
-    class one_param() :
+    class one_param():
         """
         one_param - internal; class to represent a single parameter
         """
 
         def __init__(self, spec: str):
-            try :
+            try:
                 m = re.match(r'^([+;])([^:]+):(.*)', spec)
-                if not m :
+                if not m:
                     raise ValueError
                 prod, self.pname, self.text = m.group(1, 2, 3)
-                self.product = (prod=='+')
+                self.product = (prod == '+')
                 details = self.text
-                if ':' in details :
+                if ':' in details:
                     if '*' in details:
                         self.mult = True
                         details = details.replace('*', ':')
@@ -79,14 +80,14 @@ class sensitivity():
                     self.values = None
                     r = details.split(':') + [None, None]
                     self.start, self.step, self.stop, stopper = r[:4]
-                    if stopper is not None :
+                    if stopper is not None:
                         raise IndexError
                     self.start, self.step = number(self.start), number(self.step)
-                    if self.stop is not None :
+                    if self.stop is not None:
                         self.stop = number(self.stop)
-                else :
+                else:
                     self.values = []
-                    for v in details.split(',') :
+                    for v in details.split(','):
                         vv, m = (v.split('*') + [1])[:2]
                         self.values += [number(vv)] * number(m)
                     self.start = 0
@@ -115,48 +116,48 @@ class sensitivity():
             :return: True iff the value is within the stated range.
             """
             self.index += 1
-            if self.values :
-                try :
+            if self.values:
+                try:
                     self.value = self.values[self.index]
-                except IndexError :
+                except IndexError:
                     self.value = self.values[-1]
                 return self.index < len(self.values)
-            if self.mult :
+            if self.mult:
                 self.value *= self.step
-            else :
+            else:
                 self.value = self.start + self.step * self.index
             self.value = round(self.value, 6)
-            if self.stop is None :
+            if self.stop is None:
                 return True
-            elif self.step>0 :
+            elif self.step > 0:
                 return self.value <= (self.stop * 1.00001)
-            else :
+            else:
                 return self.value >= (self.stop * 1.00001)
 
         def will_stop(self):
             return self.values or self.stop is not None
 
-    def __init__(self, params, max_iterations: int=100):
+    def __init__(self, params, max_iterations: int = 100):
         """
         :param params: see class description above.
         :param max_iterations: do not iterate more times than this. Default is 100. Intended to
                                protecet against silly mistakes.
         """
         r = ['+'] + re.split(r'([+;])', params)
-        if '' in r :
+        if '' in r:
             raise ValueError(f"Syntax error in sensitivity description: '{params}'")
-        r2 = [ m+t for m,t in zip(r[::2], r[1::2])]
-        self.ranges = [ sensitivity.one_param(p) for p in r2 ]
-        self.named_ranges = { r.pname : r for r in self.ranges }
+        r2 = [m + t for m, t in zip(r[::2], r[1::2])]
+        self.ranges = [sensitivity.one_param(p) for p in r2]
+        self.named_ranges = {r.pname: r for r in self.ranges}
         self.max_iterations = max_iterations
-        if not self.ranges[0].will_stop() :
+        if not self.ranges[0].will_stop():
             raise ValueError(f"First range must have a termination condition '{str(self.ranges[0])}'")
 
     def get_variables(self):
         """
         :return: a list of the parameter names
         """
-        return [ r.pname for r in self.ranges ]
+        return [r.pname for r in self.ranges]
 
     def get_one(self, p):
         """
@@ -172,27 +173,29 @@ class sensitivity():
         while (count < self.max_iterations):
             yield [r.get() for r in self.ranges]
             top = len(self.ranges)
-            for ii, r in enumerate(reversed(self.ranges)) :
+            for ii, r in enumerate(reversed(self.ranges)):
                 i = len(self.ranges) - 1 - ii
-                if r.product :
-                    g = [ r2.next() for r2 in self.ranges[i:top] ][0]
-                    if g :
+                if r.product:
+                    g = [r2.next() for r2 in self.ranges[i:top]][0]
+                    if g:
                         break
-                    for r in self.ranges[i:top] :
+                    for r in self.ranges[i:top]:
                         r.reset()
                     top = i
-            else :
+            else:
                 break
             count += 1
 
-def _test_one(s) :
+
+def _test_one(s):
     sens = sensitivity(s)
     print(s, end=': ')
-    for ss in sens :
+    for ss in sens:
         print(ss, end=' ')
     print('\n')
 
-if __name__=='__main__' :
+
+if __name__ == '__main__':
     _test_one('foo:1:0.1:2')
     _test_one('foo:1*2:16')
     _test_one('foo:1,2,3,4')
