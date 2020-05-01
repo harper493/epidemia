@@ -17,7 +17,6 @@ void infection_counter::infect_one(person *p)
     }
     infected += 1;
     total_infected += 1;
-    debug_assert(susceptible<1000000);
 }
 
 void infection_counter::gestate_one(person *p)
@@ -25,7 +24,6 @@ void infection_counter::gestate_one(person *p)
     debug_assert(p->is_susceptible());
     gestating += 1;
     susceptible -= 1;
-    debug_assert(susceptible<1000000);
 }
 
 void infection_counter::immunise_one(person *p)
@@ -33,7 +31,6 @@ void infection_counter::immunise_one(person *p)
     debug_assert(p->is_susceptible());
     susceptible -= 1;
     immune += 1;
-    debug_assert(susceptible<1000000);
 }
 
 void infection_counter::recover_one(person *p)
@@ -41,7 +38,6 @@ void infection_counter::recover_one(person *p)
     debug_assert(p->is_infected());
     infected -= 1;
     recovered += 1;
-    debug_assert(susceptible<1000000);
 }
 
 void infection_counter::kill_one(person *p)
@@ -49,6 +45,5 @@ void infection_counter::kill_one(person *p)
     debug_assert(p->is_infected());
     infected -= 1;
     dead += 1;
-    debug_assert(susceptible<1000000);
 }
 
