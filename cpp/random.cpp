@@ -16,7 +16,9 @@ using std::ifstream;
  * static data
  ***********************************************************************/
 
-boost::mt19937 random::rng;
+__thread boost::mt19937 *random::generator = NULL;
+U32 random::my_seed = 0;
+mutex random::my_lock;
 
 interpolator<float> random::reciprocal::power_table(vector<pair<float,float>>{
     { 0.1601, 0.1 },
@@ -57,6 +59,7 @@ interpolator<float> random::reciprocal::power_table(vector<pair<float,float>>{
 
 U32 random::true_random()
 {
+    lock_guard<mutex> lg(my_lock);
     U32 result = 0;
     ifstream rstr("/dev/urandom", ifstream::in|ifstream::binary);
     for (int i=0; i<4; ++i) {
@@ -72,9 +75,9 @@ U32 random::true_random()
  * initialize - set the initial seed
  ***********************************************************************/
 
-void random::initialize(float seed)
+void random::initialize(U32 seed)
 {
-    rng.seed(seed==0 ? true_random(): seed);
+    my_seed = seed;
 }
 
 /************************************************************************
@@ -83,9 +86,10 @@ void random::initialize(float seed)
 
 int random::uniform_int(int minimum, int maximum)
 {
+    init_thread();
     boost::uniform_int<> ui(minimum, maximum);
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > 
-        vg(rng, ui);
+        vg(*generator, ui);
     return vg(); 
 }
 
@@ -95,9 +99,10 @@ int random::uniform_int(int minimum, int maximum)
 
 float random::uniform_real(float minimum, float maximum)
 {
+    init_thread();
     boost::uniform_real<float> ui(minimum, maximum);
     boost::variate_generator<boost::mt19937&, boost::uniform_real<float> > 
-        vg(rng, ui);
+        vg(*generator, ui);
     return vg(); 
 }
 
@@ -107,9 +112,10 @@ float random::uniform_real(float minimum, float maximum)
 
 float random::get_random()
 {
+    init_thread();
     boost::uniform_01<float> ui;
     boost::variate_generator<boost::mt19937&, boost::uniform_01<float> > 
-        vg(rng, ui);
+        vg(*generator, ui);
     return vg(); 
 }
 
@@ -141,7 +147,9 @@ void random::lognormal::reset(float mean_, float sd_, float min/*=-1*/)
 
 float random::lognormal::operator()() const
 {
-    boost::variate_generator<boost::mt19937&, boost::random::lognormal_distribution<float> > vg(rng, dist);
+    init_thread();
+    boost::variate_generator<boost::mt19937&, boost::random::lognormal_distribution<float> >
+        vg(*generator, dist);
     return vg() + offset;
 }
 
@@ -220,5 +228,17 @@ vector<U32> random::reciprocal::get_values_int() const
     }
     return result;
 }
+/************************************************************************
+ * init_thread - check that the generator for this thread has been
+ * initialised. Note that 'generator' is thread local, hence there are
+ * no concurrency issues here.
+ ***********************************************************************/
 
+void random::init_thread()
+{
+    if (generator==NULL) {
+        generator = new boost::mt19937();
+        generator->seed(my_seed ? my_seed : true_random());
+    }
+}
 

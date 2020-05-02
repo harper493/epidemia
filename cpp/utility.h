@@ -118,10 +118,22 @@ inline typename M::mapped_type find_in_map(const M &m, const typename M::key_typ
 
 vector<string> split(const string &str, const string &delims);
 string join(const vector<string> &vec, const string &delim="");
+inline void join_to(string &first, const string &second, const string &delim)
+{
+    first = first.empty() ? second : first + delim + second;
+}
+
+vector<string> trim(const vector<string> &input);
 
 inline bool contains(const string &str, const string &key)
 {
     return str.find(key) != string::npos;
 }
+
+/************************************************************************
+ * system functions
+ ***********************************************************************/
+
+int get_system_core_count();
 
 #endif

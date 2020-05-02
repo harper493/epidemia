@@ -8,6 +8,9 @@
 #include <tgmath.h>
 #include <algorithm>
 #include <numeric>
+#include <boost/range/adaptors.hpp>
+
+using boost::posix_time::microsec_clock;
 
 /************************************************************************
  * constructor
@@ -47,24 +50,31 @@ void world::load_props()
 
 void world::build()
 {
+    start_time = microsec_clock::local_time();
     cluster_type::build(this);
     mobility_threshold = 3 * mobility_average / mobility_max;
     mobility_multiplier = pow(mobility_max, 3) / (9 * pow(mobility_average, 2));
     add_cities();
-    for (city *c : my_cities) {
-        c->add_people();
-    }
-    make_infection_prob();
-    infect_cities();
-    for (auto i : cluster_type::get_cluster_types()) {
-        cluster_type *ct = i.second;
-        ct->finalize(this);
-    }
-    for (city *c : my_cities) {
-        c->finalize();
-    }
-    // show_cities();
+    assign_cities_to_agents();
     make_agents();
+}
+
+void world::finish_build()
+{
+    if (!build_complete) {
+        build_complete = true;
+        make_infection_prob();
+        infect_cities();
+        for (auto i : cluster_type::get_cluster_types()) {
+            cluster_type *ct = i.second;
+            ct->finalize(this);
+        }
+        for (city *c : my_cities) {
+            c->finalize();
+        }
+        // show_cities();
+    }
+    build_complete_time = microsec_clock::local_time();
 }
 
 /************************************************************************
@@ -98,15 +108,106 @@ void world::add_cities()
         string cname = formatted("C%d", i+1);
         city *c = new city(cname, this, city_pops[i], get_random_location());
         my_cities.push_back(c);
-        c->build_clusters();
-        c->add_people();
     }
     //
     // populate the population-based chooser
     //
-    city_chooser.create(my_cities, &city::get_population);
+    city_chooser.create(my_cities, &city::get_target_pop);
 }
 
+/************************************************************************
+ * assign_cities_to_agents - figure out which agents will deal with which
+ * cities, trying to keep the population about equally spread.
+ *
+ * We start with the biggest cities, which may need to be divided amongst
+ * multiple agents. Then we combine big cities. Whenever we can't fit
+ * the next big city, we take the smallest cities in inverse size
+ * order as "stocking fillers". When every agent has reached their
+ * target population, if there are any (small) cities left, we just assihgn
+ * them round robin to the agents.
+ ***********************************************************************/
+
+void world::assign_cities_to_agents()
+{
+    if (thread_count==0) {
+        thread_count = get_system_core_count();
+    }
+    thread_count = max(1, min(thread_count, city_count / 3));
+    if (thread_count > 1) {
+        agent_max_pop = population / thread_count;
+        size_t big_cities = 0;
+        size_t small_cities = my_cities.size() - 1;
+        U32 remaining_population = (my_cities[big_cities])->get_target_pop();
+        for (size_t a=0; a<thread_count; ++a) {
+            if (big_cities >= small_cities) {
+                thread_count = a;
+                break;
+            }
+            cities_by_agent.emplace_back();
+            agent_info &this_ai = cities_by_agent.back();
+            U32 remaining_space = agent_max_pop;
+            this_ai.cities.push_back(my_cities[big_cities]);
+            if (remaining_population >= remaining_space) {
+                //
+                // This city still has enough population to fill
+                // an entire agent
+                //
+                if (remaining_population==remaining_space) {
+                    ++big_cities;
+                }
+                remaining_population -= agent_max_pop;
+                remaining_space = 0;
+                this_ai.max_pop = agent_max_pop;
+            } else {
+                this_ai.max_pop = remaining_population;
+                remaining_space -= remaining_population;
+                //
+                // We have some left over capacity after the first big city
+                //
+                do {
+                    if (big_cities>=small_cities) {
+                        break;
+                    }
+                    ++big_cities;
+                    remaining_population = (my_cities[big_cities])->get_target_pop();
+                    if (remaining_space >= remaining_population) {
+                        //
+                        // We can fit this big city into the remaining space
+                        //
+                        this_ai.cities.push_back(my_cities[big_cities]);
+                        remaining_space -= remaining_population;
+                    } else {
+                        //
+                        // Out of space for the big guys. Pack in small cities
+                        // until we run out of space
+                        //
+                        while (big_cities < small_cities
+                               && (my_cities[small_cities])->get_target_pop() <= remaining_space) {
+                            this_ai.cities.push_back(my_cities[small_cities]);
+                            remaining_space -= (my_cities[small_cities])->get_target_pop();
+                            --small_cities;
+                        }
+                        break;
+                    }
+                } while (true);
+            }
+        }
+        //
+        // We may still have some cities left. Just assign them to agents
+        // one at a time, starting with the later ones that will generally
+        // mostly have small guys.
+        //
+        while (big_cities <= small_cities) {
+            for (auto &ai : cities_by_agent | boost::adaptors::reversed) {
+                ai.cities.push_back(my_cities[small_cities]);
+                --small_cities;
+                if (small_cities<=big_cities) {
+                    break;
+                }
+            }
+        }
+    }
+}
 
 /************************************************************************
  * infect_cities - create the initial number of infections
@@ -195,18 +296,21 @@ void world::make_infection_prob()
 
 void world::make_agents()
 {
-    size_t agent_count = thread_count;
-    if (thread_count==0) {
-        thread_count = 1;
-    }
-    for (size_t i=0; i<thread_count; ++i) {
-        string name = formatted("agent-%d", i);
-        agent *a = new agent(name, (agent_count>1));
-        a->run();
-        my_agents.push_back(a);
-    }
-    for (city *c : my_cities) {
-        my_agents[0]->add_city(c);
+    my_agent_manager.build(thread_count,
+                           bind(&agent::factory, _1, _2, _3, this));
+}
+
+/************************************************************************
+ * build_agent - tell an agent what to do once it has been created
+ ***********************************************************************/
+
+void world::build_agent(agent *ag)
+{
+    agent_info &ai = cities_by_agent[ag->get_index()];
+    if (thread_count>1) {
+        ag->add_cities(ai.cities, ai.max_pop);
+    } else {
+        ag->add_cities(my_cities, 0);
     }
 }
 
@@ -216,38 +320,47 @@ void world::make_agents()
 
 void world::run(log_output &logger)
 {
-    do {
-        ++day;
-        float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
-        logger.put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
-        for (agent *a : my_agents) {
-            a->one_day_first(day);
-        }
-        for (agent *a : my_agents) {
-            a->one_day_second(day);
-        }
-        prev_infected = infected;
-        prev_total = total_infected;
-        infected = 0;
-        total_infected = 0;
-        immune = 0;
-        untouched_cities = 0;
-        for (city *c : my_cities) {
-            infected += c->get_infected();
-            total_infected += c->get_total_infected();
-            immune += c->get_immune();
-            if (c->is_untouched()) {
-                ++untouched_cities;
-            }
-        }
-    } while (worth_continuing());
+    my_logger = &logger;
+    agent_task task(this);
+    my_agent_manager.execute(&task);
+    my_agent_manager.terminate();
 }
 
 /************************************************************************
- * worth_continuing - evaluate whether we should continue
+ * end_of_day - called via agent manager at the end of each day. Return true
+ * to keep going, false to stop.
  ***********************************************************************/
 
-bool world::worth_continuing() const
+bool world::end_of_day()
+{
+    if (day==0) {
+        finish_build();
+    }
+    ++day;
+    float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
+    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
+    prev_infected = infected;
+    prev_total = total_infected;
+    infected = 0;
+    total_infected = 0;
+    immune = 0;
+    untouched_cities = 0;
+    for (city *c : my_cities) {
+        infected += c->get_infected();
+        total_infected += c->get_total_infected();
+        immune += c->get_immune();
+        if (c->is_untouched()) {
+            ++untouched_cities;
+        }
+    }
+    return still_interesting();
+}
+
+/************************************************************************
+ * still_interesting - evaluate whether we should continue
+ ***********************************************************************/
+
+bool world::still_interesting() const
 {
     bool result = true;
     if (min_days > 0 && day < min_days) {

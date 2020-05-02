@@ -2,18 +2,19 @@
 #define __INFECTION_COUNTER
 
 #include "common.h"
+#include "atomic_counter.h"
 
 class infection_counter
 {
 protected:
     U32 population = 0;
-    U32 susceptible = 0;
-    U32 gestating = 0;
-    U32 infected = 0;
-    U32 recovered = 0;
-    U32 immune = 0;
-    U32 dead = 0;
-    U32 total_infected = 0;
+    atomic_counter susceptible;
+    atomic_counter gestating;
+    atomic_counter infected;
+    atomic_counter recovered;
+    atomic_counter immune;
+    atomic_counter dead;
+    atomic_counter total_infected;
 public:
     infection_counter() { };
     void infect_one(person *p);

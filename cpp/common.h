@@ -15,6 +15,8 @@
 #include <iostream>
 #include <fstream>
 #include <tgmath.h>
+#include <thread>
+#include <mutex>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/slist.hpp>
@@ -27,8 +29,6 @@
 #include <boost/mpl/and.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/regex.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/operators.hpp>
 #include <boost/format.hpp>
 #define BOOST_NO_CXX11_SCOPED_ENUMS
@@ -36,7 +36,6 @@
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/date_time.hpp>
 #include <boost/optional/optional_io.hpp>
-#include <boost/thread/condition.hpp>
 #include <limits.h>
 #include <typeinfo>
 
@@ -54,16 +53,16 @@ using boost::bind;
 using std::unique_ptr;
 using std::auto_ptr;
 using std::make_pair;
+using std::thread;
+using std::mutex;
+using std::lock_guard;
+using std::recursive_mutex;
 using boost::is_same;
 using boost::optional;
 using boost::enable_if;
 using boost::disable_if;
 using boost::regex;
 using boost::smatch;
-using boost::mutex;
-using boost::try_mutex;
-using boost::recursive_mutex;
-using boost::condition;
 using boost::format;
 
 namespace bintr = boost::intrusive;

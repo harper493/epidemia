@@ -56,6 +56,11 @@ private:
     chooser<neighbor,float> neighbors_by_distance;
     chooser<neighbor,float> neighbors_by_appeal;
     mutex foreign_exposure_lock;
+    mutex agent_lock;
+    size_t person_number = 1;
+    day_number init_day_no = 0;
+    day_number middle_day_no = 0;
+    day_number finalize_day_no = 0;
     static size_t next_index;
 public:
     city(const string &name, world *w, U32 target_pop, const point &loc);
@@ -65,6 +70,7 @@ public:
     void reset();
     point get_random_location() const;
     void add_people();
+    person *add_person();
     void build_clusters();
     float distance(const city *other) const;
     person *get_random_person() const;
@@ -75,6 +81,7 @@ public:
     void foreign_expose();
     float get_exposure() { return exposure; };
     U32 get_population() const { return my_people.size(); };
+    U32 get_target_pop() const { return target_pop; };
     U32 get_target_population() const { return target_pop; };
     U32 get_leaf_cluster_count() const { return cluster_count; };
     U32 get_untouched_cluster_count() const { return untouched_cluster_count; };
@@ -82,9 +89,10 @@ public:
     cluster *get_random_parent_cluster(cluster *cl) const;
     const vector<person*> &get_people() const { return my_people; };
     world *get_world() const { return my_world; };
-    void one_day_1();
-    void one_day_2();
-    void one_day_3();
+    mutex &get_agent_lock() { return agent_lock; };
+    void init_day(day_number day);
+    void middle_day(day_number day);
+    void finalize_day(day_number day);
     string show() const;
 };
 

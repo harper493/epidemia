@@ -28,3 +28,38 @@ string join(const vector<string> &vec, const string &delim)
     return result;
 }
 
+/************************************************************************
+ * trim - apply trim to each string in a vector
+ ***********************************************************************/
+
+vector<string> trim(const vector<string> &input)
+{
+    vector<string> result;
+    for (const string &s : input) {
+        result.emplace_back(s);
+        boost::trim(result.back());
+    }
+    return result;
+}
+
+/************************************************************************
+ * get_system_core_count - return the number of cores given by the
+ * lscpu command. Return 0- if we can't get it.
+ ***********************************************************************/
+
+int get_system_core_count()
+{
+    int result = 0;
+    regex rx("^processor.*:\\s*(\\d+)");
+    std::ifstream istr("/proc/cpuinfo");
+    while (istr.good()) {
+        string line;
+        std::getline(istr, line);
+        smatch s;
+        if (regex_match(line, s, rx)) {
+            result = max(result, lexical_cast<int>(s[1]));
+        }
+    }
+    return result + 1;
+}
+

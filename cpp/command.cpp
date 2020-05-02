@@ -58,7 +58,7 @@ bool command::parse(int argc, const char **argv)
         for (auto iter : values) {
             string name = iter.first;
             if (name=="threads") {
-                thread_count = values["threads"].as<int>();
+                props["thread_count"] = as_string("threads");
             } else if (name=="verbosity") {
                 verbosity = values["verbosity"].as<int>();
             } else if (name=="output") {

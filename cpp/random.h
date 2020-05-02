@@ -45,9 +45,11 @@ public:
         static interpolator<float> power_table;
     };
 private:
-    static boost::mt19937 rng;
+    static __thread boost::mt19937 *generator;
+    static U32 my_seed;
+    static mutex my_lock;
 public:
-    static void initialize(float seed=0);
+    static void initialize(U32 seed=0);
     static float get_random();
     static int uniform_int(int minimum, int maximum);
     static float uniform_real(float minimum, float maximum);
@@ -57,6 +59,8 @@ public:
     {
         return coll[uniform_int(0, coll.size()-1)];
     }
+private:
+    static void init_thread();
 };
 
 #endif

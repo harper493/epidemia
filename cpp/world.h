@@ -25,7 +25,7 @@
     _P(float, , , infected_cities, 0.5)                                 \
     _P(float, , , initial_infected_power, 0.4)                          \
     _P(float, , , travel, 0)                                            \
-    _P(float, , , thread_count, 0)                                      \
+    _P(int  , , , thread_count, 0)                                      \
     _P(float, , , min_days, 0)                                          \
     _P(float, , , max_days, 0)                                          \
     _P(float, , , mobility_max, 0)                                      \
@@ -45,10 +45,19 @@
     
 class world
 {
+public:
+    struct agent_info
+    {
+        U32 max_pop = 0;
+        vector<city*> cities;
+    };
 private:
     vector<city*> my_cities;
     properties *my_props;
-    vector<agent*> my_agents;
+    log_output *my_logger;
+    agent_manager my_agent_manager;
+    vector<agent_info> cities_by_agent;
+    U32 agent_max_pop = 0;
     random::lognormal gestation_generator;
     random::lognormal recovery_generator;
     float infection_prob;
@@ -63,6 +72,9 @@ private:
     U32 untouched_cities = 0;
     U32 verbosity = 1;
     chooser<city, U32> city_chooser;
+    bool build_complete = false;
+    ptime start_time;
+    ptime build_complete_time;
     //
     // Cached properties
     //
@@ -85,7 +97,11 @@ public:
     float get_infection_prob() const { return infection_prob; };
     U32 get_verbosity() const { return verbosity; };
     properties *get_props() const { return my_props; };
-    bool worth_continuing() const;
+    bool still_interesting() const;
+    void build_agent(agent *ag);
+    bool end_of_day();
+    const ptime &get_start_time() const { return start_time; };
+    const ptime &get_build_complete_time() const { return build_complete_time; };
 #undef _P
 #define _P(TYPE, PREFIX, DELIM, NAME, DFLT)          \
     TYPE get_##PREFIX##DELIM##NAME() const      \
@@ -100,6 +116,8 @@ private:
     void make_agents();
     void show_mobility_data();
     void show_cities();
+    void finish_build();
+    void assign_cities_to_agents();
 };
 
 #endif

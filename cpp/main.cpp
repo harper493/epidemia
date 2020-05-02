@@ -41,18 +41,18 @@ int main(int argc, const char **argv)
     }
     log_output logger(args.get_output_file(), args.get_csv(), true, log_columns);
     random::initialize(props->get_numeric("random"));
-    ptime start_time(microsec_clock::local_time());
     the_world = new world(props);
     the_world->build();
-    ptime build_time(microsec_clock::local_time());
     the_world->run(logger);
-    ptime run_time(microsec_clock::local_time());
+    ptime run_complete_time(microsec_clock::local_time());
+    auto build_time = the_world->get_build_complete_time() - the_world->get_start_time();
+    auto run_time = run_complete_time - the_world->get_build_complete_time();
     if (args.get_verbosity()) {
         std::cout << formatted("\nPopulation %d build time %.3fS run time %.3fS (%d mS/day)\n",
                                the_world->get_population(),
-                               (build_time-start_time).total_microseconds() / 1e6,
-                               (run_time-build_time).total_microseconds() / 1e6,
-                               (run_time-build_time).total_microseconds() / (1000.0 * (float)the_world->get_day()));
+                               build_time.total_microseconds() / 1e6,
+                               run_time.total_microseconds() / 1e6,
+                               run_time.total_microseconds() / (1000.0 * (float)the_world->get_day()));
     }
     return 0;
 }

@@ -156,7 +156,7 @@ void cluster::add_exposure(day_number day, city *c, float e)
             exposure = add_probability(exposure, e);
         }
     } else {
-        mutex::scoped_lock sl(foreign_lock);
+        lock_guard<mutex> sl(foreign_lock);
         if (foreign_exposure_day!=day) {
             foreign_exposure = e;
             foreign_exposure_day = day;

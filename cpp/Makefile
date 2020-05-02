@@ -6,7 +6,7 @@ APP_DIR  := ..
 DEP_DIR  := dep
 TARGET   := epidemia_fast
 INCLUDE  := -I.
-LIBS     := -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_date_time -lboost_program_options
+LIBS     := -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_date_time -lboost_program_options -lpthread
 DEBUG_FLAG := $(strip $(wildcard DEBUG))
 ifdef DEBUG_FLAG
 OPT    := -O0 -DDEBUG
@@ -16,9 +16,11 @@ endif
 
 SRC      := \
 	agent.cpp \
+	agent_manager.cpp \
 	city.cpp \
 	cluster.cpp \
 	command.cpp \
+	enum_helper.cpp \
 	geometry.cpp \
 	infection_counter.cpp \
 	log_output.cpp \

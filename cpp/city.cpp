@@ -84,30 +84,35 @@ void city::finalize()
  * one_day_1 - first phase of calculation for one day. 
  ***********************************************************************/
 
-void city::one_day_1()
+void city::init_day(day_number day)
 {
-    exposure = 0;
-    foreign_exposure = 0;
+    if (init_day_no != day) {
+        init_day_no = day;
+        exposure = 0;
+        foreign_exposure = 0;
+    }
 }
 
 /************************************************************************
  * one_day_2 - second phase of calculation for one day. 
  ***********************************************************************/
 
-void city::one_day_2()
+void city::middle_day(day_number day)
 {
-    day_number day = my_world->get_day();
-    exposure = add_probability(exposure, foreign_exposure);
-    for (auto iter : my_cluster_families) {
-        cluster_family *cf = iter.second;
-        for (cluster::list &cll : cf->clusters) {
-            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
-                cl->expose_parent(day);
+    if (middle_day_no != day) {
+        middle_day_no = day;
+        exposure = add_probability(exposure, foreign_exposure);
+        for (auto iter : my_cluster_families) {
+            cluster_family *cf = iter.second;
+            for (cluster::list &cll : cf->clusters) {
+                for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+                    cl->expose_parent(day);
+                }
             }
-        }
-        for (cluster::list &cll : cf->clusters | boost::adaptors::reversed) {
-            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+            for (cluster::list &cll : cf->clusters | boost::adaptors::reversed) {
+                for (cluster *cl : cluster::cluster_prefetcher(cll))  {
                 cl->gather_exposure(day);
+                }
             }
         }
     }
@@ -117,19 +122,22 @@ void city::one_day_2()
  * one_day_3 - third phase of calculation for one day
  ***********************************************************************/
 
-void city::one_day_3()
+void city::finalize_day(day_number day)
 {
-    if (false) {
-        susceptible_cluster_count = 0;
-        untouched_cluster_count = 0;
-        for (auto iter : my_cluster_families) {
-            cluster::cluster_prefetcher pf(iter.second->get_leaf_clusters());
-            for (cluster *cl : pf) {
-                if (cl->is_susceptible()) {
-                    ++susceptible_cluster_count;
-                }
-                if (cl->is_untouched()) {
-                    ++untouched_cluster_count;
+    if (finalize_day_no != day) {
+        finalize_day_no = day;
+        if (false) {
+            susceptible_cluster_count = 0;
+            untouched_cluster_count = 0;
+            for (auto iter : my_cluster_families) {
+                cluster::cluster_prefetcher pf(iter.second->get_leaf_clusters());
+                for (cluster *cl : pf) {
+                    if (cl->is_susceptible()) {
+                        ++susceptible_cluster_count;
+                    }
+                    if (cl->is_untouched()) {
+                        ++untouched_cluster_count;
+                    }
                 }
             }
         }
@@ -159,29 +167,33 @@ person *city::get_random_person() const
 }
 
 /************************************************************************
- * build_clusters - build the nest of clusters for each cluster type
+ * build_clusters - build the nest of clusters for each cluster type. This
+ * may be called for multiple threads, so don't do anything once
+ * the clusters are present.
  ***********************************************************************/
 
 void city::build_clusters()
 {
-    for (const auto &iter : cluster_type::get_cluster_types()) {
-        const cluster_type *clt = iter.second;
-        cluster_family *cf = new cluster_family(clt);
-        cf->root = clt->make_clusters(this);
-        my_cluster_families[clt] = cf;
-        //
-        // Build cluster lists
-        //
-        for (auto iter : my_cluster_families) {
-            cluster_family *cf = iter.second;
-            for (cluster *cl : cf->root->iter_all()) {
-                while (cl->get_depth() >= cf->clusters.size()) {
-                    cf->clusters.emplace_back();
+    if (my_cluster_families.empty()) {
+        for (const auto &iter : cluster_type::get_cluster_types()) {
+            const cluster_type *clt = iter.second;
+            cluster_family *cf = new cluster_family(clt);
+            cf->root = clt->make_clusters(this);
+            my_cluster_families[clt] = cf;
+            //
+            // Build cluster lists
+            //
+            for (auto iter : my_cluster_families) {
+                cluster_family *cf = iter.second;
+                for (cluster *cl : cf->root->iter_all()) {
+                    while (cl->get_depth() >= cf->clusters.size()) {
+                        cf->clusters.emplace_back();
+                    }
+                    cf->clusters[cl->get_depth()].push_back(cl);
                 }
-                cf->clusters[cl->get_depth()].push_back(cl);
             }
+            cf->my_chooser.create(cf->get_leaf_clusters(), &cluster::get_size);
         }
-        cf->my_chooser.create(cf->get_leaf_clusters(), &cluster::get_size);
     }
 }
 
@@ -195,23 +207,37 @@ void city::add_people()
     my_people.clear();
     my_people.reserve(target_pop);
     for (U32 n=1; n<=target_pop; ++n) {
-        string pname = formatted("%s.P%d", name, n);
-        point location;
-        cluster::list clusters;
-        for (auto &i : my_cluster_families) {
-            cluster_family *cf = i.second;
-            cluster *cl = cf->my_chooser.choose();
-            debug_assert(cl->is_leaf());
-            clusters.push_back(cl);
-            if (cf->my_type->is_local()) {
-                location = cl->get_location();
-            }
-        }
-        person *p = new person(pname, this, location, clusters);
-        my_people.push_back(p);
-        this->infection_counter::add_person(p);
+        add_person();
     }
-    
+}
+
+/************************************************************************
+ * add_person - add one person
+ ***********************************************************************/
+
+person *city::add_person()
+{
+    if (my_people.empty()) {
+        my_people.reserve(target_pop);
+    }
+    size_t my_number = person_number;
+    ++person_number;
+    string pname = formatted("%s.P%d", name, my_number);
+    point location;
+    cluster::list clusters;
+    for (auto &i : my_cluster_families) {
+        cluster_family *cf = i.second;
+        cluster *cl = cf->my_chooser.choose();
+        debug_assert(cl->is_leaf());
+        clusters.push_back(cl);
+        if (cf->my_type->is_local()) {
+            location = cl->get_location();
+        }
+    }
+    person *p = new person(pname, this, location, clusters);
+    my_people.push_back(p);
+    this->infection_counter::add_person(p);
+    return p;
 }
 
 /************************************************************************
@@ -290,7 +316,7 @@ void city::expose(city *owner)
 
 void city::foreign_expose()
 {
-    mutex::scoped_lock sl(foreign_exposure_lock);
+    lock_guard<mutex> sl(foreign_exposure_lock);
     foreign_exposure = add_probability(exposure, exposure_per_person);
 }
 
