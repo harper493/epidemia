@@ -5,8 +5,10 @@
 #include "enum_helper.h"
 #include "geometry.h"
 #include "cluster.h"
+#include "allocator.h"
 
-class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>>
+class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>>,
+               public allocator_user<person>
 {
 public:
     enum class state: U8 {
@@ -44,6 +46,7 @@ public:
     void force_infect(day_number day);
     string show() const;
     world *get_world() const;
+    static person* factory(const string &n, city *c, const point &loc, const cluster::list &clusters);
 private:
     void gestate(day_number day);
     void infect(day_number day);
@@ -67,6 +70,8 @@ public:
         }
     }
 };
+
+DECLARE_ALLOCATOR(person)
 
 #endif
     

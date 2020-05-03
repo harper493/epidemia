@@ -3,6 +3,8 @@
 #include "city.h"
 #include "world.h"
 
+DEFINE_ALLOCATOR(person)
+
 /************************************************************************
  * Constructor.
  *
@@ -18,6 +20,17 @@ person::person(const string &n, city *c, const point &loc, const cluster::list &
     }
     mobility = get_world()->make_mobility();
 }
+
+/************************************************************************
+ * The factory is needed to work around issues with the template
+ * static allocator pointer.
+ ***********************************************************************/
+
+person *person::factory(const string &n, city *c, const point &loc, const cluster::list &clusters)
+{
+    return new person(n, c, loc, clusters);
+}
+
 
 /************************************************************************
  * one_day - do whatever needs doing for this person for one day,

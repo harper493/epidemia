@@ -11,6 +11,8 @@
 
 cluster_type::cluster_type_map_t cluster_type::cluster_types;
 
+DEFINE_ALLOCATOR(cluster)
+
 /************************************************************************
  * reset - reset to base condition for a new day
  ***********************************************************************/
@@ -66,6 +68,7 @@ float cluster::get_member_exposure(day_number day)
 
 void cluster::add_person(person *p)
 {
+    spinlock::scoped_lock sl(my_lock);
     my_people.push_back(p);
     this->infection_counter::add_person(p);
 }
@@ -76,6 +79,7 @@ void cluster::add_person(person *p)
 
 void cluster::add_child(cluster *cl)
 {
+    spinlock::scoped_lock sl(my_lock);
     debug_assert(cl->depth+1==depth);
     my_children.push_back(cl);
     has_children = true;
@@ -447,9 +451,10 @@ cluster *cluster_type::make_clusters(city *c) const
         }
         clusters.emplace_back();
         clusters[depth].reserve(count);
+        string clname = formatted("%s.%s.%d.%d", c->get_name(), name, depth, 1);
         for (size_t i=0; i<count; ++i) {
-            string clname = formatted("%s.%s.%d.%d", c->get_name(), name, depth, i);
             clusters[depth].push_back(new cluster(clname, this, c, sizes[i], depth, c->get_random_location()));
+            add_one_to_string(clname);
         }
         if (depth > 0) {
             chooser<cluster, U32> choose(clusters[depth], &cluster::get_size);

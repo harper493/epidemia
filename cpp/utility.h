@@ -124,6 +124,8 @@ inline void join_to(string &first, const string &second, const string &delim)
 }
 
 vector<string> trim(const vector<string> &input);
+void add_one_to_string(string &str);
+void itoa(U32 value, char *ptr);
 
 inline bool contains(const string &str, const string &key)
 {

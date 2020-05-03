@@ -66,15 +66,15 @@ void world::finish_build()
     if (!build_complete) {
         build_complete = true;
         make_infection_prob();
+        for (city *c : my_cities) {
+            c->finalize();
+        }
+        // show_cities();
         infect_cities();
         for (auto i : cluster_type::get_cluster_types()) {
             cluster_type *ct = i.second;
             ct->finalize(this);
         }
-        for (city *c : my_cities) {
-            c->finalize();
-        }
-        // show_cities();
     }
     build_complete_time = ptime_now();
 }
@@ -134,7 +134,7 @@ void world::assign_cities_to_agents()
     if (thread_count==0) {
         thread_count = get_system_core_count();
     }
-    thread_count = max(1, min(thread_count, city_count / 3));
+    thread_count = max(1, min(thread_count, city_count / 2));
     if (thread_count > 1) {
         agent_max_pop = population / thread_count;
         size_t big_cities = 0;

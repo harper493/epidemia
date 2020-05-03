@@ -41,7 +41,7 @@
     _P(float, city, _, pop_ratio_power, 0.5)                            \
     _P(float, city, _, exposure, 0.001)                                 \
     _P(float, city, _, appeal_power, 0.4)                               \
-    _P(float, city, _, auto_max_pop, 0.3)                               \
+    _P(float, city, _, auto_max_pop, 0.2)                               \
     
 class world
 {

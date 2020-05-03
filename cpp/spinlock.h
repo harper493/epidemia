@@ -5,7 +5,7 @@
 #include <emmintrin.h>
 
 #ifndef __SPINLOCK
-#define __SPINOCK
+#define __SPINLOCK
 
 void _spinlock_wait() _always_inline;
 

@@ -57,7 +57,7 @@ private:
     chooser<neighbor,float> neighbors_by_appeal;
     mutex foreign_exposure_lock;
     mutex agent_lock;
-    atomic_counter person_number = 1;
+    atomic_counter person_number = 0;
     day_number init_day_no = 0;
     day_number middle_day_no = 0;
     day_number finalize_day_no = 0;

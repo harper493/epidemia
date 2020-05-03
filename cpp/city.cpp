@@ -34,10 +34,24 @@ void city::finalize()
     //
     // Set infection factors
     //
-    pop_ratio = my_world->get_city_pop_ratio(population);
+    pop_ratio = my_world->get_city_pop_ratio(target_pop);
     exposure_per_person = my_world->get_infection_prob()
         * my_world->get_props()->get_numeric("city.exposure")
         * pop_ratio;
+    //
+    // populate my_people from the clusters
+    //
+    {
+        lock_guard<mutex> lg(my_mutex);
+        for (auto i : my_cluster_families) {
+            cluster_family *cf = i.second;
+            for (cluster *cl : cluster::cluster_prefetcher(cf->get_leaf_clusters())) {
+                for (person *p : cl->get_people()) {
+                    my_people.push_back(p);
+                }
+            }
+        }
+    }
     //
     // Build neighbor data
     //
@@ -199,17 +213,11 @@ void city::build_clusters()
 }
 
 /************************************************************************
- * add_person - add one person. Called only from add_people, with
- * the mutex held.
+ * add_person - add one person.
  ***********************************************************************/
 
 void city::add_person(person *p)
 {
-    if (my_people.empty()) {
-        my_people.reserve(target_pop);
-    }
-    my_people.push_back(p);
-    this->infection_counter::add_person(p);
     for (cluster *cl : p->get_clusters()) {
         cl->add_person(p);
     }
@@ -223,7 +231,11 @@ person *city::make_person()
 {
     size_t my_number = person_number;
     ++person_number;
-    string pname = formatted("%s.P%d", name, my_number);
+    char pname[64];             // big enough!
+    strcpy(pname, name.c_str());
+    char *offset = &pname[name.size()];
+    *offset++ = '.';
+    itoa(person_number, offset);
     point location;
     cluster::list clusters;
     for (auto &i : my_cluster_families) {
@@ -235,7 +247,7 @@ person *city::make_person()
             location = cl->get_location();
         }
     }
-    person *p = new person(pname, this, location, clusters);
+    person *p = person::factory(pname, this, location, clusters);
     return p;
 }
 

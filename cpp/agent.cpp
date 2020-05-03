@@ -140,10 +140,7 @@ void epidemia_agent::populate_cities()
         for (int i=0; i<pop; ++i) {
             person *p = c->make_person();
             susceptibles.insert(p);
-        }
-        {
-            unique_lock<mutex> sl(c->get_agent_lock());
-            c->add_people(susceptibles.get_new());
+            c->add_person(p);
         }
     }
 }

@@ -5,6 +5,8 @@
 #include "infection_counter.h"
 #include "geometry.h"
 #include "prefetcher.h"
+#include "spinlock.h"
+#include "allocator.h"
 
 class cluster_type
 {
@@ -43,7 +45,8 @@ friend class cluster;
 friend class world;
 };
 
-class cluster : public infection_counter
+class cluster : public infection_counter,
+                public allocator_user<cluster>
 {
 public:
     typedef function<void(cluster*)> visitor_fn;
@@ -129,6 +132,7 @@ private:
     point location;
     bool has_children = false;
     mutex foreign_lock;
+    spinlock my_lock;
     static map<string,cluster_type> cluster_types;
     static vector<string> clsuter_type_names;
 public:
@@ -149,6 +153,7 @@ public:
     bool is_leaf() const { return depth==0; };
     bool is_full() const { return my_children.size() > size+1; };
     bool is_foreign_exposure() const { return my_parent != my_exposure_parent; };
+    const vector<person*> &get_people() const { return my_people; };
     iterator_controller iter_all() { return iterator_controller(this, false, false); };
     iterator_controller iter_pre() { return iterator_controller(this, false, true); };
     iterator_controller iter_leaves() { return iterator_controller(this, true, false); };    
