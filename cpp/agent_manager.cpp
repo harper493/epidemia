@@ -1,7 +1,50 @@
 #include "agent_manager.h"
+#include <chrono>
 
 /************************************************************************
- * build - create the specified number of agents
+ * This file implements the agent_manager / agent system for
+ * parallel threads working on the same task. It supports the
+ * notion of several (no predefined limit) parallel threads each
+ * working on a portion of a shared task, and staying in lockstep
+ * so each thread completes step N before any proceed to step N+1.
+ *
+ * The base classes in this file know no more than that. All
+ * knowledge of the specific tasks to be performed is in the
+ * derived classes.
+ *
+ * Specifically there are three classes here:
+ *
+ * -- agent_manager - creates and manages the agent threads,
+ *                    and synchroizes them
+ * -- agent -         base class for the worker threads
+ * -- agent_task -    completely abstract class which represents
+ *                    the task being performed
+ *
+ * An implementation needs to do the following:
+ *
+ * -- derive from agent a class which actually does something.
+ *    It does this by implementing the execute() function
+ *    which will be called successively to implement the
+ *    task steps defined by the agent_task derivd class
+ * -- derive from agent_task a class which describes the
+ *    task to be performed. The implementation must define
+ *    the function:
+ *
+ *    -- next_step - advances to the next step of the task.
+ *                   Returns true iff the work should continue,
+ *                   false, if it should stop
+ *
+ * Implementation Notes
+ * --------------------
+ *
+ * -- we use condition variables to synchronise the manager
+ *    and the agents, but notify_all doesn't seem to do what
+ *    it says, so as a backstop we run a short timeout.
+ ***********************************************************************/
+
+/************************************************************************
+ * build - create the specified number of agents. The factory function
+ * must return a new object of the agent-derived class.
  ***********************************************************************/
 
 void agent_manager::build(size_t agent_count, factory_fn_t factory)
@@ -22,8 +65,8 @@ void agent_manager::build(size_t agent_count, factory_fn_t factory)
 
 void agent_manager::execute(agent_task *task)
 {
-    agent_run = false;
     current_task = task;
+    agent_run = false;
     if (my_agents.size()==1) {
         execute_sync(task);
     } else {
@@ -31,13 +74,13 @@ void agent_manager::execute(agent_task *task)
             active_agents = my_agents.size();
             awake_agents();
             while (active_agents) {
-                usleep(100);
-                continue;
                 unique_lock<mutex> msl(manager_mutex);
-                manager_condition.wait(msl);
+                manager_condition.wait_for(msl, std::chrono::microseconds(100));
             }
             agent_run = false;
-            if (!task->next_step()) {
+            if (task->next_step()) {
+                ++task->step_number;
+            } else {
                 break;
             }
         }
@@ -91,8 +134,8 @@ void agent_manager::awake_agents()
 
 void agent_manager::agent_complete()
 {
-    --active_agents;
     unique_lock<mutex> msl(manager_mutex);
+    --active_agents;
     manager_condition.notify_all();
 }
 
@@ -103,10 +146,8 @@ void agent_manager::agent_complete()
 
 void agent_manager::agent_wait()
 {
-    usleep(100);
-    return;
     unique_lock<mutex> asl(agent_mutex);
-    agent_condition.wait(asl);
+    agent_condition.wait_for(asl, std::chrono::microseconds(100));
 }
 
 /************************************************************************
@@ -115,10 +156,6 @@ void agent_manager::agent_wait()
 
 agent::agent(agent_manager *am, size_t idx, bool as)
     : my_manager(am), my_index(idx), async(as)
-{
-}
-
-agent::~agent()
 {
 }
 
@@ -139,7 +176,7 @@ void agent::start()
 
 void agent::run()
 {
-    auto_ptr<agent_task> last_task;
+    S32 last_step = -1;
     while (true) {
         my_manager->agent_wait();
         if (my_manager->is_terminating()) {
@@ -147,9 +184,9 @@ void agent::run()
         }
         const agent_task *t = my_manager->get_task();
         if (my_manager->agent_can_run() &&
-            (last_task.get()==NULL || !last_task->equals(t))) {
-            last_task.reset(t->copy());
-            execute(last_task.get());
+            (t->step_number > last_step)) {
+            last_step = t->step_number;
+            execute(t);
             my_manager->agent_complete();
         }
     }

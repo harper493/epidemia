@@ -11,6 +11,10 @@ using std::unique_lock;
 class agent;
 class agent_task;
 
+/************************************************************************
+ * agent_manager class
+ ***********************************************************************/
+
 class agent_manager
 {
 public:
@@ -49,6 +53,11 @@ private:
 friend class agent;
 };
 
+
+/************************************************************************
+ * agent class - base class for agents which do something useful
+ ***********************************************************************/
+
 class agent
 {
 protected:
@@ -58,23 +67,30 @@ protected:
     bool async;
 public:
     agent(agent_manager *am, size_t idx, bool as);
-    virtual ~agent();
+    virtual ~agent() { };
     virtual void execute(const agent_task *task) = 0;
     size_t get_index() const { return my_index; };
+private:                        // called only by agent_manager
     void start();
     void run();
     void join();
 friend class agent_manager;
 };
 
+/************************************************************************
+ * agent_task - base class for user's task class describing the current
+ * step of the job.
+ ***********************************************************************/
+
 class agent_task
 {
  private:
+    S32 step_number = 0;
  public:
     virtual ~agent_task() { };
     virtual bool next_step() = 0;
-    virtual bool equals(const agent_task *other) const = 0;
-    virtual agent_task *copy() const = 0;
+friend class agent_manager;
+friend class agent;
 };
 
 #endif

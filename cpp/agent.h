@@ -60,15 +60,6 @@ public:
     epidemia_task(const epidemia_task &other)
         : my_world(other.my_world), day(other.day), operation(other.operation) { };
     bool next_step() override;
-    bool equals(const agent_task *other) const override
-    {
-        const epidemia_task *casted = reinterpret_cast<const epidemia_task*>(other);
-        return day==casted->day && operation==casted->operation;
-    }
-    epidemia_task *copy() const override
-    {
-        return new epidemia_task(*this);
-    }
     string show_operation() const;
 friend class epidemia_agent;
 };
