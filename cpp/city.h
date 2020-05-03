@@ -57,10 +57,11 @@ private:
     chooser<neighbor,float> neighbors_by_appeal;
     mutex foreign_exposure_lock;
     mutex agent_lock;
-    size_t person_number = 1;
+    atomic_counter person_number = 1;
     day_number init_day_no = 0;
     day_number middle_day_no = 0;
     day_number finalize_day_no = 0;
+    mutex my_mutex;
     static size_t next_index;
 public:
     city(const string &name, world *w, U32 target_pop, const point &loc);
@@ -70,7 +71,10 @@ public:
     void reset();
     point get_random_location() const;
     void add_people();
-    person *add_person();
+    void add_person(person *p);
+    person *make_person();
+    template<class COLL>
+    void add_people(const COLL &coll);
     void build_clusters();
     float distance(const city *other) const;
     person *get_random_person() const;
@@ -95,5 +99,21 @@ public:
     void finalize_day(day_number day);
     string show() const;
 };
+
+/************************************************************************
+ * Inline functions
+ ***********************************************************************/
+
+template<class COLL>
+inline void city::add_people(const COLL &coll)
+{
+    unique_lock<mutex> lg(my_mutex);
+    for (person *p : const_cast<COLL&>(coll)) {
+        if (p->get_city()==this) {
+            add_person(p);
+        }
+    }
+}
+
 
 #endif

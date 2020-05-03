@@ -71,6 +71,7 @@ public:
 public:
     iterator begin() { return iterator(*this); };
     iterator end() { return iterator(); };
+    const vec_t &get_new() const { return to_list; };
 };
 
 #endif

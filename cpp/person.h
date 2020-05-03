@@ -33,6 +33,7 @@ public:
     const string &get_name() const { return name; };
     state get_state() const { return my_state; };
     city *get_city() const { return my_city; };
+    const cluster::list &get_clusters() const { return my_clusters; };
     float get_mobility() const { return mobility; };
     bool is_susceptible() const { return my_state==state::susceptible; };
     bool is_gestating() const { return my_state==state::gestating; };

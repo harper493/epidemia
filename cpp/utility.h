@@ -136,4 +136,9 @@ inline bool contains(const string &str, const string &key)
 
 int get_system_core_count();
 
+inline ptime ptime_now()
+{
+    return boost::posix_time::microsec_clock::local_time();
+}
+
 #endif

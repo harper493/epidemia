@@ -6,6 +6,7 @@
 #include "double_list.h"
 #include "agent_manager.h"
 #include "enum_helper.h"
+#include "utility.h"
 
 class epidemia_agent : public agent
 {
@@ -41,6 +42,7 @@ class epidemia_task : public agent_task
 {
 public:
     enum operations {
+        op_first,
         op_populate=1,          // populate my cities
         op_pre_init_last,
         op_init_day,
@@ -50,17 +52,27 @@ public:
         op_finalize_day,
         op_last,                // must be last
     };
+    struct timer
+    {
+        time_duration total_time;
+        U32 events = 0;
+    };
 private:
     world *my_world;
     day_number day = 0;
-    operations operation = op_populate;    
+    operations operation = op_populate;
+    array<timer, ((int)op_last)> timers;
+    ptime step_start_time;
 public:
     epidemia_task(world *w)
-        : my_world(w) { };
-    epidemia_task(const epidemia_task &other)
-        : my_world(other.my_world), day(other.day), operation(other.operation) { };
+        : my_world(w), step_start_time(ptime_now()) { };
     bool next_step() override;
-    string show_operation() const;
+    string show_operation(operations op) const;
+    string show_timers() const;
+    static operations next_operation(operations op)
+    {
+        return static_cast<operations>(((int)op) + 1);
+    }
 friend class epidemia_agent;
 };
 

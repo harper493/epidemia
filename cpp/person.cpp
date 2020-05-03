@@ -14,7 +14,6 @@ person::person(const string &n, city *c, const point &loc, const cluster::list &
     : name(n), my_city(c), my_location(loc)
 {
     for (cluster *cl : clusters) {
-        cl->add_person(this);
         my_clusters.push_back(cl);
     }
     mobility = get_world()->make_mobility();

@@ -5,6 +5,39 @@
 #include "formatted.h"
 
 /************************************************************************
+ * This class implements the agent (see agent_manager.cpp) responsible for
+ * performing the world class functions. It is driven by a single
+ * function, execute(), which dispatches according to the task described in
+ * the epdiemia_task object. That describes a day, and the job to be done
+ * for that day.
+ *
+ * There are several phases to the operation:
+ *
+ * -- on day 0 only, we run populate_cities
+ * -- on subseequent days, there are the following steps. They are 
+ *    performed in lockstep, supervised by the agent manager, such
+ *    that all agents h have completed step N before any o fthem
+ *    start step N+1
+ * -- initialise our cities for the day
+ * -- spread infection from our infected population
+ * -- manage the infection within clusters within the cities (middle() )
+ * -- expose our susceptible population
+ * -- finalize the city operations
+ *
+ * Each agent is responsible for a subset of the total population, which
+ * it keeps in three lists: susceptible, destating and infected. Once
+ * they have recovered, there is nothing for us to do so we just 
+ * forget about them. Each agent creates its own people in
+ * populate_cities().
+ *
+ * For themost part each city is handeld by exactly one agent. But the 
+ * largest cities need to be split, with a subset of the population
+ * handled by different agents. This requires some careful
+ * concurrency control to allow maximum parallelism without
+ * breaking anything.
+ ***********************************************************************/
+
+/************************************************************************
  * static data
  ***********************************************************************/
 
@@ -48,7 +81,7 @@ void epidemia_agent::execute(const agent_task *task_base)
     const epidemia_task *task = reinterpret_cast<const epidemia_task*>(task_base);
 #if 0
     std::cout << formatted("epidemia_agent %2d day %4d operation %s\n",
-                           my_index, task->day, task->show_operation());
+                           my_index, task->day, task->show_operation(operation));
 #endif
     switch (task->operation) {
     case epidemia_task::op_populate:
@@ -76,9 +109,7 @@ void epidemia_agent::execute(const agent_task *task_base)
 
 /************************************************************************
  * add_cities - add a city, and add its people to the
- * appropriate lists. If 'spacing' is not one, then we
- * just every n'th person since we are sharing the city with
- * other epidemia_agents.
+ * appropriate lists.
  ***********************************************************************/
 
 void epidemia_agent::add_cities(const vector<city*> &cities, U32 max_population)
@@ -90,9 +121,7 @@ void epidemia_agent::add_cities(const vector<city*> &cities, U32 max_population)
 }
 
 /************************************************************************
- * populate_cities - add people to each city I own. For the first city,
- * add only max_pop if it is non-zero. If I have more than once city
- * fully populate the others.
+ * populate_cities - add people to each city I own.
  ***********************************************************************/
 
 void epidemia_agent::populate_cities()
@@ -104,11 +133,17 @@ void epidemia_agent::populate_cities()
             pop = min(pop, max_pop);
         }
         first = false;
-        unique_lock<mutex> sl(c->get_agent_lock());
-        c->build_clusters();
+        {
+            unique_lock<mutex> sl(c->get_agent_lock());
+            c->build_clusters();
+        }
         for (int i=0; i<pop; ++i) {
-            person *p = c->add_person();
+            person *p = c->make_person();
             susceptibles.insert(p);
+        }
+        {
+            unique_lock<mutex> sl(c->get_agent_lock());
+            c->add_people(susceptibles.get_new());
         }
     }
 }
@@ -208,12 +243,16 @@ void epidemia_agent::finalize_day(day_number day)
 bool epidemia_task::next_step()
 {
     bool result = true;
-    operation = static_cast<operations>(((int)operation) + 1);
+    timer &t = timers[((int)operation)];
+    t.total_time += ptime_now() - step_start_time;
+    ++t.events;
+    operation = next_operation(operation);
     if (operation>=op_last || operation==op_pre_init_last) {
         operation = op_init_day;
         ++day;
         result = my_world->end_of_day();
     }
+    step_start_time = ptime_now();
     return result;
 }
 
@@ -221,7 +260,30 @@ bool epidemia_task::next_step()
  * epidemia_task functions
  ***********************************************************************/
 
-string epidemia_task::show_operation() const
+string epidemia_task::show_operation(operations op) const
 {
-    return enum_helper<epidemia_task::operations>().str(operation);
+    return enum_helper<epidemia_task::operations>().str(op);
 }
+
+/************************************************************************
+ * show_timers - generate a string showing the step timers
+ ***********************************************************************/
+
+string epidemia_task::show_timers() const
+{
+    string result;
+    operations op = op_first;
+    while (op!=op_last) {
+        const timer &t = timers[op];
+        if (t.events) {
+            join_to(result,
+                    formatted("%14s: %8.3f mS",
+                              show_operation(op),
+                              ((float)t.total_time.total_microseconds())/(1000 * t.events)),
+                    "\n");
+        }
+        op = next_operation(op);
+    }
+    return result;
+}
+

@@ -38,8 +38,9 @@
  * --------------------
  *
  * -- we use condition variables to synchronise the manager
- *    and the agents, but notify_all doesn't seem to do what
- *    it says, so as a backstop we run a short timeout.
+ *    and the agents, but there are too many race conditions
+ *    to make this perfect, so as a backstop we run a short
+ *    (100 uS) timer.
  ***********************************************************************/
 
 /************************************************************************

@@ -174,6 +174,7 @@ person *city::get_random_person() const
 
 void city::build_clusters()
 {
+    lock_guard<mutex> lg(my_mutex);
     if (my_cluster_families.empty()) {
         for (const auto &iter : cluster_type::get_cluster_types()) {
             const cluster_type *clt = iter.second;
@@ -198,28 +199,28 @@ void city::build_clusters()
 }
 
 /************************************************************************
- * add_people - add people to the city, including assigning them
- * to clusters as appropriate
+ * add_person - add one person. Called only from add_people, with
+ * the mutex held.
  ***********************************************************************/
 
-void city::add_people()
-{
-    my_people.clear();
-    my_people.reserve(target_pop);
-    for (U32 n=1; n<=target_pop; ++n) {
-        add_person();
-    }
-}
-
-/************************************************************************
- * add_person - add one person
- ***********************************************************************/
-
-person *city::add_person()
+void city::add_person(person *p)
 {
     if (my_people.empty()) {
         my_people.reserve(target_pop);
     }
+    my_people.push_back(p);
+    this->infection_counter::add_person(p);
+    for (cluster *cl : p->get_clusters()) {
+        cl->add_person(p);
+    }
+}
+
+/************************************************************************
+ * make_person - create one person for this city
+ ***********************************************************************/
+
+person *city::make_person()
+{
     size_t my_number = person_number;
     ++person_number;
     string pname = formatted("%s.P%d", name, my_number);
@@ -235,8 +236,6 @@ person *city::add_person()
         }
     }
     person *p = new person(pname, this, location, clusters);
-    my_people.push_back(p);
-    this->infection_counter::add_person(p);
     return p;
 }
 
@@ -327,6 +326,6 @@ void city::foreign_expose()
 string city::show() const
 {
     return formatted("%6s pop %7d size %6.3f location %15s",
-                     name, get_population(), size, my_location);
+                     name, target_pop, size, my_location);
 }
 

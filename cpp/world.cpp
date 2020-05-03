@@ -5,12 +5,11 @@
 #include "formatted.h"
 #include "chooser.h"
 #include "properties.h"
+#include "command.h"
 #include <tgmath.h>
 #include <algorithm>
 #include <numeric>
 #include <boost/range/adaptors.hpp>
-
-using boost::posix_time::microsec_clock;
 
 /************************************************************************
  * constructor
@@ -50,11 +49,14 @@ void world::load_props()
 
 void world::build()
 {
-    start_time = microsec_clock::local_time();
+    start_time = ptime_now();
     cluster_type::build(this);
     mobility_threshold = 3 * mobility_average / mobility_max;
     mobility_multiplier = pow(mobility_max, 3) / (9 * pow(mobility_average, 2));
     add_cities();
+    if (the_args->get_verbosity()) {
+        show_cities();
+    }
     assign_cities_to_agents();
     make_agents();
 }
@@ -74,7 +76,7 @@ void world::finish_build()
         }
         // show_cities();
     }
-    build_complete_time = microsec_clock::local_time();
+    build_complete_time = ptime_now();
 }
 
 /************************************************************************
@@ -324,6 +326,9 @@ void world::run(log_output &logger)
     epidemia_task task(this);
     my_agent_manager.execute(&task);
     my_agent_manager.terminate();
+    if (the_args->get_verbosity()) {
+        std::cout << task.show_timers() << std::endl;
+    }
 }
 
 /************************************************************************

@@ -56,6 +56,7 @@ using std::make_pair;
 using std::thread;
 using std::mutex;
 using std::lock_guard;
+using std::unique_lock;
 using std::recursive_mutex;
 using boost::is_same;
 using boost::optional;
@@ -70,6 +71,7 @@ namespace bfs = boost::filesystem;
 namespace bpt = boost::posix_time;
 
 using bpt::ptime;
+using bpt::time_duration;
 
 typedef boost::multiprecision::uint256_t U256;
 typedef __uint128_t U128;
@@ -92,6 +94,7 @@ class city;
 class world;
 class cluster;
 class properties;
+class command;
 
 /************************************************************************
  * Traits for widespread use
@@ -104,6 +107,7 @@ struct streamable_traits { };
  ***********************************************************************/
 
 extern world *the_world;
+extern command *the_args;
 
 /************************************************************************
  * Compiler specific macros
