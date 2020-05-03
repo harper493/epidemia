@@ -297,14 +297,14 @@ void world::make_infection_prob()
 void world::make_agents()
 {
     my_agent_manager.build(thread_count,
-                           bind(&agent::factory, _1, _2, _3, this));
+                           bind(&epidemia_agent::factory, _1, _2, _3, this));
 }
 
 /************************************************************************
  * build_agent - tell an agent what to do once it has been created
  ***********************************************************************/
 
-void world::build_agent(agent *ag)
+void world::build_agent(epidemia_agent *ag)
 {
     agent_info &ai = cities_by_agent[ag->get_index()];
     if (thread_count>1) {
@@ -321,7 +321,7 @@ void world::build_agent(agent *ag)
 void world::run(log_output &logger)
 {
     my_logger = &logger;
-    agent_task task(this);
+    epidemia_task task(this);
     my_agent_manager.execute(&task);
     my_agent_manager.terminate();
 }

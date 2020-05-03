@@ -98,7 +98,7 @@ public:
     U32 get_verbosity() const { return verbosity; };
     properties *get_props() const { return my_props; };
     bool still_interesting() const;
-    void build_agent(agent *ag);
+    void build_agent(epidemia_agent *ag);
     bool end_of_day();
     const ptime &get_start_time() const { return start_time; };
     const ptime &get_build_complete_time() const { return build_complete_time; };

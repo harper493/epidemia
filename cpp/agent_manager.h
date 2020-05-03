@@ -8,16 +8,16 @@
 using std::condition_variable;
 using std::unique_lock;
 
-class agent_base;
-class agent_task_base;
+class agent;
+class agent_task;
 
 class agent_manager
 {
 public:
-    typedef function<agent_base*(agent_manager*,size_t,bool)> factory_fn_t;
+    typedef function<agent*(agent_manager*,size_t,bool)> factory_fn_t;
 private:
-    vector<agent_base*> my_agents;
-    agent_task_base *current_task = NULL;
+    vector<agent*> my_agents;
+    agent_task *current_task = NULL;
     bool terminating = false;
     bool agent_run = false;
     atomic_counter active_agents;    
@@ -36,20 +36,20 @@ public:
         terminate();
     }
     void build(size_t agent_count, factory_fn_t factory);
-    void execute(agent_task_base *task);
+    void execute(agent_task *task);
     void terminate();
 private:
     void agent_complete();
-    void execute_sync(agent_task_base *task);
+    void execute_sync(agent_task *task);
     void awake_agents();
     void agent_wait();
-    const agent_task_base *get_task() const { return current_task; };
+    const agent_task *get_task() const { return current_task; };
     bool is_terminating() const { return terminating; };
     bool agent_can_run() const { return agent_run; };
-friend class agent_base;
+friend class agent;
 };
 
-class agent_base
+class agent
 {
 protected:
     agent_manager *my_manager;
@@ -57,9 +57,9 @@ protected:
     auto_ptr<thread> my_thread;
     bool async;
 public:
-    agent_base(agent_manager *am, size_t idx, bool as);
-    virtual ~agent_base();
-    virtual void execute(const agent_task_base *task) = 0;
+    agent(agent_manager *am, size_t idx, bool as);
+    virtual ~agent();
+    virtual void execute(const agent_task *task) = 0;
     size_t get_index() const { return my_index; };
     void start();
     void run();
@@ -67,14 +67,14 @@ public:
 friend class agent_manager;
 };
 
-class agent_task_base
+class agent_task
 {
  private:
  public:
-    virtual ~agent_task_base() { };
+    virtual ~agent_task() { };
     virtual bool next_step() = 0;
-    virtual bool equals(const agent_task_base *other) const = 0;
-    virtual agent_task_base *copy() const = 0;
+    virtual bool equals(const agent_task *other) const = 0;
+    virtual agent_task *copy() const = 0;
 };
 
 #endif

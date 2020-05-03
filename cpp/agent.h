@@ -7,7 +7,7 @@
 #include "agent_manager.h"
 #include "enum_helper.h"
 
-class agent : public agent_base
+class epidemia_agent : public agent
 {
 public:
     typedef double_list<person> my_list_t;
@@ -20,9 +20,9 @@ private:
     my_list_t gestatings;
     my_list_t infecteds;
 public:
-    agent(agent_manager *am, size_t idx, bool async, world *w);
-    ~agent() { };
-    void execute(const agent_task_base *task) override;
+    epidemia_agent(agent_manager *am, size_t idx, bool async, world *w);
+    ~epidemia_agent() { };
+    void execute(const agent_task *task) override;
     void add_cities(const vector<city*> &cities, U32 max_population);
     void populate_cities();
     void init_day(day_number day);
@@ -30,14 +30,14 @@ public:
     void middle(day_number day);
     void infect(day_number day);
     void finalize_day(day_number day);
-    static agent *factory(agent_manager *am, size_t idx, bool async, world *w);
+    static epidemia_agent *factory(agent_manager *am, size_t idx, bool async, world *w);
 };
 
 /************************************************************************
- * task for this agent
+ * task for this epidemia_agent
  ***********************************************************************/
 
-class agent_task : public agent_task_base
+class epidemia_task : public agent_task
 {
 public:
     enum operations {
@@ -55,24 +55,24 @@ private:
     day_number day = 0;
     operations operation = op_populate;    
 public:
-    agent_task(world *w)
+    epidemia_task(world *w)
         : my_world(w) { };
-    agent_task(const agent_task &other)
+    epidemia_task(const epidemia_task &other)
         : my_world(other.my_world), day(other.day), operation(other.operation) { };
     bool next_step() override;
-    bool equals(const agent_task_base *other) const override
+    bool equals(const agent_task *other) const override
     {
-        const agent_task *casted = reinterpret_cast<const agent_task*>(other);
+        const epidemia_task *casted = reinterpret_cast<const epidemia_task*>(other);
         return day==casted->day && operation==casted->operation;
     }
-    agent_task *copy() const override
+    epidemia_task *copy() const override
     {
-        return new agent_task(*this);
+        return new epidemia_task(*this);
     }
     string show_operation() const;
-friend class agent;
+friend class epidemia_agent;
 };
 
-DECLARE_SHOW_ENUM(agent_task::operations)
+DECLARE_SHOW_ENUM(epidemia_task::operations)
 
 #endif

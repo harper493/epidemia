@@ -8,10 +8,10 @@ void agent_manager::build(size_t agent_count, factory_fn_t factory)
 {
     my_agents.reserve(agent_count);    
     for (size_t idx=0; idx<agent_count; ++idx) {
-        agent_base *ag = (factory)(this, idx, agent_count>1);
+        agent *ag = (factory)(this, idx, agent_count>1);
         my_agents.push_back(ag);
     }
-    for (agent_base *ag : my_agents) {
+    for (agent *ag : my_agents) {
         ag->start();
     }
 }
@@ -20,7 +20,7 @@ void agent_manager::build(size_t agent_count, factory_fn_t factory)
  * execute - execute each step of each generation repeatedly
  ***********************************************************************/
 
-void agent_manager::execute(agent_task_base *task)
+void agent_manager::execute(agent_task *task)
 {
     agent_run = false;
     current_task = task;
@@ -50,7 +50,7 @@ void agent_manager::execute(agent_task_base *task)
  * clarity
  ***********************************************************************/
 
-void agent_manager::execute_sync(agent_task_base *task)
+void agent_manager::execute_sync(agent_task *task)
 {
     do {
         my_agents[0]->execute(task);
@@ -66,7 +66,7 @@ void agent_manager::terminate()
 {
     terminating = true;
     awake_agents();
-    for (agent_base *ag : my_agents) {
+    for (agent *ag : my_agents) {
         ag->join();
         delete ag;
     }
@@ -110,15 +110,15 @@ void agent_manager::agent_wait()
 }
 
 /************************************************************************
- * agent_base functions
+ * agent functions
  ***********************************************************************/
 
-agent_base::agent_base(agent_manager *am, size_t idx, bool as)
+agent::agent(agent_manager *am, size_t idx, bool as)
     : my_manager(am), my_index(idx), async(as)
 {
 }
 
-agent_base::~agent_base()
+agent::~agent()
 {
 }
 
@@ -126,10 +126,10 @@ agent_base::~agent_base()
  * start - start the thread that does the work
  ***********************************************************************/
 
-void agent_base::start()
+void agent::start()
 {
     if (async) {
-        my_thread.reset(new thread(&agent_base::run, this));
+        my_thread.reset(new thread(&agent::run, this));
     }
 }
 
@@ -137,15 +137,15 @@ void agent_base::start()
  * run - run continuously looking for something new to do
  ***********************************************************************/
 
-void agent_base::run()
+void agent::run()
 {
-    auto_ptr<agent_task_base> last_task;
+    auto_ptr<agent_task> last_task;
     while (true) {
         my_manager->agent_wait();
         if (my_manager->is_terminating()) {
             break;
         }
-        const agent_task_base *t = my_manager->get_task();
+        const agent_task *t = my_manager->get_task();
         if (my_manager->agent_can_run() &&
             (last_task.get()==NULL || !last_task->equals(t))) {
             last_task.reset(t->copy());
@@ -159,7 +159,7 @@ void agent_base::run()
  * join - join the thread
  ***********************************************************************/
 
-void agent_base::join()
+void agent::join()
 {
     if (async) {
         my_thread->join();
