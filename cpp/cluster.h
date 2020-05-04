@@ -12,6 +12,7 @@ class cluster_type
 {
 public:
     typedef map<string,cluster_type*> cluster_type_map_t;
+    static const int max_cluster_types = 5;
 private:
     string name;
     U32 min_pop;

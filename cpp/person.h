@@ -6,6 +6,7 @@
 #include "geometry.h"
 #include "cluster.h"
 #include "allocator.h"
+#include "sized_array.h"
 
 class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>>,
                public allocator_user<person>
@@ -20,13 +21,14 @@ public:
             immune,
     };
     typedef bintr::list<person, bintr::constant_time_size<false>> list;
+    typedef sized_array<cluster*,cluster_type::max_cluster_types> cluster_array_t;
     static const int prefetch_depth = 10;
 private:
     string name;
     state my_state = state::susceptible;
     city *my_city;
     point my_location;
-    cluster::list my_clusters;
+    cluster_array_t my_clusters;
     float mobility = 0;
     day_number infected_time;
     day_number next_transition;
@@ -35,7 +37,7 @@ public:
     const string &get_name() const { return name; };
     state get_state() const { return my_state; };
     city *get_city() const { return my_city; };
-    const cluster::list &get_clusters() const { return my_clusters; };
+    cluster_array_t &get_clusters() { return my_clusters; };
     float get_mobility() const { return mobility; };
     bool is_susceptible() const { return my_state==state::susceptible; };
     bool is_gestating() const { return my_state==state::gestating; };
@@ -60,7 +62,7 @@ public:
         case prefetch_depth-1:
             ::prefetch(p);
             break;
-        case prefetch_depth/2:
+        case 4:
             for (cluster *cl : p->my_clusters) {
                 ::prefetch_n<2>(cl);
             }

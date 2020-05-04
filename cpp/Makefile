@@ -1,5 +1,5 @@
 CXX      := -c++
-CXXFLAGS := -std=c++17 -funroll-loops -Wno-literal-suffix -Wreturn-type -Wno-deprecated-declarations -Wno-invalid-offsetof -Wparentheses -g
+CXXFLAGS := -std=c++17 -Wno-literal-suffix -Wreturn-type -Wno-deprecated-declarations -Wno-invalid-offsetof -Wparentheses -g
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 OBJ_DIR  := obj
 APP_DIR  := ..
