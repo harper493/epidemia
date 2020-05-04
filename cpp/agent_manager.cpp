@@ -123,8 +123,8 @@ void agent_manager::terminate()
 
 void agent_manager::awake_agents()
 {
-    agent_run = true;
     unique_lock<mutex> asl(agent_mutex);
+    agent_run = true;
     agent_condition.notify_all();
 }
 
