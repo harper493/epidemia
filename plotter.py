@@ -3,13 +3,21 @@ import os
 import numpy as np
 from utility import *
 
+default_colors = 'blue,forestgreen,red,cyan,darkviolet,gold,' \
+    'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,sandybrown,' \
+    'purple,yellowgreen,rosybrown,steelblue,crimson,black'
 
 class plotter():
 
     def __init__(self):
         pass
 
-    def plot(self, x, *data, title='', log=True, legend=True, file=None, show=False, format=None):
+    def plot(self, x, *data, title='', log=True, legend=True, file=None, show=False, format=None, props=None):
+        size = props.get(int, 'plot', 'size') if props else None
+        x_size = (props.get(int, 'plot', 'x_size') if props else None) or size
+        y_size = (props.get(int, 'plot', 'y_size') if props else None) or size
+        if x_size and y_size :
+            plt.figure(figsize=(x_size, y_size))
         for d in data:
             style = d.get('style', '-')
             color = d.get('color', None)
@@ -29,3 +37,7 @@ class plotter():
                 file = f'{file}.{format}'
             plt.savefig(file, bbox_inches='tight', format=format or 'png')
         plt.show()
+
+    @staticmethod
+    def make_colors(props):
+        return (props.get('plot', 'colors') or default_colors).split(',')

@@ -33,6 +33,9 @@ cluster.*.influence                = 1
 cluster.*.nest_influence           = 0.005
 cluster.*.proximality              = 0.9
 
+plot.x_size                        = 8
+plot.y_size                        = 6
+
 city.max_density                   = 5000
 city.min_density                   = 2000
 city.auto_power                    = 0.5
@@ -47,7 +50,6 @@ city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
 
 world_size                         = 100
-
 mobility_max                       = 0.1
 mobility_average                   = 0.001
 recovery_time                      = 15

@@ -129,7 +129,7 @@ class epidemia() :
         data = [ {'label': var_to_title(v),
                   'data' : w.get_data(v)[from_:to] } for v in ('total_infected', 'infected') ]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format)
+        p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
 
     def run_sensitivity(self):
         def one_col(w, name) :
@@ -174,7 +174,7 @@ class epidemia() :
             plot = plotter()
             x = range(from_, to)
             data = []
-            colors = ( 'b', 'g', 'r', 'c', 'm', 'y', 'k' )
+            colors = plot.make_colors(self.props)
             for p, w, c in zip(params, results, itertools.cycle(colors)) :
                 d = w.get_data('total_infected')[from_:to]
                 d1 = w.get_data('infected')[from_:to]
@@ -193,7 +193,7 @@ class epidemia() :
                 title += '\nVarying {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot.plot(x, *data, title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                      format=self.args.format)
+                      format=self.args.format, props=self.props)
             if detail_log :
                 detail_log.close()
 
