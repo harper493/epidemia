@@ -11,6 +11,7 @@ from argparser import argparser
 from math import *
 from datetime import datetime
 from fast_world import fast_world
+import functools
 import itertools
 
 import cProfile
@@ -131,9 +132,13 @@ class epidemia() :
         p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format)
 
     def run_sensitivity(self):
+        def one_col(w, name) :
+            return float_to_str(w.params[name])
         s = f'repeat:1*{self.args.repeat}' if self.args.repeat else self.args.sensitivity
         sens = sensitivity(s)
-        param_cols = [_f(var_to_title(n), '%10s', lambda w: float_to_str(sens.get_one(n))) for n in sens.get_variables()]
+        param_cols = [_f(var_to_title(n), '%10s',
+                         functools.partial(one_col, name=n))
+                      for n in sens.get_variables()]
         t = dynamic_table((param_cols+list(summary_fields)), file=self.log_file, console=self.args.console)
         if self.log_filename :
             detail_log = open(f'{self.log_path}{self.log_filename}-detail.log', 'w')
@@ -161,6 +166,7 @@ class epidemia() :
                 w = fast_world(props=self.props)
                 w.run()
                 results.append(w)
+                w.params = { sss[0]:sss[1] for sss in ss }
                 t.add_line(w)
         if self.args.plot or self.log_path:
             from_ = min([ w.get_interesting()[0] for w in results ])
