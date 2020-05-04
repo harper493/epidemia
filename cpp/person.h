@@ -20,7 +20,7 @@ public:
             immune,
     };
     typedef bintr::list<person, bintr::constant_time_size<false>> list;
-    static const int prefetch_depth = 8;
+    static const int prefetch_depth = 10;
 private:
     string name;
     state my_state = state::susceptible;
@@ -60,16 +60,16 @@ public:
         case prefetch_depth-1:
             ::prefetch(p);
             break;
-        case prefetch_depth-4:
+        case prefetch_depth/2:
             for (cluster *cl : p->my_clusters) {
-                ::prefetch_n<1>(cl);
+                ::prefetch_n<2>(cl);
             }
             break;
         default:
             break;
         }
     }
-};
+} _cache_aligned;
 
 DECLARE_ALLOCATOR(person)
 

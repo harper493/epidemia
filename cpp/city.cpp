@@ -222,26 +222,32 @@ person *city::get_random_person() const
 
 void city::build_clusters()
 {
-    lock_guard<mutex> lg(my_mutex);
-    if (my_cluster_families.empty()) {
-        for (const auto &iter : cluster_type::get_cluster_types()) {
-            const cluster_type *clt = iter.second;
-            cluster_family *cf = new cluster_family(clt);
-            cf->root = clt->make_clusters(this);
-            my_cluster_families[clt] = cf;
-            //
-            // Build cluster lists
-            //
-            for (auto iter : my_cluster_families) {
-                cluster_family *cf = iter.second;
-                for (cluster *cl : cf->root->iter_all()) {
-                    while (cl->get_depth() >= cf->clusters.size()) {
-                        cf->clusters.emplace_back();
-                    }
-                    cf->clusters[cl->get_depth()].push_back(cl);
+    while (true) {
+        cluster_family *cf = NULL;
+        {
+            lock_guard<mutex> lg(my_mutex);
+            for (const auto &iter : cluster_type::get_cluster_types()) {
+                const cluster_type *clt = iter.second;
+                if (my_cluster_families.find(clt)==my_cluster_families.end())  {
+                    cf = new cluster_family(clt);
+                    my_cluster_families[clt] = cf;
+                    break;
+                } else {
+                    cf = NULL;
                 }
             }
+        }
+        if (cf) {
+            cf->root = cf->my_type->make_clusters(this);
+            for (cluster *cl : cf->root->iter_all()) {
+                while (cl->get_depth() >= cf->clusters.size()) {
+                    cf->clusters.emplace_back();
+                }
+                cf->clusters[cl->get_depth()].push_back(cl);
+            }
             cf->my_chooser.create(cf->get_leaf_clusters(), &cluster::get_size);
+        } else {
+            break;              // all done
         }
     }
 }

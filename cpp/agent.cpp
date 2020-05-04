@@ -42,6 +42,7 @@
  ***********************************************************************/
 
 SHOW_ENUM(epidemia_task::operations)
+    SHOW_ENUM_VAL(epidemia_task::operations::op_, build_clusters)
     SHOW_ENUM_VAL(epidemia_task::operations::op_, populate)
     SHOW_ENUM_VAL(epidemia_task::operations::op_, pre_init_last)
     SHOW_ENUM_VAL(epidemia_task::operations::op_, init_day)
@@ -84,6 +85,9 @@ void epidemia_agent::execute(const agent_task *task_base)
                            my_index, task->day, task->show_operation(operation));
 #endif
     switch (task->operation) {
+    case epidemia_task::op_build_clusters:
+        build_clusters();
+        break;
     case epidemia_task::op_populate:
         populate_cities();
         break;
@@ -121,6 +125,17 @@ void epidemia_agent::add_cities(const vector<city*> &cities, U32 max_population)
 }
 
 /************************************************************************
+ * build_clusters - build clusters for my cities
+ ***********************************************************************/
+
+void epidemia_agent::build_clusters()
+{
+    for (city *c : my_cities) {
+        c->build_clusters();
+    }
+}
+
+/************************************************************************
  * populate_cities - add people to each city I own.
  ***********************************************************************/
 
@@ -133,10 +148,6 @@ void epidemia_agent::populate_cities()
             pop = min(pop, max_pop);
         }
         first = false;
-        {
-            unique_lock<mutex> sl(c->get_agent_lock());
-            c->build_clusters();
-        }
         for (int i=0; i<pop; ++i) {
             person *p = c->make_person();
             susceptibles.insert(p);

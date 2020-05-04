@@ -35,15 +35,24 @@ public:
     //    chunk *&get_current_chunk();
     C *alloc()
     {
-        chunk *&c = current_chunk;;
+        C *result = NULL;
+        chunk *&c = current_chunk;
         if (!(c && c->allocated < CHUNK_SIZE)) {
-            c = new chunk();
-            spinlock::scoped_lock sl(my_lock);
-            chunks.push_back(*c);
+            void *mem;
+            int rc = posix_memalign(&mem, CACHE_LINE_SIZE, sizeof(chunk));
+            if (rc==0) {
+                c = new chunk();
+                spinlock::scoped_lock sl(my_lock);
+                chunks.push_back(*c);
+            } else {
+                c = 0;
+            }
         }
-        C *result = reinterpret_cast<C*>(c->next_free);
-        *(C**)(&c->next_free) += 1;
-        c->allocated += 1;
+        if (c) {
+            result = reinterpret_cast<C*>(c->next_free);
+            *(C**)(&c->next_free) += 1;
+            c->allocated += 1;
+        }
         return result;
     }
 public:

@@ -52,7 +52,7 @@ public:
     typedef function<void(cluster*)> visitor_fn;
     typedef vector<cluster*> list;
     typedef map<cluster_type, list> list_map;
-    static const int prefetch_depth = 8;
+    static const int prefetch_depth = 6;
     class iterator : public std::forward_iterator_tag
     {
     public:
@@ -113,13 +113,13 @@ public:
 private:
     day_number exposure_day = 0;
     float exposure = 0;
-    const cluster_type *my_type; // keep these three in the first cache line
+    day_number member_exposure_day;
+    float member_exposure;
     day_number foreign_exposure_day = 0;
     float foreign_exposure = 0;
     day_number child_exposure_day = 0;
     float child_exposure = 0;
-    day_number member_exposure_day;
-    float member_exposure;
+    const cluster_type *my_type; // keep these in the first cache line
     string name;
     cluster *my_parent;
     cluster *my_exposure_parent;
@@ -170,7 +170,7 @@ private:
 public:
     typedef prefetcher<cluster::list, prefetch_depth, &prefetch_one> cluster_prefetcher;
 friend class cluster_type;
-};
+} _cache_aligned;
 
 inline void cluster::prefetch_one(cluster *cl, int slot)
 {
@@ -178,7 +178,7 @@ inline void cluster::prefetch_one(cluster *cl, int slot)
     case prefetch_depth-1:
         prefetch(cl);
         break;
-    case prefetch_depth-4:
+    case prefetch_depth/2:
         prefetch(cl->my_parent);
         break;
     default:

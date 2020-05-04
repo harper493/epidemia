@@ -25,6 +25,7 @@ public:
     ~epidemia_agent() { };
     void execute(const agent_task *task) override;
     void add_cities(const vector<city*> &cities, U32 max_population);
+    void build_clusters();
     void populate_cities();
     void init_day(day_number day);
     void expose(day_number day);
@@ -43,7 +44,8 @@ class epidemia_task : public agent_task
 public:
     enum operations {
         op_first,
-        op_populate=1,          // populate my cities
+        op_build_clusters=1,
+        op_populate,          // populate my cities
         op_pre_init_last,
         op_init_day,
         op_expose,
@@ -60,7 +62,7 @@ public:
 private:
     world *my_world;
     day_number day = 0;
-    operations operation = op_populate;
+    operations operation = op_build_clusters;
     array<timer, ((int)op_last)> timers;
     ptime step_start_time;
 public:

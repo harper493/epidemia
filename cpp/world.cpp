@@ -134,7 +134,7 @@ void world::assign_cities_to_agents()
     if (thread_count==0) {
         thread_count = get_system_core_count();
     }
-    thread_count = max(1, min(thread_count, city_count));
+    thread_count = max(1, thread_count);
     if (thread_count > 1) {
         agent_max_pop = population / thread_count;
         size_t big_cities = 0;
