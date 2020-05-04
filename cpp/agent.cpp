@@ -196,7 +196,6 @@ void epidemia_agent::expose(day_number day)
 void epidemia_agent::middle(day_number day)
 {
     for (city *c : my_cities) {
-        unique_lock<mutex> sl(c->get_agent_lock());
         c->middle_day(day);
     }
 }

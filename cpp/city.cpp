@@ -95,7 +95,7 @@ void city::finalize()
 }
 
 /************************************************************************
- * one_day_1 - first phase of calculation for one day. 
+ * init_day - first phase of calculation for one day. 
  ***********************************************************************/
 
 void city::init_day(day_number day)
@@ -104,36 +104,70 @@ void city::init_day(day_number day)
         init_day_no = day;
         exposure = 0;
         foreign_exposure = 0;
-    }
-}
-
-/************************************************************************
- * one_day_2 - second phase of calculation for one day. 
- ***********************************************************************/
-
-void city::middle_day(day_number day)
-{
-    if (middle_day_no != day) {
-        middle_day_no = day;
-        exposure = add_probability(exposure, foreign_exposure);
         for (auto iter : my_cluster_families) {
             cluster_family *cf = iter.second;
-            for (cluster::list &cll : cf->clusters) {
-                for (cluster *cl : cluster::cluster_prefetcher(cll))  {
-                    cl->expose_parent(day);
-                }
-            }
-            for (cluster::list &cll : cf->clusters | boost::adaptors::reversed) {
-                for (cluster *cl : cluster::cluster_prefetcher(cll))  {
-                cl->gather_exposure(day);
-                }
-            }
+            cf->active = false;
         }
     }
 }
 
 /************************************************************************
- * one_day_3 - third phase of calculation for one day
+ * middle_day - second phase of calculation for one day. 
+ ***********************************************************************/
+
+void city::middle_day(day_number day)
+{
+    {
+        lock_guard<mutex> lg(my_mutex);
+        if (middle_day_no != day) {
+            middle_day_no = day;
+            exposure = add_probability(exposure, foreign_exposure);
+            for (auto iter : my_cluster_families) {
+                cluster_family *cf = iter.second;
+            }
+        }
+    }
+    while (middle_one_cluster(day)) { };
+}
+
+/************************************************************************
+ * middle_one_cluster - consolidate the data for a single cluster,
+ * which we choose. The idea is that different threads can call this
+ * function and each of them will get to do a single family. Return
+ * true iff there is potentially more to do.
+ ***********************************************************************/
+
+bool city::middle_one_cluster(day_number day)
+{
+    cluster_family *cf = NULL;
+    {
+        lock_guard<mutex> lg(my_mutex);
+        for (auto iter : my_cluster_families) {
+            cf = iter.second;
+            if (!cf->active) {
+                cf->active = true;
+            } else {
+                cf = NULL;
+            }
+        }
+    }
+    if (cf) {
+        for (cluster::list &cll : cf->clusters) {
+            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+                cl->expose_parent(day);
+            }
+        }
+        for (cluster::list &cll : cf->clusters | boost::adaptors::reversed) {
+            for (cluster *cl : cluster::cluster_prefetcher(cll))  {
+                cl->gather_exposure(day);
+            }
+        }
+    }
+    return cf!=NULL;
+}
+
+/************************************************************************
+ * finalize_day - third phase of calculation for one day
  ***********************************************************************/
 
 void city::finalize_day(day_number day)

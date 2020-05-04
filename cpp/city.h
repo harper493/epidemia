@@ -31,6 +31,7 @@ public:
         cluster *root = NULL;
         vector<cluster::list> clusters;
         chooser<cluster,float> my_chooser;
+        bool active = false;
         cluster_family(const cluster_type *type_) : my_type(type_) { };
         cluster::list &get_leaf_clusters() { return clusters[0]; };
     };
@@ -84,6 +85,8 @@ public:
     void expose(city *owner);
     void foreign_expose();
     float get_exposure() { return exposure; };
+    bool build_one_cluster_family();
+    bool middle_one_cluster(day_number day);
     U32 get_population() const { return my_people.size(); };
     U32 get_target_pop() const { return target_pop; };
     U32 get_target_population() const { return target_pop; };
