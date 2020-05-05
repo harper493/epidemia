@@ -19,7 +19,8 @@ cluster.locale.min_pop             = 20
 cluster.locale.max_pop             = 100
 cluster.locale.average_pop         = 40
 cluster.locale.same_city           = 1
-cluster.locale.influence           = 0.02
+cluster.locale.influence           = 0.1
+cluster.locale.nest_influence      = 0.6
 
 cluster.*.min_pop                  = 2
 cluster.*.max_proportion           = 0.3
@@ -30,11 +31,11 @@ cluster.*.nest_average             = 8
 cluster.*.same_city                = 0.98
 cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
-cluster.*.nest_influence           = 0.005
+cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
 
-plot.x_size                        = 8
-plot.y_size                        = 6
+plot.x_size                        = 12
+plot.y_size                        = 8
 
 city.max_density                   = 5000
 city.min_density                   = 2000
