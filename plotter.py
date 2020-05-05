@@ -4,7 +4,7 @@ import numpy as np
 from utility import *
 
 default_colors = 'blue,forestgreen,red,cyan,darkviolet,gold,' \
-    'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,sandybrown,' \
+    'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,magenta,' \
     'purple,yellowgreen,rosybrown,steelblue,crimson,black'
 
 class plotter():
