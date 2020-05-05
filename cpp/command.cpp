@@ -2,6 +2,7 @@
 #include "formatted.h"
 #include "utility.h"
 #include "string_exception.h"
+#include <algorithm>
 
 /************************************************************************
  * parse - parse the command line, recognising the options in the
@@ -31,6 +32,7 @@ bool command::parse(int argc, const char **argv)
         ("infectiousness,i",  po::value<float>(),  "infectiousness, typically 1-5")
         ("initial,n",         po::value<int>(),    "initial infected population")
         ("infected-cities,C", po::value<float>(),  "proportion or number of cities to infect")
+        ("log-cities,J",                           "include cities in log output")
         ("max_days",          po::value<int>(),    "max days to run for")
         ("min_days",          po::value<int>(),    "min days to run for")
         ("output,o",          po::value<string>(), "output file")
@@ -65,6 +67,8 @@ bool command::parse(int argc, const char **argv)
                 output_file = values["output"].as<string>();
             } else if (name=="csv") {
                 csv = true;
+            } else if (name=="log-cities") {
+                log_cities = true;
             } else if (name=="positional") {
                 for (const string &p : values["positional"].as<vector<string>>()) {
                     auto pp = split(p, "=");
@@ -79,7 +83,9 @@ bool command::parse(int argc, const char **argv)
                     }
                 }
             } else {
-                props[name] = as_string(name);
+                string pname = name;
+                std::replace(pname.begin(), pname.end(), '-', '_');
+                props[pname] = as_string(name);
             }
         }
     }

@@ -45,13 +45,17 @@ void city::finalize()
         lock_guard<mutex> lg(my_mutex);
         for (auto i : my_cluster_families) {
             cluster_family *cf = i.second;
-            for (cluster *cl : cluster::cluster_prefetcher(cf->get_leaf_clusters())) {
-                for (person *p : cl->get_people()) {
-                    my_people.push_back(p);
+            if (cf->my_type->is_local()) {
+                for (cluster *cl : cluster::cluster_prefetcher(cf->get_leaf_clusters())) {
+                    for (person *p : cl->get_people()) {
+                        my_people.push_back(p);
+                    }
                 }
+                break;
             }
         }
     }
+    this->infection_counter::set_population(my_people.size());
     //
     // Build neighbor data
     //

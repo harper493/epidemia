@@ -125,7 +125,7 @@ void world::add_cities()
  * multiple agents. Then we combine big cities. Whenever we can't fit
  * the next big city, we take the smallest cities in inverse size
  * order as "stocking fillers". When every agent has reached their
- * target population, if there are any (small) cities left, we just assihgn
+ * target population, if there are any (small) cities left, we just assign
  * them round robin to the agents.
  ***********************************************************************/
 
@@ -343,7 +343,13 @@ bool world::end_of_day()
     }
     ++day;
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
-    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
+    if (the_args->get_log_cities()) {
+        for (city *c : my_cities) {
+            my_logger->put_line(day, c->index, c->population, c->infected,
+                                c->total_infected, 0, c->immune, c->is_untouched());
+        }
+    }
+    my_logger->put_line(day, 0, population, infected, total_infected, growth, immune, untouched_cities);
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;
@@ -448,7 +454,7 @@ city *world::get_random_city() const
 
 /************************************************************************
  * make_mobility - generate a random mobility figure for a person,
- * based on the configured average andmaximum values
+ * based on the configured average and maximum values
  ***********************************************************************/
 
 float world::make_mobility()

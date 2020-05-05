@@ -101,6 +101,7 @@ public:
     void middle_day(day_number day);
     void finalize_day(day_number day);
     string show() const;
+friend class world;
 };
 
 /************************************************************************

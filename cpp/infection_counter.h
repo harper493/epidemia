@@ -32,6 +32,10 @@ public:
     U32 get_recovered() const { return recovered; };
     U32 get_immune() const { return immune; };
     U32 get_dead() const { return dead; };
+    void set_population(U32 p)
+    {
+        population = susceptible = p;
+    }
 };
 
 #endif

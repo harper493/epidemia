@@ -13,7 +13,7 @@ cluster.friends.same_city          = 0.98
 cluster.work.min_pop               = 2
 cluster.work.max_pop               = 20
 cluster.work.average_pop           = 8
-cluster.work.same_city             = 0.9
+cluster.work.same_city             = 0.95
 
 cluster.locale.min_pop             = 20
 cluster.locale.max_pop             = 100
