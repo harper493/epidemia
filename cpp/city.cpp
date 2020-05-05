@@ -146,6 +146,7 @@ bool city::middle_one_cluster(day_number day)
             cf = iter.second;
             if (!cf->active) {
                 cf->active = true;
+                break;
             } else {
                 cf = NULL;
             }
