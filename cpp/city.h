@@ -6,6 +6,7 @@
 #include "person.h"
 #include "geometry.h"
 #include "chooser.h"
+#include "log_output.h"
 
 class city : public infection_counter
 {
@@ -100,7 +101,8 @@ public:
     void init_day(day_number day);
     void middle_day(day_number day);
     void finalize_day(day_number day);
-    string show() const;
+    void log(log_output &logger) const;
+    static const log_output::column_defs &get_columns();
 friend class world;
 };
 

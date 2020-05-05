@@ -95,6 +95,7 @@ class world;
 class cluster;
 class properties;
 class command;
+class log_output;
 
 /************************************************************************
  * Traits for widespread use

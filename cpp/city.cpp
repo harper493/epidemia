@@ -11,7 +11,7 @@
  * Static data
  ***********************************************************************/
 
-size_t city::next_index = 0;
+size_t city::next_index = 1;
 
 /************************************************************************
  * Constructor
@@ -377,12 +377,24 @@ void city::foreign_expose()
 }
 
 /************************************************************************
- * show - return a short string describing the city
+ * log - describe self into a log file
  ***********************************************************************/
 
-string city::show() const
+log_output::column_defs city_columns{
+    { "10s", "name" },
+    { "6d", "index" },
+    { "11d", "population" },
+    { "8.3f", "size" },
+    { "20s", "location" },
+};
+
+const log_output::column_defs &city::get_columns()
 {
-    return formatted("%6s pop %7d size %6.3f location %15s",
-                     name, target_pop, size, my_location);
+    return city_columns;
+}
+
+void city::log(log_output &logger) const
+{
+    logger.put_line(name, index, target_pop, size, my_location);
 }
 

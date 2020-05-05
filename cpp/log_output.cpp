@@ -12,7 +12,7 @@ void log_output::create(const string &fn, bool csv_, bool do_heading, const vect
     for (const pairss &c : col_info) {
         columns.emplace_back(*this, c.first, c.second);
     }
-    if (fn.empty()) {
+    if (fn.empty() || fn=="stdout") {
         my_ostr = &std::cout;
         my_stream = false;
     } else {
@@ -62,7 +62,7 @@ void log_output::start_line()
 log_output::column::column(const log_output &logger, const string &fmt, const string &hdg)
     : format_str(fmt), heading(hdg)
 {
-    regex rx("(\\d*)(.*)");
+    regex rx("(\\d*)(.*)(\\w)");
     smatch m;
     regex_match(format_str, m, rx);
     if (m[1].str().empty()) {
@@ -71,7 +71,11 @@ log_output::column::column(const log_output &logger, const string &fmt, const st
         width = lexical_cast<int>(m[1]);
     }
     if (logger.csv) {
-        format_.parse(string("%") + m[2]);
+        if (m[3]=="s") {
+            format_.parse(string("\"%") + m[2] + m[3] + "\"");
+        } else {
+            format_.parse(string("%") + m[2] + m[3]);
+        }
     } else {
         format_.parse(string("%" + format_str));
     }

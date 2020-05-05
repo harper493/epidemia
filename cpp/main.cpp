@@ -6,18 +6,18 @@
 #include "command.h"
 #include "log_output.h"
 #include "random.h"
+#include "city.h"
 
 using boost::posix_time::microsec_clock;
 
 log_output::column_defs log_columns{
     { "4d", "day" },
     { "6d", "city" },
-    { "10d", "population" },
     { "9d", "infected" },
     { "9d", "total" },
     { "7.2f", "growth" },
     { "9d", "immune" },
-    { "10d", "untouched_cities" },
+    { "17d", "untouched_cities" },
 };
 
 world *the_world = NULL;
@@ -41,10 +41,15 @@ int main(int argc, const char **argv)
     for (auto i : the_args->get_props()) {
         props->add_property(i.first, i.second);
     }
-    log_output logger(the_args->get_output_file(), the_args->get_csv(), true, log_columns);
     random::initialize(props->get_numeric("random"));
     the_world = new world(props);
     the_world->build();
+    if (!props->get("city_data").empty()) {
+        string city_file = props->get("city_data");
+        log_output city_logger(city_file, the_args->get_csv(), true, city::get_columns());
+        the_world->show_cities(city_logger);
+    }
+    log_output logger(the_args->get_output_file(), the_args->get_csv(), true, log_columns);
     the_world->run(logger);
     ptime run_complete_time(microsec_clock::local_time());
     auto build_time = the_world->get_build_complete_time() - the_world->get_start_time();

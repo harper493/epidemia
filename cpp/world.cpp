@@ -54,9 +54,6 @@ void world::build()
     mobility_threshold = 3 * mobility_average / mobility_max;
     mobility_multiplier = pow(mobility_max, 3) / (9 * pow(mobility_average, 2));
     add_cities();
-    if (the_args->get_verbosity()) {
-        show_cities();
-    }
     assign_cities_to_agents();
     make_agents();
 }
@@ -69,7 +66,6 @@ void world::finish_build()
         for (city *c : my_cities) {
             c->finalize();
         }
-        // show_cities();
         infect_cities();
         for (auto i : cluster_type::get_cluster_types()) {
             cluster_type *ct = i.second;
@@ -345,11 +341,11 @@ bool world::end_of_day()
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
     if (the_args->get_log_cities()) {
         for (city *c : my_cities) {
-            my_logger->put_line(day, c->index, c->population, c->infected,
-                                c->total_infected, 0, c->immune, c->is_untouched());
+            my_logger->put_line(day, c->index, c->infected,
+                                c->total_infected, 0, c->immune, c->is_untouched()?1:0);
         }
     }
-    my_logger->put_line(day, 0, population, infected, total_infected, growth, immune, untouched_cities);
+    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;
@@ -502,9 +498,9 @@ void world::show_mobility_data()
  * show_cities - show city information
  ***********************************************************************/
 
-void world::show_cities()
+void world::show_cities(log_output &logger)
 {
     for (city *c : my_cities) {
-        std::cout << c->show() << std::endl;
+        c->log(logger);
     }
 }
