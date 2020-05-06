@@ -104,19 +104,21 @@ void world::add_cities()
     //
     for (size_t i=0; i<city_count; ++i) {    
         string cname = formatted("C%d", i+1);
+        U32 pop = city_pops[i];
+        float this_size = make_city_size(pop);
         point loc = get_random_location();
         bool good = false;
         while (!good) {
             good = true;
             loc = get_random_location();
             for (city *other : my_cities) {
-                if (loc.distance(other->get_location()) < city_min_distance) {
+                if (loc.distance(other->get_location()) + other->get_size() + this_size < city_min_distance) {
                     good = false;
                     break;
                 }
             }
         }
-        city *c = new city(cname, this, city_pops[i], loc);
+        city *c = new city(cname, this, pop, loc);
         my_cities.push_back(c);
     }
     //
@@ -250,7 +252,7 @@ void world::infect_cities()
     vector<city*> infectees;
     copy_container(my_cities, infectees);
     if (city_count<my_cities.size()) {
-        std::random_shuffle(infectees.begin()+1, infectees.end());
+        std::random_shuffle(infectees.begin(), infectees.end());
         infectees.resize(city_count);
     }
     //
