@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 from dataclasses import dataclass
 from geometry import *
@@ -38,6 +39,7 @@ class raindrop():
         #self.ax.set_xlim(0, 1)
         #self.ax.set_ylim(0, 1)
         self.cities = {}
+        self.title = ''
         self.min_pop = 0
         self._build_cities(cities)
         self.outlines = plt.scatter(self.city_data(lambda c: c.map_location.x),
@@ -61,13 +63,26 @@ class raindrop():
             my_c.infected = c.infected + my_c.finished
             my_c.finished_size = my_c.map_size * my_c.finished / my_c.population
             my_c.infected_size = my_c.map_size * my_c.infected / my_c.population
+        plt.title(self.title + f'\nDay{day:4d}')
         self.infected.set_sizes(self.city_data(lambda c: c.infected_size))
         self.finished.set_sizes(self.city_data(lambda c: c.finished_size))
 
-    def plot(self):
+    def plot(self, file=None, title='', format=None):
         self.animation = FuncAnimation(self.fig, self.do_day,
                                        frames=range(1, len(self.world.daily) - 1),
                                        repeat=False)
+        if title :
+            self.title = title
+        if file:
+            format = format or 'gif'
+            if '.' not in os.path.basename(file) :
+                file = f'{file}.{format}'
+            if format == 'mp4':
+                Writer = animation.writers['ffmpeg']
+                writer = Writer(fps=15)
+                self.animation.save(file, writer=writer)
+            elif format == 'gif':
+                self.animation.save(file, writer='imagemagick', fps=10)
         plt.show()
 
     def _build_cities(self, cities):
@@ -87,6 +102,8 @@ class raindrop():
         return [ fn(c) for c in self.cities.values()]
 
     def _make_map_location(self, loc):
+        p = point(loc.x, loc.y)
+        return p
         p = point(loc.x / self.world.size, loc.y / self.world.size)
         return p
 

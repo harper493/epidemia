@@ -135,8 +135,10 @@ class epidemia() :
         p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
 
     def plot_raindrop(self, w):
+        title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
+        plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
         rd = raindrop(w, w.daily[1]['cities'])
-        rd.plot()
+        rd.plot(file=plotfile, title=title)
 
     def run_sensitivity(self):
         def one_col(w, name) :
