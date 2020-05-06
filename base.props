@@ -20,7 +20,7 @@ cluster.locale.max_pop             = 100
 cluster.locale.average_pop         = 40
 cluster.locale.same_city           = 1
 cluster.locale.influence           = 0.1
-cluster.locale.nest_influence      = 0.6
+cluster.locale.nest_influence      = 0.4
 
 cluster.*.min_pop                  = 2
 cluster.*.max_proportion           = 0.3
@@ -31,7 +31,7 @@ cluster.*.nest_average             = 8
 cluster.*.same_city                = 0.98
 cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
-cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
+cluster.*.nest_influence           = 0.02   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
 
 plot.x_size                        = 12
@@ -46,10 +46,10 @@ city.min_pop                       = 0
 city.min_count                     = 5
 city.min_size_multiplier           = 2
 city.pop_ratio_power               = 0.5
-city.exposure                      = 0.0001 # useful range is 0 - 0.01
+city.exposure                      = 0.000001 # useful range is 0 - 0.01
 city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
-city.min_distance                  = 8
+city.min_distance                  = 5
 
 world_size                         = 100
 mobility_max                       = 0.1
