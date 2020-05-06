@@ -22,6 +22,7 @@ class argparser(object) :
         arg('-o', '--output', type=str, default=None, help='output file name')
         arg('-F', '--format', type=str, default=None, help='graphics file format')
         arg('-P', '--plot', action='store_true',  help='plot results as graph')
+        arg('-Z', '--raindrop', action='store_true', help='plot data as raindrop chart')
         arg('-X', '--profile', action='store_true',  help='run cProfile')
         arg('-v', '--verbose', action='store_true',  help="describe what's going on")
         arg('-V', '--very-verbose', action='store_true',  help="describe what's going on A LOT")

@@ -39,8 +39,8 @@ plot.y_size                        = 8
 
 city.max_density                   = 5000
 city.min_density                   = 2000
-city.auto_power                    = 0.5
-city.auto_divider                  = 50
+city.auto_power                    = 0.6
+city.auto_divider                  = 70
 city.max_pop                       = 0
 city.min_pop                       = 0
 city.min_count                     = 5
@@ -49,6 +49,7 @@ city.pop_ratio_power               = 0.5
 city.exposure                      = 0.0001 # useful range is 0 - 0.01
 city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
+city.min_distance                  = 8
 
 world_size                         = 100
 mobility_max                       = 0.1

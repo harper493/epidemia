@@ -4,42 +4,86 @@ import csv
 from infection_counter import infection_counter
 from datetime import datetime
 from math import *
+from dataclasses import dataclass
+from geometry import *
+from copy import copy, deepcopy
 
 name_trans = { 'total' : 'total_infected' }
 
 class fast_world(infection_counter):
 
-    def __init__(self, props):
+    @dataclass
+    class _city_info():
+        name: str
+        index: int
+        population: int
+        location: point
+        size: float
+        infected: int = 0
+        recovered: int = 0
+
+    def __init__(self, props, args):
         self.props = props
+        self.args = args
         self.population = props.get(int, 'population')
         self.auto_immunity = self.props.get(float, 'auto_immunity')
         self.infectiousness = self.props.get(float, 'infectiousness')
         self.daily = {}
+        self.size = 100
 
     def run(self):
         temp_file = f"_tmp_{datetime.now().strftime('%Y%m%dT%H%M%S_%f')[:-3]}"
         csv_file = temp_file + ".csv"
+        city_file = temp_file + '_cities.csv'
         props_file = temp_file + ".props"
         with open(props_file,'w') as f:
             f.write(self.props.dump())
-        subprocess.call(("./epidemia_fast", "--csv", "--verbosity=0", "-o", csv_file, props_file))
+        cmd_args = ["./epidemia_fast", "--csv", "--verbosity=0",
+                          "-o", csv_file, "--city-data="+city_file ]
+        if self.args.raindrop:
+            cmd_args.append('--log-cities')
+        cmd_args.append(props_file)
+        subprocess.call(cmd_args)
+        with open(city_file, 'r') as cfile :
+            city_reader = csv.DictReader(cfile)
+            self.cities = {}
+            self.cities_by_index = {}
+            for row in city_reader:
+                ci = fast_world._city_info(name=row['name'],
+                                           index = int(row['index']),
+                                           population=int(row['population']),
+                                           location=point(string=row['location']),
+                                           size=float(row['size']))
+                self.cities[ci.name] = ci
+                self.cities_by_index[ci.index] = ci
         self.max_infected = 0
         self.max_growth = 0
         self.highest_day = 0
         self.total_infected = 0
+        today = None
         with open(csv_file, 'r') as infile:
             reader = csv.DictReader(infile)
             for row in reader:
                 day = int(row['day'])
-                today = { name_trans.get(n, n):(float(v) if '.' in v else int(v)) for n,v in row.items() }
-                infected = today['infected']
-                if infected > self.max_infected:
-                    self.max_infected = infected
-                    self.highest_day = day
-                self.max_growth = max(self.max_growth, today['growth'])
-                self.total_infected = max(self.total_infected, today['total_infected'])
-                self.daily[day] = today
+                city_no = int(row['city'])
+                data = {name_trans.get(n, n): (float(v) if '.' in v else int(v)) for n, v in row.items()}
+                if city_no and today:
+                    city = today['cities'][self.cities_by_index[city_no].name]
+                    infected = data['infected']
+                    city.infected = infected
+                    city.recovered = data['total_infected'] + data['immune'] - infected
+                else:
+                    today = data
+                    today['cities'] = deepcopy(self.cities)
+                    infected = today['infected']
+                    if infected > self.max_infected:
+                        self.max_infected = infected
+                        self.highest_day = day
+                    self.max_growth = max(self.max_growth, today['growth'])
+                    self.total_infected = max(self.total_infected, today['total_infected'])
+                    self.daily[day] = today
             self.days_to_double = log(2) / log(1 + self.max_growth/100) if self.max_growth else 0
+        os.remove(city_file)
         os.remove(csv_file)
         os.remove(props_file)
 

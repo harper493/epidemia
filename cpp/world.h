@@ -38,6 +38,7 @@
     _P(float, city, _, min_pop, 0)                                      \
     _P(float, city, _, min_count, 5)                                    \
     _P(float, city, _, min_size_multiplier, 2.5)                        \
+    _P(float, city, _, min_distance, 15)                                \
     _P(float, city, _, pop_ratio_power, 0.5)                            \
     _P(float, city, _, exposure, 0.001)                                 \
     _P(float, city, _, appeal_power, 0.4)                               \

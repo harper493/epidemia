@@ -1,18 +1,40 @@
 Epidemia is a program to simulate an epidemic, exploring realistic infection processes. It
 is licensed under GPLv3.
 
-It is written in Python3.8, and also requires a few non-default packages: numpy, matplotlib and
-TkInter.
+It is written in Python3.8 and C++, and also requires a few non-default packages: numpy,
+matplotlib and TkInter, and boost for C++.
 
 To run it from the command line:
 
 python3.8 epidemia.py [-p population] [-i infectiousness] -P
 
-will run for the specified population (in the range 10000-1000000) and infectiousness (default is 2.5,
+will run for the specified population (in the range 10000-10000000) and infectiousness (default is 2.5,
 anything in the range 1.5-4 should produce interesting results). It will show what is going on day by
 day and when it has finished it will plot a graph (thanks to -P).
 
 Many more options to control how it runs are described in the documentation.
+
+Why Another Simulation?
+-----------------------
+
+The basis of epediemology is the "SIR [susceptible, infected, recovered] model", dating from the
+1930s. It is where the term "R0" comes from, the initial rate of infection. But the
+classic model fails to follow the actual infection rate curves seen during the
+Covid-19 pandemic. In reality, the infection rate drops continuously, leading to
+a steady curve in a log/linear graph. The SIR model predicts a straight line until
+very close to the end o fthe pandemic.
+
+The principal reason for this seems to be that the SIR model assumes that any infected
+person is just as likely to infect any susceptible person. This is obviously not
+true - if an infected person is in Los Angeles, they are way more likely to infect
+their spouse, drinking buddy or workmate than someone in North Dakota. What's
+more, people form clusters (family, friends, workmates) that will establish
+local herd immunity long before it is established globally.
+
+There is no obvious mathematical way to model this. Instead, epipdemia simulates
+each peson individually, up to a population of tens of millions. On a modern
+multi-core CPU, the 100+ day course of a pandemic among 10,000,000 people can
+be simulated in about 10 seconds.
 
 Installation
 ------------
@@ -23,12 +45,15 @@ Now you will need python3.8, a Python virtual environment for it, and all the ne
 the following while running as sudo.
 
 apt install python3.8
+apt install libboost-dev-all
 apt-get install python3.8-venv
 python3.8 -m venv .venv
 source .venv/bin/activate
 pip3 install numpy
 pip3 install matplotlib
 apt install python3-tk
+cd cpp
+make
 
 Once you've done this, the above command line will run epidemia.
 

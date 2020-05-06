@@ -1,12 +1,16 @@
 import random
 import math
+import re
 
 DEFAULT_PLACES = 3
 
 class point(object) :
 
-    def __init__(self, x=0, y=0):
-        self.x, self.y = float(x), float(y)
+    def __init__(self, x=0, y=0, string=None):
+        if string:
+            self.parse(string)
+        else:
+            self.x, self.y = float(x), float(y)
 
     def __str__(self, places=DEFAULT_PLACES):
         fmt = '%%.%df' % (places)
@@ -30,6 +34,15 @@ class point(object) :
 
     def apply(self, fn):
         return point(fn(self.x), fn(self.y))
+
+    def parse(self, value):
+        m = re.match(r'(?:\()?([0-9.]+),([0-9.]+)(?:\))?', value)
+        self.x = self.y = 0
+        if m:
+            try:
+                self.x = float(m.group(1))
+                self.y = float(m.group(2))
+            except ValueError: pass
 
 class geometry(object) :
 

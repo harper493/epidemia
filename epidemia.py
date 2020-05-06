@@ -11,6 +11,7 @@ from argparser import argparser
 from math import *
 from datetime import datetime
 from fast_world import fast_world
+from raindrop import raindrop
 import functools
 import itertools
 
@@ -92,7 +93,7 @@ class epidemia() :
             self.log_file.close()
 
     def run_one(self) :
-        w = fast_world(props=self.props)
+        w = fast_world(props=self.props, args=self.args)
         if True:
             w.run()
         else:
@@ -113,6 +114,8 @@ class epidemia() :
                      f'Days: {w.day:d} in {w.run_time:.2f}S { w.run_time/w.day:.3f} S/day'))
         if self.args.plot :
             self.plot_results(w)
+        elif self.args.raindrop:
+            self.plot_raindrop(w)
 
     def show_cities(self, w) :
         print('\n')
@@ -130,6 +133,10 @@ class epidemia() :
                   'data' : w.get_data(v)[from_:to] } for v in ('total_infected', 'infected') ]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
         p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
+
+    def plot_raindrop(self, w):
+        rd = raindrop(w, w.daily[1]['cities'])
+        rd.plot()
 
     def run_sensitivity(self):
         def one_col(w, name) :

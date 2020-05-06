@@ -104,7 +104,19 @@ void world::add_cities()
     //
     for (size_t i=0; i<city_count; ++i) {    
         string cname = formatted("C%d", i+1);
-        city *c = new city(cname, this, city_pops[i], get_random_location());
+        point loc = get_random_location();
+        bool good = false;
+        while (!good) {
+            good = true;
+            loc = get_random_location();
+            for (city *other : my_cities) {
+                if (loc.distance(other->get_location()) < city_min_distance) {
+                    good = false;
+                    break;
+                }
+            }
+        }
+        city *c = new city(cname, this, city_pops[i], loc);
         my_cities.push_back(c);
     }
     //
@@ -339,13 +351,13 @@ bool world::end_of_day()
     }
     ++day;
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
+    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
     if (the_args->get_log_cities()) {
         for (city *c : my_cities) {
             my_logger->put_line(day, c->index, c->infected,
                                 c->total_infected, 0, c->immune, c->is_untouched()?1:0);
         }
     }
-    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;

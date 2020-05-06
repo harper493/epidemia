@@ -31,10 +31,10 @@ def sround(value, digits=1, round_up=True) :
     result = 0
     if value > 0 :
         while digits>0 :
-            try :
+            try:
                 log = math.log10(remainder)
             except ValueError :
-                break
+                 break
             if log >= 0 :
                 int_log = int(log)
             else :
