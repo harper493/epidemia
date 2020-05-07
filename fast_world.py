@@ -21,6 +21,7 @@ class fast_world(infection_counter):
         size: float
         infected: int = 0
         recovered: int = 0
+        total: int = 0
 
     def __init__(self, props, args):
         self.props = props
@@ -40,7 +41,7 @@ class fast_world(infection_counter):
             f.write(self.props.dump())
         cmd_args = ["./epidemia_fast", "--csv", "--verbosity=0",
                           "-o", csv_file, "--city-data="+city_file ]
-        if self.args.raindrop:
+        if self.args.bubbles:
             cmd_args.append('--log-cities')
         cmd_args.append(props_file)
         subprocess.call(cmd_args)
@@ -71,7 +72,8 @@ class fast_world(infection_counter):
                     city = today['cities'][self.cities_by_index[city_no].name]
                     infected = data['infected']
                     city.infected = infected
-                    city.recovered = data['total_infected'] + data['immune'] - infected
+                    city.total =  data['total_infected']
+                    city.recovered = city.total + data['immune'] - infected
                 else:
                     today = data
                     today['cities'] = deepcopy(self.cities)

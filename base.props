@@ -13,13 +13,13 @@ cluster.friends.same_city          = 0.98
 cluster.work.min_pop               = 2
 cluster.work.max_pop               = 20
 cluster.work.average_pop           = 8
-cluster.work.same_city             = 0.95
+cluster.work.same_city             = 0.99
 
 cluster.locale.min_pop             = 20
 cluster.locale.max_pop             = 100
 cluster.locale.average_pop         = 40
 cluster.locale.same_city           = 1
-cluster.locale.influence           = 0.1
+cluster.locale.influence           = 0.2
 cluster.locale.nest_influence      = 0.4
 
 cluster.*.min_pop                  = 2
@@ -28,10 +28,10 @@ cluster.*.depth                    = 0
 cluster.*.nest_min                 = 5
 cluster.*.nest_max                 = 20
 cluster.*.nest_average             = 8
-cluster.*.same_city                = 0.98
+cluster.*.same_city                = 0.99
 cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
-cluster.*.nest_influence           = 0.02   # useful range is up about 0.25
+cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
 
 plot.x_size                        = 12
@@ -49,7 +49,7 @@ city.pop_ratio_power               = 0.5
 city.exposure                      = 0.000001 # useful range is 0 - 0.01
 city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
-city.min_distance                  = 5
+city.min_distance                  = 8
 
 world_size                         = 100
 mobility_max                       = 0.1
@@ -63,7 +63,7 @@ cluster_exposure                   = 0.002
 initial_infected                   = 0
 city_count                         = 0
 infected_cities                    = 0.8
-travel                             = 0.005 # useful range is 0 - 0.05 or so
+travel                             = 0.001 # useful range is 0 - 0.05 or so
 auto_immunity                      = 0.5
 population                         = 1000000
 max_days                           = 400
