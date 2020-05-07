@@ -12,15 +12,15 @@ import os
 
 susceptible_color = 'deepskyblue'
 infected_color = 'red'
-recovered_color = 'greenyellow'
+recovered_color = 'lime'
 
 button_color = 'linen'
 button_hovercolor = 'bisque'
 
 background_color = 'ivory'
 
-total_color = 'red'
-infected_color = 'orange'
+graph_total_color = 'red'
+graph_infected_color = 'darkorange'
 
 default_size = 10
 map_size_scale = 300
@@ -35,6 +35,8 @@ button_left = 0.8
 button_width = 0.1
 button_bottom = 0.92
 button_height = 0.03
+
+bubble_margin = 5
 
 class bubbles():
 
@@ -66,6 +68,8 @@ class bubbles():
         self.title = ''
         self.min_pop = 0
         self._build_cities(cities)
+        self.bubble_chart.set_xlim(-bubble_margin, self.world.size+bubble_margin)
+        self.bubble_chart.set_ylim(-bubble_margin, self.world.size + bubble_margin)
         self.outlines = self.bubble_chart.scatter(self.city_data(lambda c: c.map_location.x),
                                                   self.city_data(lambda c: c.map_location.y),
                                                   s=self.city_data(lambda c: c.map_size),
@@ -81,14 +85,22 @@ class bubbles():
         self.x_values = [ d for d in range(1, len(self.world.daily)) ]
         self.total_y = [ np.nan ] * len(self.x_values)
         self.infected_y = [ np.nan ] * len(self.x_values)
-        self.total_line, = self.graph.plot(self.x_values, self.total_y, color=total_color)
-        self.infected_line, = self.graph.plot(self.x_values, self.infected_y, color=infected_color, linestyle='--')
+        self.total_line, = self.graph.plot(self.x_values, self.total_y, color=graph_total_color)
+        self.infected_line, = self.graph.plot(self.x_values, self.infected_y, color=graph_infected_color,
+                                              linestyle='--')
         self.graph.set_xlim(0, len(self.world.daily))
         self.graph.set_xlabel('Days')
         self.graph.set_ylabel('People')
         ymin = min([ d['infected'] for d in self.world.daily.values() if d['infected']>0])
         self.graph.set_ylim(ymin, self.world.population)
         self.graph.set_yscale('log')
+        self.total_box = self.graph.text(len(self.world.daily) * 1.02,
+                                         self.world.population*0.6,
+                                         '', color=graph_total_color)
+        self.infected_box = self.graph.text(len(self.world.daily) * 1.02,
+                                         self.world.population*0.1,
+                                         '', color=graph_infected_color)
+        self.max_infected = 0
         self.add_button()
 
     def add_button(self):
@@ -103,7 +115,7 @@ class bubbles():
     def do_day(self, day):
         day = day or 1
         daily = self.world.daily[day]
-        self.fig.suptitle(self.title + f'\nDay{day:4d}')
+        self.fig.suptitle(f'\nDay{day:4d}')
         for c in daily['cities'].values():
             my_c = self.cities[c.name]
             my_c.finished = c.recovered
@@ -112,6 +124,11 @@ class bubbles():
             my_c.infected_size = my_c.map_size * my_c.infected / my_c.population
         self.infected.set_sizes(self.city_data(lambda c: c.infected_size))
         self.finished.set_sizes(self.city_data(lambda c: c.finished_size))
+        total_percent = 100 * daily["total_infected"]/self.world.population
+        infected_percent = 100 * daily["infected"]/self.world.population
+        self.max_infected = max(infected_percent, self.max_infected)
+        self.total_box.set_text(f'Total {total_percent:4.1f}%')
+        self.infected_box.set_text(f'Infected {infected_percent:4.1f}%\nMax {self.max_infected:4.1f}%')
         if day==1:
             self.total_y = [np.nan] * len(self.x_values)
             self.infected_y = [np.nan] * len(self.x_values)
@@ -125,10 +142,21 @@ class bubbles():
         self.title = title
         self.format = format
         self.file = file
+        descr = '\n'.join([ t for t in re.split(r'(.*?\s+[0-9.]+)\s', title) if len(t) ])
+        self.description = self.bubble_chart.text(-bubble_margin, self.world.size + bubble_margin * 1.5, descr, size=10)
+        self._make_color_key()
         self._make_animation()
         self._save_file()
         plt.show()
-        
+
+    def _make_color_key(self):
+        y = self.world.size
+        for n in ('susceptible', 'infected', 'recovered'):
+            color = globals()[n+'_color']
+            text = self.bubble_chart.text(self.world.size + bubble_margin*1.5, y, n, color=color)
+            text.draw(self.bubble_chart.figure.canvas.get_renderer())
+            y -= text.get_window_extent().height / 3
+
     def _make_animation(self):
         self.animation = FuncAnimation(self.fig, self.do_day,
                                        frames=range(1, len(self.world.daily) - 1),
