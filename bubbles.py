@@ -110,6 +110,9 @@ class bubbles():
         self.replay_button.on_clicked(self.replay)
 
     def replay(self, *args, **kwargs):
+        self.total_y = [ np.nan ] * len(self.x_values)
+        self.infected_y = [ np.nan ] * len(self.x_values)
+        self.max_infected = 0
         self._make_animation()
 
     def do_day(self, day):
@@ -129,6 +132,7 @@ class bubbles():
         self.max_infected = max(infected_percent, self.max_infected)
         self.total_box.set_text(f'Total {total_percent:4.1f}%')
         self.infected_box.set_text(f'Infected {infected_percent:4.1f}%\nMax {self.max_infected:4.1f}%')
+        self._update_bubble_labels(daily)
         if day==1:
             self.total_y = [np.nan] * len(self.x_values)
             self.infected_y = [np.nan] * len(self.x_values)
@@ -144,18 +148,30 @@ class bubbles():
         self.file = file
         descr = '\n'.join([ t for t in re.split(r'(.*?\s+[0-9.]+)\s', title) if len(t) ])
         self.description = self.bubble_chart.text(-bubble_margin, self.world.size + bubble_margin * 1.5, descr, size=10)
-        self._make_color_key()
+        self._make_bubble_labels()
         self._make_animation()
         self._save_file()
         plt.show()
 
-    def _make_color_key(self):
+    def _make_bubble_labels(self):
         y = self.world.size
+        self.bubble_labels = {}
         for n in ('susceptible', 'infected', 'recovered'):
             color = globals()[n+'_color']
-            text = self.bubble_chart.text(self.world.size + bubble_margin*1.5, y, n, color=color)
+            text = self.bubble_chart.text(self.world.size + bubble_margin*1.5, y, n, color=color, size=9)
             text.draw(self.bubble_chart.figure.canvas.get_renderer())
+            self.bubble_labels[n] = text
             y -= text.get_window_extent().height / 3
+
+    def _update_bubble_labels(self, daily):
+        self._update_one_bubble_label('infected', daily['infected'])
+        self._update_one_bubble_label('susceptible', self.world.population - daily['total_infected'] - daily['immune'])
+        self._update_one_bubble_label('recovered', daily['total_infected'] + daily['immune'])
+
+    def _update_one_bubble_label(self, name, value):
+        text = self.bubble_labels[name]
+        percent = 100 * value / self.world.population
+        text.set_text(f'{name.title()} {percent:4.1f}%')
 
     def _make_animation(self):
         self.animation = FuncAnimation(self.fig, self.do_day,
