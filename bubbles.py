@@ -89,6 +89,7 @@ class bubbles():
         ymin = min([ d['infected'] for d in self.world.daily.values() if d['infected']>0])
         self.graph.set_ylim(ymin, self.world.population)
         self.graph.set_yscale('log')
+        self.add_button()
 
     def add_button(self):
         self.replay_button_axes = self.fig.add_axes([button_left, button_bottom, button_width, button_height])
@@ -97,9 +98,7 @@ class bubbles():
         self.replay_button.on_clicked(self.replay)
 
     def replay(self, *args, **kwargs):
-        print('***replay***')
-        self.animation.frame_seq = self.animation.new_frame_seq()
-        self.animation.event_source.start()
+        self._make_animation()
 
     def do_day(self, day):
         day = day or 1
@@ -123,27 +122,33 @@ class bubbles():
             self.infected_line.set_ydata([ self.infected_y ])
 
     def plot(self, file=None, title='', format=None):
+        self.title = title
+        self.format = format
+        self.file = file
+        self._make_animation()
+        self._save_file()
+        plt.show()
+        
+    def _make_animation(self):
         self.animation = FuncAnimation(self.fig, self.do_day,
                                        frames=range(1, len(self.world.daily) - 1),
-                                       repeat=True,
+                                       repeat=False,
                                        repeat_delay=5000)
-        self.title = title
-        plt.suptitle = title + '\n'
-        if file:
-            format = format or 'gif'
-            if '.' not in os.path.basename(file) :
-                file = f'{file}.{format}'
-            if format == 'mp4':
+
+    def _save_file(self):
+        if self.file:
+            self.format = self.format or 'gif'
+            if '.' not in os.path.basename(self.file) :
+                self.file = f'{self.file}.{self.format}'
+            if self.format == 'mp4':
                 Writer = animation.writers['ffmpeg']
                 writer = Writer(fps=15)
-                self.animation.save(file, writer=writer)
-            elif format == 'gif':
-                self.animation.save(file, writer='imagemagick', fps=10)
-            elif format == 'html5':
-                with open(file, 'w') as f:
+                self.animation.save(self.file, writer=writer)
+            elif self.format == 'gif':
+                self.animation.save(self.file, writer='imagemagick', fps=10)
+            elif self.format == 'html5':
+                with open(self.file, 'w') as f:
                     f.write(self.animation.to_html5_video())
-        #self.add_button()
-        plt.show()
 
     def _build_cities(self, cities):
         for c in cities.values():
