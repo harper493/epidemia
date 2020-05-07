@@ -8,6 +8,7 @@ TARGET   := epidemia_fast
 INCLUDE  := -I.
 LIBS     := -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_date_time -lboost_program_options -lpthread
 DEBUG_FLAG := $(strip $(wildcard DEBUG))
+
 ifdef DEBUG_FLAG
 OPT    := -O0 -DDEBUG
 else
@@ -51,21 +52,30 @@ $(APP_DIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS) $(LIBS)
 
-.PHONY: all build clean debug release
+.PHONY: all build clean superclean debug release touch_debug rm_debug
 
 build:
 	@mkdir -p $(APP_DIR)
 	@mkdir -p $(OBJ_DIR)
 
-debug: CXXFLAGS += -DDEBUG -O0
-debug: all
+debug:	OPT := -O0 -DDEBUG
+debug:  touch_debug all
 
-release: CXXFLAGS += -O3
-release: all
+touch_debug:
+	-@touch DEBUG
+
+release: OPT := -O3
+release: rm_debug all
+
+rm_debug:
+	-@rm -f DEBUG
+
+superclean:	clean
+	-@rm -rvf $(DEP_DIR)/*
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*
-	-@rm -rvf $(APP_DIR)/*
+	-@rm -vf $(APP_DIR)/$(TARGET)
 
 -include $(DEPS)
 
