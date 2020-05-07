@@ -90,6 +90,7 @@ public:
     bool middle_one_cluster(day_number day);
     U32 get_population() const { return my_people.size(); };
     U32 get_target_pop() const { return target_pop; };
+    float get_size() const { return size; };
     U32 get_target_population() const { return target_pop; };
     const point &get_location() const { return my_location; };
     U32 get_leaf_cluster_count() const { return cluster_count; };
