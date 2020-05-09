@@ -95,7 +95,7 @@ class sensitivity():
                     self.stop = None
                 self.reset()
             except (IndexError, ValueError):
-                raise ValueError(f"Incorrect parameter range '{spec}'")
+                raise ValueError("Incorrect parameter range '{}'".format(spec))
 
         def __str__(self):
             return self.text

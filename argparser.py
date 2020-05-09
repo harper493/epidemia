@@ -9,7 +9,10 @@ class argparser(object) :
             long_ = args[0]
             if long_[-1]=='*' :
                 long_ = long_[:-1]
-            p.add_argument(short, long_, **kwargs)
+            if short:
+                p.add_argument(short, long_, **kwargs)
+            else :
+                p.add_argument(long_, **kwargs)
         self.argnames = []
         self.command_line = ' '.join(sys.argv)
         self.extra_props = {}
@@ -18,6 +21,9 @@ class argparser(object) :
         p.add_argument('stuff', nargs='*', help='property file or property assignments')
         arg('-c', '--console', action='store_true', help='send output to console')
         arg('-C', '--city_count*', type=int, help='number of cities')
+        arg('',   '--min-days', type=int, default=0, help='minimum number of days to run')
+        arg('',   '--max-days', type=int, default=0, help='maximum number of days to run')
+        arg('',   '--random', type=int, default=0, help='random number seed')
         arg('-R', '--repeat', type=int, default=0, help='run repeatedly with the same parameters')
         arg('-o', '--output', type=str, default=None, help='output file name')
         arg('-F', '--format', type=str, default=None, help='graphics file format')

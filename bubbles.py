@@ -95,10 +95,10 @@ class bubbles():
         self.graph.set_ylim(ymin, self.world.population)
         self.graph.set_yscale('log')
         self.total_box = self.graph.text(len(self.world.daily) * 1.02,
-                                         self.world.population*0.6,
+                                         self.world.population*0.5,
                                          '', color=graph_total_color)
         self.infected_box = self.graph.text(len(self.world.daily) * 1.02,
-                                         self.world.population*0.1,
+                                         self.world.population*0.05,
                                          '', color=graph_infected_color)
         self.max_infected = 0
         self.add_button()

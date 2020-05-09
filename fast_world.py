@@ -43,6 +43,12 @@ class fast_world(infection_counter):
                           "-o", csv_file, "--city-data="+city_file ]
         if self.args.bubbles:
             cmd_args.append('--log-cities')
+        if self.args.min_days:
+            cmd_args.append(f'--min-days={self.args.min_days}')
+        if self.args.max_days:
+            cmd_args.append(f'--max-days={self.args.max_days}')
+        if self.args.random:
+            cmd_args.append(f'--random={self.args.random}')
         cmd_args.append(props_file)
         subprocess.call(cmd_args)
         with open(city_file, 'r') as cfile :

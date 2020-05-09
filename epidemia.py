@@ -14,6 +14,8 @@ from fast_world import fast_world
 from bubbles import bubbles
 import functools
 import itertools
+import numpy as np
+import os
 
 import cProfile
 
@@ -144,6 +146,8 @@ class epidemia() :
         def one_col(w, name) :
             return float_to_str(w.params[name])
         s = f'repeat:1*{self.args.repeat}' if self.args.repeat else self.args.sensitivity
+        if self.args.random==0:
+            self.args.random = true_random()
         sens = sensitivity(s)
         param_cols = [_f(var_to_title(n), '%10s',
                          functools.partial(one_col, name=n))
@@ -172,7 +176,7 @@ class epidemia() :
             else :
                 params.append(ss)
                 self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
-                w = fast_world(props=self.props)
+                w = fast_world(props=self.props, args=self.args)
                 w.run()
                 results.append(w)
                 w.params = { sss[0]:sss[1] for sss in ss }
@@ -189,7 +193,7 @@ class epidemia() :
                 d1 = w.get_data('infected')[from_:to]
                 while len(d) < len(x) :
                     d.append(d[-1])
-                    d1.append(d1[-1])
+                    d1.append(np.nan)
                 legend = ', '.join([ float_to_str(pp[1]) for pp in p ])
                 data.append({ 'label':legend, 'data':d, 'color':c})
                 data.append({ 'data': d1, 'style':'--', 'color': c})

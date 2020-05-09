@@ -4,7 +4,7 @@ __all__ = ( 'sround', 'cmpfn', 'scale_list', 'camel_to_title', 'var_to_title', '
             'make_plural', 'make_singular', 'is_irregular_plural', 'make_indef_article' ,
             'contains_any', 'get_random_member', 'float_to_str',
             'parse_time_of_day', 'decay', 'make_safe_string', 'number', 'indent', 'make_dict',
-            'assert_', 'count', 'add_probability' )
+            'assert_', 'count', 'add_probability', 'true_random' )
 
 import math
 import string
@@ -546,3 +546,13 @@ def count(coll, pred) :
 #
 def add_probability(p1: float, p2: float) -> float:
     return 1 - ((1 - p1) * (1 - p2))
+
+#
+# true_random - return a truly random 32 bit number
+#
+def true_random():
+    result = 0
+    for b in os.urandom(4):
+        result *= 256
+        result += b
+    return result
