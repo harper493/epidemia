@@ -5,6 +5,7 @@
 #include "formatted.h"
 #include "chooser.h"
 #include "properties.h"
+#include "interpolator.h"
 #include "command.h"
 #include <tgmath.h>
 #include <algorithm>
@@ -289,8 +290,20 @@ void world::infect_cities()
  * infectee, based on average cluster sizes
  ***********************************************************************/
 
+#define P std::pair<float,float>
+
 void world::make_infection_prob()
 {
+    static vector<pair<float,float>> immunity_correction{
+        P( 0, 0.32 ),
+        P( 0.25, 0.49 ),
+        P( 0.5, 0.77 ),
+        P( 0.75, 1.6 ),
+        P( 0.9, 5 )
+    };
+    static interpolator<float> immunity_corrector(immunity_correction);
+    float inf = min(0.9, infectiousness);
+    float correction = immunity_corrector(auto_immunity);
     U32 exposure_time = recovery_time - gestating_time;
     float cluster_factor = my_props->get_numeric("cluster_factor");
     if (cluster_factor==0) {
@@ -299,7 +312,7 @@ void world::make_infection_prob()
             cluster_factor += ct->size_rms * pow(ct->influence, 2);
         }
     }
-    infection_prob = ((float)infectiousness) / (exposure_time * cluster_factor);
+    infection_prob = ((float)infectiousness) * correction / (exposure_time * cluster_factor);
 }
 
 /************************************************************************
