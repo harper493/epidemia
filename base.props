@@ -4,11 +4,13 @@ cluster.family.average_pop         = 4
 cluster.family.proximality         = 1
 cluster.family.same_city           = 0.98
 cluster.family.influence           = 1
+cluster.family.max_depth           = 2
 
 cluster.friends.min_pop            = 5
 cluster.friends.max_pop            = 20
 cluster.friends.average_pop        = 8
 cluster.friends.same_city          = 0.98
+cluster.friends.max_depth          = 3
 
 cluster.work.min_pop               = 2
 cluster.work.max_pop               = 20
@@ -24,7 +26,7 @@ cluster.locale.nest_influence      = 0.4
 
 cluster.*.min_pop                  = 2
 cluster.*.max_proportion           = 0.3
-cluster.*.depth                    = 0
+cluster.*.max_depth                = 0
 cluster.*.nest_min                 = 5
 cluster.*.nest_max                 = 20
 cluster.*.nest_average             = 8
@@ -33,6 +35,15 @@ cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
 cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
+
+distance.min.city.exposure         = 0
+distance.min.cluster.*.influence   = 0
+distance.min.cluster.family.influence = 1
+distance.min.cluster.work.influence = 0.02
+distance.min.cluster.locale.influence = 0.01
+distance.min.cluster.*.next_influence = 0.05
+distance.min.mobility_max          = 0.03
+distance.min.mobility_average     = 0.0001
 
 plot.x_size                        = 12
 plot.y_size                        = 8
@@ -49,7 +60,7 @@ city.pop_ratio_power               = 0.5
 city.exposure                      = 0.000001 # useful range is 0 - 0.01
 city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
-city.min_distance                  = 8
+city.min_distance                  = 10
 
 world_size                         = 100
 mobility_max                       = 0.1
@@ -66,5 +77,5 @@ infected_cities                    = 0.8
 travel                             = 0.001 # useful range is 0 - 0.05 or so
 auto_immunity                      = 0.5
 population                         = 1000000
-max_days                           = 400
+max_days                           = 1000
 

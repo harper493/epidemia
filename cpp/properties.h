@@ -21,6 +21,7 @@ public:
         string get_value() const;
         vector<string> get_elements() const;
         virtual bool is_wild() const { return wild!=NULL; };
+    friend class properties;
     };
     struct wild_property : public property_value
     {
@@ -70,12 +71,13 @@ public:
     void add_property(const string &name, const string &value);
     void add_properties(const vector<string> &props);
     bool add_from_file(const string &filename);
-    float get_numeric(const vector<string> &pname, float dflt=0) const;
-    string get(const vector<string> &prop, const string &dflt="") const;
-    float get_numeric(const string &pname, float dflt=0) const;
-    string get(const string &prop, const string &dflt="") const;
+    float get_numeric(const vector<string> &pname, float dflt=0, bool wild_ok=true) const;
+    string get(const vector<string> &prop, const string &dflt="", bool wild_ok=true) const;
+    float get_numeric(const string &pname, float dflt=0, bool wild_ok=true) const;
+    string get(const string &prop, const string &dflt="", bool wild_ok=true) const;
     const_iterator begin() const { return const_iterator(this); };
     const_iterator end() const { return const_iterator(); };
+    string str() const;
 private:
     const wild_property *find_wild(const string &name) const;
 friend class const_iterator;

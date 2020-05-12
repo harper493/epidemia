@@ -135,9 +135,9 @@ class properties(object) :
         if isinstance(d[0], str) :
             yield (d[1], d[0])
         else :
-            for k in sorted(d[0]) :
+            for k in d[0] :
                 if k is None :
-                    fn(d[1], d[0][None])
+                    yield (d[1], d[0][None])
                 else :
                     yield from self._iter_one((d[0][k], d[1] + [k]))
 

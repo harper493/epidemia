@@ -1,4 +1,5 @@
 #include "properties.h"
+#include "formatted.h"
 #include "utility.h"
 
 /************************************************************************
@@ -36,8 +37,15 @@ void properties::add_property(const string &name, const string &value)
     }
     if (wc) {
         string re = join(name_parts, "\\.");
-        wild_property *w = new wild_property(name, re, value, wc);
-        wild_properties.emplace_back(w);
+        wild_property *w = NULL;
+        auto iter = my_properties.find(name);
+        if (iter==my_properties.end()) {
+            w  = new wild_property(name, re, value, wc);
+            wild_properties.emplace_back(w);
+        } else {
+            w = dynamic_cast<wild_property*>(iter->second);
+            w->value = value;
+        }
         my_properties[name] = w;
     } else {
         my_properties[name] = new property_value(name, value, NULL);
@@ -83,27 +91,31 @@ bool properties::add_from_file(const string &filename)
  * wildcard value.
  ***********************************************************************/
 
-string properties::get(const string &prop, const string &dflt) const
+string properties::get(const string &prop, const string &dflt, bool wild_ok) const
 {
     string result = dflt;
     auto iter = my_properties.find(prop);
     if (iter==my_properties.end()) {
-        const wild_property *wp = find_wild(prop);
-        if (wp) {
-            my_properties[prop] = new property_value(prop, "", wp);
-            result = wp->value;
+        if (wild_ok) {
+            const wild_property *wp = find_wild(prop);
+            if (wp) {
+                my_properties[prop] = new property_value(prop, "", wp);
+                result = wp->value;
+            }
         }
     } else if (iter->second->wild) {
-        result = iter->second->wild->value;
+        if (wild_ok) {
+            result = iter->second->wild->value;
+        }
     } else {
         result = iter->second->value;
     }
     return result;
 }
 
-string properties::get(const vector<string> &prop, const string &dflt) const
+string properties::get(const vector<string> &prop, const string &dflt, bool wild_ok) const
 {
-    return get(join(prop, "."), dflt);
+    return get(join(prop, "."), dflt, wild_ok);
 }
 
 
@@ -113,10 +125,10 @@ string properties::get(const vector<string> &prop, const string &dflt) const
  * given default or 0.
  ***********************************************************************/
 
-float properties::get_numeric(const string &pname, float dflt) const
+float properties::get_numeric(const string &pname, float dflt, bool wild_ok) const
 {
     float result = dflt;
-    string str_value = get(pname);
+    string str_value = get(pname, "", wild_ok);
     if (!str_value.empty()) {
         try {
             result = lexical_cast<float>(str_value);
@@ -125,9 +137,9 @@ float properties::get_numeric(const string &pname, float dflt) const
     return result;
 }
 
-float properties::get_numeric(const vector<string> &pname, float dflt) const
+float properties::get_numeric(const vector<string> &pname, float dflt, bool wild_ok) const
 {
-    return get_numeric(join(pname, "."), dflt);
+    return get_numeric(join(pname, "."), dflt, wild_ok);
 }
 
 /************************************************************************
@@ -150,7 +162,20 @@ const properties::wild_property *properties::find_wild(const string &name) const
 }
 
 /************************************************************************
- * property_type functions
+ * str - return a string of all the properties and their values
+ ***********************************************************************/
+
+string properties::str() const
+{
+    string result;
+    for (const auto *p : *this) {
+        join_to(result, formatted("%40s = %s", p->get_name(), p->get_value()), "\n");
+    }
+    return result;
+}
+
+/************************************************************************
+ * property_value functions
  ***********************************************************************/
 
 /************************************************************************
@@ -181,9 +206,7 @@ bool properties::const_iterator::operator==(const const_iterator &other) const
 properties::const_iterator &properties::const_iterator::operator++()
 {
     if (my_props && !ended()) {
-        do {
-            ++my_iter;
-        } while (!ended() && (my_iter->second)->wild!=NULL);
+        ++my_iter;
         if (!ended()) {
             return *this;
         } else {

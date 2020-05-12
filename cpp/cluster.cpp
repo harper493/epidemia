@@ -329,22 +329,18 @@ void cluster::iterator::advance()
  * refresh - refresh all the parameters from the properties
  ***********************************************************************/
 
-#define refresh_one(prop) prop = props->get_numeric({"cluster", name, #prop})
-
 void cluster_type::refresh(properties *props)
 {
-    refresh_one(min_pop);
-    refresh_one(max_pop);
-    refresh_one(average_pop);
-    refresh_one(same_city);
-    refresh_one(influence);
-    refresh_one(nest_min);
-    refresh_one(nest_max);
-    refresh_one(nest_average);
-    refresh_one(nest_influence);
-    refresh_one(same_city);
-    refresh_one(nest_max);
-    refresh_one(proximality);
+#undef _CP
+#define _CP(TYPE, PROP)                                                 \
+    PROP = props->get_numeric({"cluster", name, #PROP});
+    
+    CLUSTER_PROPERTIES
+#undef _CP
+#define _CP(TYPE, PROP)                                                 \
+        base_##PROP = props->get_numeric({"base", "cluster", name, #PROP}, PROP, false);
+
+    CLUSTER_PROPERTIES
 }
 
 /************************************************************************
@@ -412,6 +408,9 @@ void cluster_type::build_one(world *w)
     random::reciprocal trial(min_pop, max_pop, 100, average_pop);
     auto trial_values = trial.get_values_int();
     size_rms = make_rms(trial_values);
+    random::reciprocal base_trial(base_min_pop, base_max_pop, 100, base_average_pop);
+    auto base_trial_values = base_trial.get_values_int();
+    base_size_rms = make_rms(base_trial_values);
 }
 
 /************************************************************************

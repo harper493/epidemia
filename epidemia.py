@@ -175,7 +175,8 @@ class epidemia() :
                 t.add_line(w)
             else :
                 params.append(ss)
-                self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
+                p = '\n'.join([f'{v[0]}={v[1]}' for v in ss])
+                self.props.add_properties(p)
                 w = fast_world(props=self.props, args=self.args)
                 w.run()
                 results.append(w)

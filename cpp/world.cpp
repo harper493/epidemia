@@ -23,7 +23,9 @@ world::world(properties *props)
 }
 
 /************************************************************************
- * load_props - load static parameters from properties file
+ * load_props - load static parameters from properties file. We load
+ * each value and also create a corresponding base.... version that we
+ * can use when we adjust parameters.
  ***********************************************************************/
 
 float world::get_one_prop(const string &prefix, const string &name, float dflt)
@@ -38,8 +40,30 @@ float world::get_one_prop(const string &prefix, const string &name, float dflt)
 void world::load_props()
 {
 #undef _P
-#define _P(TYPE, PREFIX, DELIM, NAME, DFLT) PREFIX##DELIM##NAME = get_one_prop(#PREFIX, #NAME, DFLT);
-    PROPERTIES
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT)                     \
+    PREFIX##DELIM##NAME = get_one_prop(#PREFIX, #NAME, DFLT);
+    
+    PROPERTIES;
+#undef _P
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT)                             \
+    if (string(#PREFIX).empty()) {                                      \
+        base_##PREFIX##DELIM##NAME =                                    \
+            my_props->get_numeric(vector<string>{"base", #NAME}, PREFIX##DELIM##NAME); \
+    } else {                                                            \
+        base_##PREFIX##DELIM##NAME =                                    \
+            my_props->get_numeric(vector<string>{"base", #PREFIX, #NAME}, PREFIX##DELIM##NAME); \
+    }
+    
+    PROPERTIES;
+    
+    for (const auto *p : *my_props) {
+        if (!boost::starts_with(p->get_name(), "base.")) {
+            string base_name = string("base.") + p->get_name();
+            if (my_props->get(base_name).empty()) {
+                my_props->add_property(base_name, p->get_value());
+            }
+        }
+    }
     gestation_generator.reset(gestating_time, gestating_sd);
     recovery_generator.reset(recovery_time, recovery_sd);
 }
@@ -51,6 +75,7 @@ void world::load_props()
 void world::build()
 {
     start_time = ptime_now();
+    adjust_distance();
     cluster_type::build(this);
     mobility_threshold = 3 * mobility_average / mobility_max;
     mobility_multiplier = pow(mobility_max, 3) / (9 * pow(mobility_average, 2));
@@ -303,13 +328,13 @@ void world::make_infection_prob()
     };
     static interpolator<float> immunity_corrector(immunity_correction);
     float inf = min(0.9, infectiousness);
-    float correction = immunity_corrector(auto_immunity);
-    U32 exposure_time = recovery_time - gestating_time;
+    float correction = immunity_corrector(base_auto_immunity);
+    U32 exposure_time = base_recovery_time - base_gestating_time;
     float cluster_factor = my_props->get_numeric("cluster_factor");
     if (cluster_factor==0) {
         for (auto iter : cluster_type::get_cluster_types()) {
             cluster_type *ct = iter.second;
-            cluster_factor += ct->size_rms * pow(ct->influence, 2);
+            cluster_factor += ct->base_size_rms * pow(ct->base_influence, 2);
         }
     }
     infection_prob = ((float)infectiousness) * correction / (exposure_time * cluster_factor);
@@ -444,6 +469,29 @@ float world::make_city_size(U32 pop) const
     float area = pop / density;
     float radius = sqrt(area/3.14);
     return radius;
+}
+
+/************************************************************************
+ * adjust_distance - apply the distance parameter. We adjust every
+ * parameter that has a "distance_min_..." counterpart, in the ratio
+ * from min to normal according to the distance parameter.
+ ***********************************************************************/
+
+void world::adjust_distance()
+{
+    static const string prefix("distance.min.");
+    if (distance > 0) {
+        std::cout << "### " << distance << std::endl;
+        for (const auto *d : *my_props) {
+            if (boost::starts_with(d->get_name(), prefix)) {
+                string prop_name = d->get_name().substr(prefix.size());
+                float v = my_props->get_numeric(prop_name);
+                float min_v = my_props->get_numeric(d->get_name());
+                float new_value = (v - min_v) * (1 - distance) + min_v;
+                my_props->add_property(prop_name, lexical_cast<string>(new_value));
+            }
+        }
+    }
 }
 
 /************************************************************************

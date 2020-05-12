@@ -21,6 +21,7 @@ class argparser(object) :
         p.add_argument('stuff', nargs='*', help='property file or property assignments')
         arg('-c', '--console', action='store_true', help='send output to console')
         arg('-C', '--city_count*', type=int, help='number of cities')
+        arg('-d', '--distance', type=float, help='social duistance (0=none, 1=Wuhan)')
         arg('',   '--min-days', type=int, default=0, help='minimum number of days to run')
         arg('',   '--max-days', type=int, default=0, help='maximum number of days to run')
         arg('',   '--random', type=int, default=0, help='random number seed')

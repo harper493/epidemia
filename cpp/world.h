@@ -10,6 +10,7 @@
 
 #define PROPERTIES                                                      \
     _P(float, , , auto_immunity, 0)                                     \
+    _P(float, , , distance, 0)                                          \
     _P(float, , , travel_prob, 0)                                       \
     _P(float, , , infectiousness, 2.5)                                  \
     _P(float, , , appeal_factor, 0.5)                                   \
@@ -80,7 +81,9 @@ private:
     // Cached properties
     //
 #undef _P
-#define _P(TYPE, PREFIX, DELIM, NAME, DFLT) TYPE PREFIX##DELIM##NAME;
+#define _P(TYPE, PREFIX, DELIM, NAME, DFLT) \
+    TYPE PREFIX##DELIM##NAME; \
+    TYPE base_##PREFIX##DELIM##NAME;
     PROPERTIES
 public:
     world(properties *props);
@@ -119,6 +122,7 @@ private:
     void show_mobility_data();
     void finish_build();
     void assign_cities_to_agents();
+    void adjust_distance();
 };
 
 #endif

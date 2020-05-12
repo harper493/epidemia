@@ -8,6 +8,20 @@
 #include "spinlock.h"
 #include "allocator.h"
 
+#define CLUSTER_PROPERTIES \
+    _CP(U32, min_pop) \
+    _CP(U32, max_pop) \
+    _CP(U32, average_pop) \
+    _CP(float, influence) \
+    _CP(U32, nest_min) \
+    _CP(U32, nest_max) \
+    _CP(U32, nest_average) \
+    _CP(U32, max_depth) \
+    _CP(float, same_city) \
+    _CP(float, nest_influence) \
+    _CP(float, size_rms) \
+    _CP(float, proximality) \
+    
 class cluster_type
 {
 public:
@@ -15,17 +29,12 @@ public:
     static const int max_cluster_types = 5;
 private:
     string name;
-    U32 min_pop;
-    U32 max_pop;
-    U32 average_pop;
-    float influence;
-    U32 nest_min;
-    U32 nest_max;
-    U32 nest_average;
-    float same_city;
-    float nest_influence;
-    float size_rms;
-    float proximality;
+
+#undef _CP
+#define _CP(TYPE, PROP) TYPE PROP; \
+    TYPE base_##PROP;
+
+    CLUSTER_PROPERTIES
     float exposure;
     static cluster_type_map_t cluster_types;
 public:
