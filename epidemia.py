@@ -162,26 +162,19 @@ class epidemia() :
             detail_log = detail_table = None
         params = []
         results = []
+        base_params = ''
         for ss in sens :
-            if False:
-                params.append(ss)
-                self.props.add_properties('\n'.join([f'{v[0]}={v[1]}' for v in ss]))
-                cluster.make_cluster_info(self.props)
-                w = world(props=self.props)
-                w.run(logger=(lambda w: detail_table.add_line(w)) if detail_table else None)
-                if detail_table :
-                    detail_table.write()
-                results.append(w)
-                t.add_line(w)
-            else :
-                params.append(ss)
-                p = '\n'.join([f'{v[0]}={v[1]}' for v in ss])
-                self.props.add_properties(p)
-                w = fast_world(props=self.props, args=self.args)
-                w.run()
-                results.append(w)
-                w.params = { sss[0]:sss[1] for sss in ss }
-                t.add_line(w)
+            if not params:
+                base_params = '\n'.join([f'base.{v[0]}={v[1]}' for v in ss])
+            params.append(ss)
+            p = '\n'.join([f'{v[0]}={v[1]}' for v in ss])
+            self.props.add_properties(p)
+            self.props.add_properties(base_params)
+            w = fast_world(props=self.props, args=self.args)
+            w.run()
+            results.append(w)
+            w.params = { sss[0]:sss[1] for sss in ss }
+            t.add_line(w)
         if self.args.plot or self.log_path:
             from_ = min([ w.get_interesting()[0] for w in results ])
             to = max([ w.get_interesting()[1] for w in results ])
