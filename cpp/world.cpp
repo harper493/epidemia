@@ -481,7 +481,6 @@ void world::adjust_distance()
 {
     static const string prefix("distance.min.");
     if (distance > 0) {
-        std::cout << "### " << distance << std::endl;
         for (const auto *d : *my_props) {
             if (boost::starts_with(d->get_name(), prefix)) {
                 string prop_name = d->get_name().substr(prefix.size());
