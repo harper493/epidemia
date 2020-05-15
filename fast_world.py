@@ -68,7 +68,7 @@ class fast_world(infection_counter):
         self.total_infected = 0
         self.today = None
 
-    def run(self):
+    def run(self, sync=True):
         os.system("mkdir -p tmp")
         temp_file = f"tmp/_tmp_{datetime.now().strftime('%Y%m%dT%H%M%S_%f')[:-3]}"
         self.csv_file = temp_file + ".csv"
@@ -92,6 +92,8 @@ class fast_world(infection_counter):
         self.city_reader = csv_listener(self.city_listener, self._unpack_city)
         self.csv_listener = file_listener(self.csv_file)
         self.csv_reader = csv_listener(self.csv_listener, self._unpack_row)
+        if sync:
+            self.terminate()
 
     def terminate(self):
         self.process.wait()
@@ -153,13 +155,13 @@ class fast_world(infection_counter):
         return [  getattr(d, name) for d in self.daily.values() ]
 
     def get_data_point(self, name, day):
-        return self.daily[day][name]
+        return getattr(self.daily[day], name)
 
     def get_interesting(self):
         from_ = None
         to = len(self.daily)
         for d in self.daily.keys():
-            ti = self.get_data_point('total_infected', d)
+            ti = self.get_data_point('total', d)
             if from_:
                 if d > self.highest_day and self.get_data_point('infected', d) < ti // 5:
                     to = d

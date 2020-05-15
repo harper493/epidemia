@@ -101,7 +101,7 @@ class epidemia() :
 
     def run_one(self) :
         w = fast_world(props=self.props, args=self.args)
-        w.run()
+        w.run(sync=False)
         if self.args.bubbles:
             self.plot_bubbles(w)
         elif self.args.plot :
