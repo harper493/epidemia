@@ -44,6 +44,8 @@ class argparser(object) :
         arg('-a', '--auto-immunity*', type=float, default=None, \
                        help='level of non-infectious immunity (0-1)')
         arg('-Q', '--ignore', type=str)
+        arg('',   '--save-frames', type=str, help='save animation frames at the specified path')
+        arg('',   '--no-display', action='store_true', help='do not display output')
         a = p.parse_args()
         if a.sensitivity and a.repeat :
             self.error("Can't combine --sensitivity and --repeat in a single command")

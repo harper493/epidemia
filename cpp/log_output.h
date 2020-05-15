@@ -46,6 +46,14 @@ public:
         _put_element(args...);
         write_line();
     }
+    void write_line(const string &line="")
+    {
+        (*my_ostr) << line << "\n";
+    }
+    void flush()
+    {
+        my_ostr->flush();
+    }
 private:
     template<class C>
     void _put(column &col, const C &val)
@@ -68,10 +76,6 @@ private:
     }
     void _put_element() { };     // recursion stopper
     void start_line();
-    void write_line()
-    {
-        (*my_ostr) << "\n";
-    }
 friend class column;
 };
 

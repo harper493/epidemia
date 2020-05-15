@@ -68,6 +68,7 @@ private:
     day_number day = 0;
     U32 infected = 0;
     U32 total_infected = 0;
+    U32 max_infected = 0;
     U32 prev_infected = 0;
     U32 prev_total = 0;
     U32 immune = 0;

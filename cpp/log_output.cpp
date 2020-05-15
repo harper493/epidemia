@@ -40,6 +40,9 @@ void log_output::create(const string &fn, bool csv_, bool do_heading, const vect
 
 void log_output::close()
 {
+    if (my_ostr && csv) {
+        (*my_ostr) << "#!End" << std::endl;
+    }
     if (my_stream) {
         delete my_ostr;
     }

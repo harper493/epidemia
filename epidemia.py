@@ -15,9 +15,13 @@ from bubbles import bubbles
 import functools
 import itertools
 import numpy as np
+from threading import Lock, Thread
+import time
 import os
 
 import cProfile
+
+bubbles_async = True
 
 def _f(*args, **kwargs) :
     return dynamic_table.field(*args, **kwargs)
@@ -66,6 +70,7 @@ class epidemia() :
             propfiles.append(self.args.props_file)
         self.props = properties(*propfiles, cmd_args=self.args.extra_props)
         cluster.make_cluster_info(self.props)
+        self.bubble_thread = None
         if self.args.log_path or self.args.output:
             self.log_path = self.args.log_path or '.'
             if self.log_path[-1] != '/' :
@@ -96,28 +101,12 @@ class epidemia() :
 
     def run_one(self) :
         w = fast_world(props=self.props, args=self.args)
-        if True:
-            w.run()
-        else:
-            if self.args.very_verbose :
-                self.show_cities(w)
-            print()
-            t = dynamic_table(log_fields, file=self.log_file, console=self.args.console)
-            w.run(logger=lambda w: t.add_line(w))
-            t.write((f'\nMax Infected: {w.max_infected:d}',
-                    f'({100*w.max_infected/w.population:.2f}%)',
-                    f'Total Infected: {w.total_infected:d}',
-                    f'({100*w.total_infected/w.population:.2f}%)',
-                    f'Max Growth: {100*(w.max_growth-1):.2f}%',
-                    f'Days to Double: {w.days_to_double:.1f}',
-                    f'Days to Peak: {w.highest_day}'))
-            t.write((f'Population: {w.population:d}',
-                     f'Setup Time: {w.setup_time:.2f}S',
-                     f'Days: {w.day:d} in {w.run_time:.2f}S { w.run_time/w.day:.3f} S/day'))
-        if self.args.plot :
-            self.plot_results(w)
-        elif self.args.bubbles:
+        w.run()
+        if self.args.bubbles:
             self.plot_bubbles(w)
+        elif self.args.plot :
+            self.plot_results(w)
+        w.terminate()
 
     def show_cities(self, w) :
         print('\n')
@@ -132,15 +121,15 @@ class epidemia() :
         title += f'\nMax Days to Double {w.days_to_double:.1f}'
         x = w.get_days()[from_:to]
         data = [ {'label': var_to_title(v),
-                  'data' : w.get_data(v)[from_:to] } for v in ('total_infected', 'infected') ]
+                  'data' : w.get_data(v)[from_:to] } for v in ('total_', 'infected') ]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
         p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
 
     def plot_bubbles(self, w):
         title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        rd = bubbles(w, w.daily[1]['cities'])
-        rd.plot(file=plotfile, title=title, format = self.args.format)
+        rd = bubbles(w, title=title)
+        rd.plot(file=plotfile, format = self.args.format)
 
     def run_sensitivity(self):
         def one_col(w, name) :
@@ -183,7 +172,7 @@ class epidemia() :
             data = []
             colors = plot.make_colors(self.props)
             for p, w, c in zip(params, results, itertools.cycle(colors)) :
-                d = w.get_data('total_infected')[from_:to]
+                d = w.get_data('total')[from_:to]
                 d1 = w.get_data('infected')[from_:to]
                 while len(d) < len(x) :
                     d.append(d[-1])

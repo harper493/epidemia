@@ -398,6 +398,7 @@ bool world::end_of_day()
                                 c->total_infected, 0, c->immune, c->is_untouched()?1:0);
         }
     }
+    my_logger->flush();
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;
@@ -412,6 +413,7 @@ bool world::end_of_day()
             ++untouched_cities;
         }
     }
+    max_infected = max(max_infected, infected);
     return still_interesting();
 }
 
@@ -427,10 +429,9 @@ bool world::still_interesting() const
     } else if (max_days > 0 && day > max_days) {
         result = false;
     } else {
-        result = infected>0
-            && ((infected > prev_infected)
-                || (infected > population / 1000)
-                || (total_infected + immune < population / 4));
+        result = (max_infected > initial_infected * 10
+                  && infected > initial_infected)
+            || (infected * 5 > initial_infected);
     }
     return result;
 }
