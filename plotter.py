@@ -101,7 +101,11 @@ class plotter(dynamic_plot):
                                                                   linestyle=l.style or 'solid')[0]
                                       for l in self.lines})
         if self.legend:
+            legend2 = self.graph.legend([ g for g in self.graph_lines[0].values() ],
+                                        [ n for n in self.graph_lines[0].keys()],
+                                        loc='center left')
             self.graph.legend(loc='upper left')
+            self.graph.add_artist(legend2)
         self.first = True
 
     def do_day(self, r):
