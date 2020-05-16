@@ -105,6 +105,7 @@ class epidemia() :
         if self.args.bubbles:
             self.plot_bubbles(w)
         elif self.args.plot :
+            w.terminate()
             self.plot_results(w)
         w.terminate()
 
@@ -116,14 +117,14 @@ class epidemia() :
 
     def plot_results(self, w) :
         from_, to = w.get_interesting()
-        p = plotter()
         title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
-        title += f'\nMax Days to Double {w.days_to_double:.1f}'
+        # title += f'\nMax Days to Double {w.days_to_double:.1f}'
+        plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
+        p = plotter(title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
         x = w.get_days()[from_:to]
         data = [ {'label': var_to_title(v),
-                  'data' : w.get_data(v)[from_:to] } for v in ('total_', 'infected') ]
-        plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        p.plot(x, *data, title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
+                  'data' : w.get_data(v)[from_:to] } for v in ('total', 'infected') ]
+        p.plot(x, *data)
 
     def plot_bubbles(self, w):
         title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
@@ -138,10 +139,11 @@ class epidemia() :
         if self.args.random==0:
             self.args.random = true_random()
         sens = sensitivity(s)
+        self.ranges = [ r for r in sens ]
         param_cols = [_f(var_to_title(n), '%10s',
                          functools.partial(one_col, name=n))
                       for n in sens.get_variables()]
-        t = dynamic_table((param_cols+list(summary_fields)), file=self.log_file, console=self.args.console)
+        self.table = dynamic_table((param_cols+list(summary_fields)), file=self.log_file, console=self.args.console)
         if self.log_filename :
             detail_log = open(f'{self.log_path}{self.log_filename}-detail.log', 'w')
             self.write_log_header(detail_log)
@@ -149,49 +151,34 @@ class epidemia() :
             detail_log.write('\n')
         else :
             detail_log = detail_table = None
-        params = []
-        results = []
-        base_params = ''
-        for ss in sens :
-            if not params:
-                base_params = '\n'.join([f'base.{v[0]}={v[1]}' for v in ss])
-            params.append(ss)
-            p = '\n'.join([f'{v[0]}={v[1]}' for v in ss])
-            self.props.add_properties(p)
-            self.props.add_properties(base_params)
-            w = fast_world(props=self.props, args=self.args)
-            w.run()
-            results.append(w)
-            w.params = { sss[0]:sss[1] for sss in ss }
-            t.add_line(w)
+        self.worlds = []
+        self.base_params = [ (f'base.{r[0]}', r[1]) for r in self.ranges[0] ]
+        self.run_thread = Thread(target=self._world_runner)
+        self.run_thread.start()
         if self.args.plot or self.log_path:
-            from_ = min([ w.get_interesting()[0] for w in results ])
-            to = max([ w.get_interesting()[1] for w in results ])
-            plot = plotter()
-            x = range(from_, to)
-            data = []
-            colors = plot.make_colors(self.props)
-            for p, w, c in zip(params, results, itertools.cycle(colors)) :
-                d = w.get_data('total')[from_:to]
-                d1 = w.get_data('infected')[from_:to]
-                while len(d) < len(x) :
-                    d.append(d[-1])
-                    d1.append(np.nan)
-                legend = ', '.join([ float_to_str(pp[1]) for pp in p ])
-                data.append({ 'label':legend, 'data':d, 'color':c})
-                data.append({ 'data': d1, 'style':'--', 'color': c})
-            titles = []
-            for t in ('population', 'infectiousness', 'auto_immunity') :
-                if t not in sens.get_variables() :
-                    titles.append(f'{var_to_title(t)} = {getattr(results[0], t)}')
-            title = ' '.join(titles)
+            self.labels = [ ', '.join([ float_to_str(pp[1]) for pp in p ]) for p in self.ranges ]
+            title = ' '.join([ f'{var_to_title(t)} = {self.props.get(float, t)}'
+                       for t in ('population', 'infectiousness', 'auto_immunity')
+                       if t not in sens.get_variables() ])
             if not self.args.repeat :
                 title += '\nVarying {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-            plot.plot(x, *data, title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                      format=self.args.format, props=self.props)
-            if detail_log :
-                detail_log.close()
+            plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
+                           format=self.args.format, props=self.props)
+            plot.plot_dynamic(self.worlds, self.labels)
+        if detail_log :
+            detail_log.close()
+        self.run_thread.join()
 
+    def _world_runner(self):
+        for ss in self.ranges:
+            self.props.add_properties(values=ss)
+            self.props.add_properties(values=self.base_params)
+            w = fast_world(props=self.props, args=self.args)
+            self.worlds.append(w)
+            w.run(sync=True)
+            if self.table:
+                w.params = { sss[0]:sss[1] for sss in ss }
+                self.table.add_line(w)
 
 epidemia().run()

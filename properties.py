@@ -156,7 +156,14 @@ class properties(object) :
 # java properties format, and adds them to the tree. Deal with continuation lines flagged by a
 # '\' as the last character of the preceding line.
 #
-    def add_properties(self, props) :
+    def add_properties(self, props:str=None, values=None) :
+        if props:
+            self._add_properties_str(props)
+        else:
+            for l in values:
+                self.add(l[0], l[1])
+
+    def _add_properties_str(self, props):
         rx = re.compile(r'^\s*(\S+)\s*=\s*(.+?)\s*(#.*)?$')
         line = ''
         for l in props.split('\n') :
@@ -198,9 +205,9 @@ class properties(object) :
                 d = d[k]
         kn = keys[-1]
         if kn in d and isinstance(d[kn], dict) :
-            d[kn][None] = value
+            d[kn][None] = str(value)
         else :
-            d[kn] = value
+            d[kn] = str(value)
 #
 # do_directive  process a directive line beginning with @
 #
