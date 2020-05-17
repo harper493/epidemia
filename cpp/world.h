@@ -31,6 +31,8 @@
     _P(float, , , max_days, 0)                                          \
     _P(float, , , mobility_max, 0)                                      \
     _P(float, , , mobility_average, 0)                                  \
+    _P(float, , , vaccination, 0)                                       \
+    _P(float, , , mortality, 0.001)                                     \
     _P(float, city, _, max_density, 5000)                               \
     _P(float, city, _, min_density, 1000)                               \
     _P(float, city, _, auto_power, 0.67)                                \
@@ -72,6 +74,8 @@ private:
     U32 prev_infected = 0;
     U32 prev_total = 0;
     U32 immune = 0;
+    U32 vaccinated = 0;
+    U32 dead = 0;
     U32 untouched_cities = 0;
     U32 verbosity = 1;
     chooser<city, U32> city_chooser;

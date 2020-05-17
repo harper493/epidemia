@@ -14,6 +14,7 @@ class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>
 public:
     enum class state: U8 {
         susceptible = 0,
+        vaccinated,
             gestating,
             infected,
             recovered,
@@ -44,8 +45,12 @@ public:
     bool is_infected() const { return my_state==state::infected; };
     bool is_recovered() const { return my_state==state::recovered; };
     bool is_immune() const { return my_state==state::immune; };
+    bool is_vaccinated() const { return my_state==state::vaccinated; };
+    bool is_dead() const { return my_state==state::dead; };
     bool one_day(day_number day);
     void force_infect(day_number day);
+    void vaccinate();
+    void kill();
     string show() const;
     world *get_world() const;
     static person* factory(const string &n, city *c, const point &loc, const cluster::list &clusters);

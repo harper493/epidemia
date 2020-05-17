@@ -39,6 +39,7 @@ class fast_world(infection_counter):
         growth: float = 0
         immune: int = 0
         vaccinated: int = 0
+        dead: int = 0
         susceptible: int = 0
         severe: int = 0
         population: int = 0
@@ -62,10 +63,11 @@ class fast_world(infection_counter):
         self.size = 100
         self.cities = {}
         self.cities_by_index = {}
+        self.total = 0
+        self.dead = 0
         self.max_infected = 0
         self.max_growth = 0
         self.highest_day = 0
-        self.total_infected = 0
         self.today = None
 
     def run(self, sync=True):
@@ -121,14 +123,18 @@ class fast_world(infection_counter):
             city_no = int(row['city'])
             data = fast_world._day_info(**{ n: (float(v) if '.' in v else int(v)) for n, v in row.items()
                                              if n in fast_world._day_info.get_fields() })
-            data.recovered = data.total + data.immune - data.infected
+            data.recovered = data.total - data.infected
             if data.city==0:
                 self.today = data
                 data.population = self.population
                 data.susceptible = self.population - data.total - data.immune
                 self.today.cities = {}
-                self.max_infected = max(self.max_infected, data.infected)
+                if data.infected > self.max_infected:
+                    self.max_infected = data.infected
+                    self.highest_day = day
+                self.dead = data.dead
                 self.max_growth = max(self.max_growth, data.growth)
+                self.total = data.total
                 self.days_to_double = log(2) / log(1 + self.max_growth / 100) if self.max_growth else 0
                 with self.daily_lock:
                     self.daily[day] = self.today

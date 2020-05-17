@@ -263,8 +263,12 @@ void city::build_clusters()
 
 void city::add_person(person *p)
 {
+    infection_counter::add_person(p);
     for (cluster *cl : p->get_clusters()) {
         cl->add_person(p);
+    }
+    if (random::get_random() < my_world->get_vaccination()) {
+        p->vaccinate();
     }
 }
 

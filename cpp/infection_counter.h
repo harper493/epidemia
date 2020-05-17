@@ -13,6 +13,7 @@ protected:
     atomic_counter infected;
     atomic_counter recovered;
     atomic_counter immune;
+    atomic_counter vaccinated;
     atomic_counter dead;
     atomic_counter total_infected;
 public:
@@ -23,6 +24,7 @@ public:
     void immunise_one(person *p);
     void kill_one(person *p);
     void add_person(person *p);
+    void vaccinate_one(person *p);
     bool is_untouched() const { return susceptible==population; };
     bool is_susceptible() const { return susceptible > 0; };
     U32 get_susceptible() const { return susceptible; };
@@ -30,6 +32,7 @@ public:
     U32 get_infected() const { return infected; };
     U32 get_total_infected() const { return total_infected; };
     U32 get_recovered() const { return recovered; };
+    U32 get_vaccinated() const { return vaccinated; };
     U32 get_immune() const { return immune; };
     U32 get_dead() const { return dead; };
     void set_population(U32 p)

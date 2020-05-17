@@ -53,10 +53,12 @@ city_fields = (
 )
 
 summary_fields = (
-    _f('max_infected', '%6d'),
+    _f('max_infected', '%7d'),
     _f('%', "%5.2f", lambda w: 100 * w.max_infected / w.population),
-    _f('total_infected', '%6d'),
-    _f('%', "%5.2f", lambda w: 100 * w.total_infected / w.population),
+    _f('total', '%7d'),
+    _f('%', "%5.2f", lambda w: 100 * w.total / w.population),
+    _f('dead', '%7d'),
+    _f('%', '%5.2f', lambda w: 100 * w.dead / w.population),
     _f('days_to_double', '%5.1f'),
     _f('Days to Peak', '%3d', lambda w: w.highest_day),
 )

@@ -72,7 +72,11 @@ bool person::one_day(day_number day)
     case state::infected:
         if (day >= next_transition) {
             result = true;
-            recover();
+            if (random::get_random() < get_world()->get_mortality()) {
+                kill();
+            } else {
+                recover();
+            }
         } else {
             visitee->get_city()->expose(my_city);
             for (auto *cl : visitee->my_clusters) {
@@ -139,6 +143,32 @@ void person::immunise(day_number day)
         cl->immunise_one(this);
     }
     my_state = state::immune;
+}
+
+/************************************************************************
+ * vaccinate - transition to vaccinated
+ ***********************************************************************/
+
+void person::vaccinate()
+{
+    my_city->vaccinate_one(this);
+    for (auto *cl : my_clusters) {
+        cl->vaccinate_one(this);
+    }
+    my_state = state::vaccinated;
+}
+
+/************************************************************************
+ * kill - transition to dead
+ ***********************************************************************/
+
+void person::kill()
+{
+    my_city->kill_one(this);
+    for (auto *cl : my_clusters) {
+        cl->kill_one(this);
+    }
+    my_state = state::dead;
 }
 
 /************************************************************************

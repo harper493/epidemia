@@ -41,7 +41,8 @@ bool command::parse(int argc, const char **argv)
         ("population,p",      po::value<int>(),    "population")
         ("random,r",          po::value<float>(),  "random number seed")
         ("threads,T",         po::value<int>(),    "number of threads to use")
-        ("verbosity,v",       po::value<int>(),    "how much output to give");
+        ("vaccination,v",     po::value<float>(),   "proportion of people vaccinated (0-1)")
+        ("verbosity,V",       po::value<int>(),    "how much output to give");
     po::options_description hidden("");
     hidden.add_options()
         ("positional",        po::value<vector<string>>(),       "positional arguments");

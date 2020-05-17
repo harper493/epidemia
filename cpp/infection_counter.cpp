@@ -26,6 +26,20 @@ void infection_counter::gestate_one(person *p)
     susceptible -= 1;
 }
 
+void infection_counter::vaccinate_one(person *p)
+{
+    debug_assert(p->is_susceptible());
+    vaccinated += 1;
+    susceptible -= 1;
+}
+
+void infection_counter::kill_one(person *p)
+{
+    debug_assert(p->is_infected());
+    dead += 1;
+    infected -= 1;
+}
+
 void infection_counter::immunise_one(person *p)
 {
     debug_assert(p->is_susceptible());
@@ -38,12 +52,5 @@ void infection_counter::recover_one(person *p)
     debug_assert(p->is_infected());
     infected -= 1;
     recovered += 1;
-}
-
-void infection_counter::kill_one(person *p)
-{
-    debug_assert(p->is_infected());
-    infected -= 1;
-    dead += 1;
 }
 

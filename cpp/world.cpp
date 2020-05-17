@@ -285,7 +285,13 @@ void world::infect_cities()
     // make sure each has at least one infected
     //
     for (city *c : infectees) {
-        c->get_random_person()->force_infect(0);
+        while (true) {
+            person *p = c->get_random_person();
+            if (p->is_susceptible()) {
+                p->force_infect(0);
+                break;
+            }
+        }
     }
     //
     // now randomly infect others, biassed by city size. The while loops
@@ -391,11 +397,12 @@ bool world::end_of_day()
     }
     ++day;
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
-    my_logger->put_line(day, 0, infected, total_infected, growth, immune, untouched_cities);
+    my_logger->put_line(day, 0, infected, total_infected, growth, immune, vaccinated, dead, untouched_cities);
     if (the_args->get_log_cities()) {
         for (city *c : my_cities) {
             my_logger->put_line(day, c->index, c->infected,
-                                c->total_infected, 0, c->immune, c->is_untouched()?1:0);
+                                c->total_infected, 0, c->immune,
+                                c->vaccinated, c->dead, c->is_untouched()?1:0);
         }
     }
     my_logger->flush();
@@ -405,10 +412,14 @@ bool world::end_of_day()
     total_infected = 0;
     immune = 0;
     untouched_cities = 0;
+    vaccinated = 0;
+    dead = 0;
     for (city *c : my_cities) {
         infected += c->get_infected();
         total_infected += c->get_total_infected();
         immune += c->get_immune();
+        vaccinated += c->get_vaccinated();
+        dead += c->get_dead();
         if (c->is_untouched()) {
             ++untouched_cities;
         }

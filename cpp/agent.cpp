@@ -150,8 +150,10 @@ void epidemia_agent::populate_cities()
         first = false;
         for (int i=0; i<pop; ++i) {
             person *p = c->make_person();
-            susceptibles.insert(p);
             c->add_person(p);
+            if (p->is_susceptible()) {
+                susceptibles.insert(p);
+            }
         }
     }
 }

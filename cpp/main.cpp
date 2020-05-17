@@ -17,6 +17,8 @@ log_output::column_defs log_columns{
     { "9d", "total" },
     { "7.2f", "growth" },
     { "9d", "immune" },
+    { "11d", "vaccinated" },
+    { "9d", "dead" },
     { "17d", "untouched_cities" },
 };
 

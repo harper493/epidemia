@@ -62,7 +62,10 @@ class plotter():
         button_hover = 'bisque'
         susceptible = 'deepskyblue'
         infected = 'red'
-        recovered = 'lime'
+        recovered = 'mediumseagreen'
+        immune = 'limegreen'
+        vaccinated = 'chartreuse'
+        dead = 'black'
         total = 'cornflowerblue'
         graph_infected = 'darkorange'
         graph_total = 'red'
@@ -103,7 +106,8 @@ class plotter():
         constructor(plotter.arg_table, args=kwargs).apply(self)
         if self.lines is None:
             self.lines = (line_info('total', style='solid'),
-                          line_info('infected', style='dashed'))
+                          line_info('infected', style='dashed'),
+                          line_info('dead', style='dotted'))
         self.colors = plotter.colors()
         self.colors.load(self.props)
 

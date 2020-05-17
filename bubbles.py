@@ -29,7 +29,7 @@ graph_infected_color = 'darkorange'
 
 default_size = 10
 
-bubble_size = 500
+bubble_size = 700
 
 bubble_top = 0.9
 bubble_bottom = 0.3
@@ -56,6 +56,9 @@ x_increase_delta = 100
 initial_y_min = 100
 
 bubble_types = (    # listed from innermost to outermost
+    'dead',
+    'vaccinated',
+    'immune',
     'recovered',    # TODO add immune, vaxxed, dead
     'infected',
 )
@@ -87,7 +90,8 @@ class bubbles(plotter):
         self.square = True
         self.max_infected = 0
         self.lines = (plotter.make_line_info('total', color=self.colors.total, style='solid'),
-                      plotter.make_line_info('infected', color=self.colors.infected, style='dashed'))
+                      plotter.make_line_info('infected', color=self.colors.infected, style='dashed'),
+                      plotter.make_line_info('dead', color=self.colors.dead, style='dotted'))
         self.cities = None
 
     def build_extra(self):
@@ -105,6 +109,9 @@ class bubbles(plotter):
         self.infected_box = self.graph.text(label_left, 0.7,
                                             '', color = self.colors.infected,
                                             transform = self.graph.transAxes)
+        self.dead_box = self.graph.text(label_left, 0.6,
+                                        '', color = self.colors.dead,
+                                        transform = self.graph.transAxes)
         self.add_buttons()
 
     def day_pre_extra(self, day, world, daily):
@@ -158,11 +165,13 @@ class bubbles(plotter):
             text.set_text(f'{b.title()} {percent:4.1f}%')
         total_percent = 100 * daily.total / world.population
         infected_percent = 100 * daily.infected / world.population
+        dead_percent = 100 * daily.dead / world.population
         self.max_infected = max(daily.infected, self.max_infected)
         max_infected_percent = 100 * self.max_infected / world.population
         self.total_box.set_text(f'Total {total_percent:4.1f}% ({daily.total})')
         self.infected_box.set_text(f'Infected {infected_percent:4.1f}% ({daily.infected})'
                                    f'\nMax {max_infected_percent:4.1f}% ({self.max_infected})')
+        self.dead_box.set_text(f'Dead {dead_percent:4.1f}% ({daily.dead})')
 
     def make_bubble_size(self, data, b, prev_b):
         pop = getattr(data, b)
