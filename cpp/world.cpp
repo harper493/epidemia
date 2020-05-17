@@ -429,9 +429,9 @@ bool world::still_interesting() const
     } else if (max_days > 0 && day > max_days) {
         result = false;
     } else {
-        result = (max_infected > initial_infected * 10
-                  && infected > initial_infected)
-            || (infected * 5 > initial_infected);
+        result = (max_infected > initial_infected * 10)
+                  ? infected > initial_infected
+                  : infected * 5 > initial_infected;
     }
     return result;
 }
