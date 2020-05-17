@@ -98,9 +98,6 @@ class bubbles(plotter):
         self.bubble_chart = self.fig.add_axes([self.left_margin, bubble_bottom,
                                                (1 - self.left_margin - self.right_margin),
                                                bubble_top-bubble_bottom])
-        descr = '\n'.join([t for t in re.split(r'(.*?\s+[0-9.]+)\s', self.title) if len(t)])
-        self.description = self.bubble_chart.text(-bubble_margin, self.world_size + bubble_margin * 1.5, descr,
-                                                   size=10)
         self.bubble_chart.set_xlim(-bubble_margin, self.world_size+bubble_margin)
         self.bubble_chart.set_ylim(-bubble_margin, self.world_size + bubble_margin)
         self.total_box = self.graph.text(label_left, 0.9,
@@ -113,6 +110,7 @@ class bubbles(plotter):
                                         '', color = self.colors.dead,
                                         transform = self.graph.transAxes)
         self.add_buttons()
+        self.top_ax = self.bubble_chart
 
     def day_pre_extra(self, day, world, daily):
         if self.cities is None :
@@ -177,6 +175,7 @@ class bubbles(plotter):
         pop = getattr(data, b)
         if prev_b and pop > 0:
             inner = getattr(data, prev_b)
+            pop = max(pop, inner * 0.1)
             total = inner + pop
         else:
             inner, total = 0, pop

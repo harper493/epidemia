@@ -396,16 +396,6 @@ bool world::end_of_day()
         finish_build();
     }
     ++day;
-    float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
-    my_logger->put_line(day, 0, infected, total_infected, growth, immune, vaccinated, dead, untouched_cities);
-    if (the_args->get_log_cities()) {
-        for (city *c : my_cities) {
-            my_logger->put_line(day, c->index, c->infected,
-                                c->total_infected, 0, c->immune,
-                                c->vaccinated, c->dead, c->is_untouched()?1:0);
-        }
-    }
-    my_logger->flush();
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;
@@ -425,6 +415,16 @@ bool world::end_of_day()
         }
     }
     max_infected = max(max_infected, infected);
+    float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
+    my_logger->put_line(day, 0, infected, total_infected, growth, immune, vaccinated, dead, untouched_cities);
+    if (the_args->get_log_cities()) {
+        for (city *c : my_cities) {
+            my_logger->put_line(day, c->index, c->infected,
+                                c->total_infected, 0, c->immune,
+                                c->vaccinated, c->dead, c->is_untouched()?1:0);
+        }
+    }
+    my_logger->flush();
     return still_interesting();
 }
 

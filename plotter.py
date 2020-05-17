@@ -94,12 +94,18 @@ class plotter():
         'size': None,
         'x_size': default_x_size,
         'y_size': default_y_size,
-        'left_margin': 0.1,
-        'right_margin': 0.1,
-        'bottom_margin': 0.05,
+        'left_margin': 0.06,
+        'right_margin': 0.06,
+        'bottom_margin': 0.07,
         'graph_height': 0.8,
+        'surtitle_left_margin': 0.1,
+        'surtitle_base': 1.02,
+        'surtitle_line_height': 0.025,
+        'surtitle_width': 0.08,
+        'surtitle_font_size': 9,
         'display': True,
         'square': False,
+        'surtitle': [],    # must be a list of 2-tuples (label, value)
     }
 
     def __init__(self, **kwargs):
@@ -162,7 +168,18 @@ class plotter():
             if self.legend:
                 self.graph.legend(loc='upper left')
         self.first = True
+        self.top_ax = self.graph
         self.build_extra()
+        self.build_surtitle()
+
+    def build_surtitle(self):
+        row_labels = [ s[0] for s in self.surtitle ]
+        col_values = [ [ s[1] ] for s in self.surtitle ]
+        self.surtitles = self.top_ax.table(cellText=col_values, rowLabels=row_labels,
+                                           fontsize=self.surtitle_font_size, edges='open',
+                                           bbox=(self.surtitle_left_margin, self.surtitle_base,
+                                                 self.surtitle_width,
+                                                 self.surtitle_line_height * len(row_labels)))
 
     def build_extra(self):
         pass

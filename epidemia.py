@@ -129,10 +129,12 @@ class epidemia() :
         p.plot(x, *data)
 
     def plot_bubbles(self, w):
-        title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
+        surtitle = [('Population', w.population),
+                    ('Infectiousness', w.get_infectiousness()),
+                    ('Auto Immunity', w.get_auto_immunity())]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        rd = bubbles(title=title, file=plotfile, format = self.args.format, props=self.props, world_size=w.size,
-                     population=w.population, legend=False, incremental=True)
+        rd = bubbles(file=plotfile, format = self.args.format, props=self.props, world_size=w.size,
+                     population=w.population, legend=False, incremental=True, surtitle=surtitle)
         rd.plot([w], ('total', 'infected'))
 
     def run_sensitivity(self):
@@ -160,14 +162,14 @@ class epidemia() :
         self.run_thread.start()
         if self.args.plot or self.log_path:
             self.labels = [ ', '.join([ float_to_str(pp[1]) for pp in p ]) for p in self.ranges ]
-            title = ' '.join([ f'{var_to_title(t)} = {self.props.get(float, t)}'
+            surtitle = [ (f'{var_to_title(t)}', f'{float_to_str(self.props.get(float, t))}')
                        for t in ('population', 'infectiousness', 'auto_immunity')
-                       if t not in sens.get_variables() ])
+                       if t not in sens.get_variables() ]
             if not self.args.repeat :
-                title += '\nVarying {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
+                title = '\nVarying: {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                           format=self.args.format, props=self.props, incremental=False)
+                           format=self.args.format, props=self.props, incremental=False, surtitle=surtitle)
             plot.plot(self.worlds, self.labels)
         if detail_log :
             detail_log.close()
