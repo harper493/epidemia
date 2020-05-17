@@ -148,7 +148,8 @@ class epidemia() :
         param_cols = [_f(var_to_title(n), '%10s',
                          functools.partial(one_col, name=n))
                       for n in sens.get_variables()]
-        self.table = dynamic_table((param_cols+list(summary_fields)), file=self.log_file, console=self.args.console)
+        table_cols = param_cols+list(summary_fields)
+        self.table = dynamic_table(table_cols, file=self.log_file, console=self.args.console)
         if self.log_filename :
             detail_log = open(f'{self.log_path}{self.log_filename}-detail.log', 'w')
             self.write_log_header(detail_log)
@@ -169,7 +170,8 @@ class epidemia() :
                 title = '\nVarying: {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                           format=self.args.format, props=self.props, incremental=False, surtitle=surtitle)
+                           format=self.args.format, props=self.props, incremental=False, surtitle=surtitle,
+                           table=table_cols)
             plot.plot(self.worlds, self.labels)
         if detail_log :
             detail_log.close()

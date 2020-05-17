@@ -52,6 +52,7 @@ class plotter():
                     self.world_no += 1
                     self.highest_day = 0
                     if self.world_no >= len(self.worlds):
+                        yield(-1, -1)
                         return
                 yield (self.world_no, self.highest_day)
 
@@ -72,6 +73,8 @@ class plotter():
         graph = 'blue,forestgreen,red,cyan,darkviolet,gold,' \
                 'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,magenta,' \
                 'purple,yellowgreen,rosybrown,steelblue,crimson,black'
+        table_header_background = 'oldlace'
+        table_cell_background = 'floralwhite'
 
         def load(self, props):
             for pname, pvalue in props:
@@ -100,12 +103,17 @@ class plotter():
         'graph_height': 0.8,
         'surtitle_left_margin': 0.1,
         'surtitle_base': 1.02,
-        'surtitle_line_height': 0.025,
+        'surtitle_line_height': 0.035,
         'surtitle_width': 0.08,
         'surtitle_font_size': 9,
+        'table_height': 0.25,
+        'table_width': 0.8,
+        'table_top_margin': 0.03,
+        'table_font_size': 0,
         'display': True,
         'square': False,
         'surtitle': [],    # must be a list of 2-tuples (label, value)
+        'table': None
     }
 
     def __init__(self, **kwargs):
@@ -143,8 +151,14 @@ class plotter():
             y_size = self.props.get(int, 'plot', 'y_size') or self.size or self.y_size
         self.fig = plt.figure(figsize=(x_size, y_size))
         self.fig.patch.set_facecolor(self.colors.background)
-        self.graph = self.fig.add_axes((self.left_margin, self.bottom_margin,
-                                        (1 - self.left_margin - self.right_margin), self.graph_height))
+        if self.table:
+            bottom = self.bottom_margin + self.table_height + self.table_top_margin
+            height = self.graph_height - self.table_height - self.table_top_margin
+        else:
+            bottom = self.bottom_margin
+            height = self.graph_height
+        self.graph = self.fig.add_axes((self.left_margin, bottom,
+                                        (1 - self.left_margin - self.right_margin), height))
         self.x_values = [ d for d in range(1, initial_x_limit) ]
         self.graph.set_xlim(0, len(self.x_values))
         self.graph.set_xlabel('Days')
@@ -171,6 +185,7 @@ class plotter():
         self.top_ax = self.graph
         self.build_extra()
         self.build_surtitle()
+        self.build_table()
 
     def build_surtitle(self):
         row_labels = [ s[0] for s in self.surtitle ]
@@ -180,6 +195,31 @@ class plotter():
                                            bbox=(self.surtitle_left_margin, self.surtitle_base,
                                                  self.surtitle_width,
                                                  self.surtitle_line_height * len(row_labels)))
+
+    def build_table(self):
+        if self.table:
+            col_labels = [ f.text for f in self.table ]
+            col_colors = [ self.colors.table_header_background ] * len(col_labels)
+            data = [ [ '' ] * len(col_labels)] * len (self.labels)
+            cell_colors = [ [ self.colors.table_cell_background ] * len(col_labels)] * len (self.labels)
+            self.table_obj = self.graph.table(colLabels=col_labels, colColours=col_colors,
+                                              cellColours=cell_colors,
+                                              fontsize=self.table_font_size, edges='horizontal',
+                                              bbox=(self.left_margin,
+                                                    -(self.table_height + self.table_top_margin)*2,
+                                                    self.table_width, self.table_height*1.5))
+            for pos, c in self.table_obj.get_celld().items():
+                c.set_facecolor(self.colors.table_cell_background)
+                c.set_text_props(ha='right')
+                if pos[0]==0:
+                    c.set_text_props(weight='bold')
+                elif pos[1]==0:
+                    c.set_text_props(color=self.colors.graph[pos[0]-1])
+
+    def update_table(self, w, row):
+        if self.table:
+            for col, f in enumerate(self.table):
+                self.table_obj[row, col].set_text_props(text=f(w))
 
     def build_extra(self):
         pass
@@ -197,23 +237,25 @@ class plotter():
     def do_day(self, r):
         world_no, day = r
         if world_no != self.last_world:
+            self.update_table(self.worlds[self.last_world], self.last_world+1)
             self.last_world = world_no
             self.last_day = 0
-        while self.last_day < day:
-            self.last_day += 1
-            w = self.worlds[world_no]
-            daily = w.get_daily(self.last_day)
-            self.day_pre_extra(self.last_day, w, daily)
-            if self.last_day > len(self.x_values) :
-                self.extend_x()
-            if self.first:
-                self.first = False
-                self.graph.set_ylim(initial_y_min, w.population)
-            for l in self.lines:
-                e = l.element
-                self.values[world_no][e][self.last_day-1] = getattr(daily, e)
-                self.graph_lines[world_no][e].set_ydata(self.values[world_no][e])
-            self.day_extra(self.last_day, w, daily)
+        if world_no >= 0:
+            while self.last_day < day:
+                self.last_day += 1
+                w = self.worlds[world_no]
+                daily = w.get_daily(self.last_day)
+                self.day_pre_extra(self.last_day, w, daily)
+                if self.last_day > len(self.x_values) :
+                    self.extend_x()
+                if self.first:
+                    self.first = False
+                    self.graph.set_ylim(initial_y_min, w.population)
+                for l in self.lines:
+                    e = l.element
+                    self.values[world_no][e][self.last_day-1] = getattr(daily, e)
+                    self.graph_lines[world_no][e].set_ydata(self.values[world_no][e])
+                self.day_extra(self.last_day, w, daily)
 
     def day_pre_extra(self, day, world, daily):
         pass
