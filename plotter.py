@@ -5,8 +5,10 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
 import numpy as np
 from utility import *
-from dynamic_plot import dynamic_plot
+from dataclasses import dataclass
 import time
+from utility import *
+from constructor import constructor
 
 default_x_size = 12
 default_y_size = 8
@@ -14,15 +16,19 @@ initial_x_limit = 200
 x_increase_delta = 100
 initial_y_min = 100
 
-class plotter(dynamic_plot):
+@dataclass
+class line_info():
+    element: str
+    color: str = None
+    style: str = None
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class plotter():
 
     class range_maker():
 
-        def __init__(self, worlds):
-            self.worlds = worlds
+        def __init__(self, plotter):
+            self.plotter = plotter
+            self.worlds = plotter.worlds
             self.world_no = 0
             self.highest_day = 0
 
@@ -36,6 +42,8 @@ class plotter(dynamic_plot):
                         if d:
                             daily = d
                             self.highest_day += 1
+                            if self.plotter.incremental:
+                                break
                         elif daily:
                             break
                         else:
@@ -47,29 +55,63 @@ class plotter(dynamic_plot):
                         return
                 yield (self.world_no, self.highest_day)
 
-    def plot(self, x, *data):
-        self.pre_plot(x_size=default_x_size, y_size=default_y_size)
-        for d in data:
-            style = d.get('style', '-')
-            color = d.get('color', None)
-            label = d.get('label', None)
-            plt.plot(x, d['data'], label=label, linestyle=style, color=color)
-        plt.xlabel('Days')
-        plt.ylabel('People')
-        if self.title :
-            plt.title(self.title, fontsize=10)
-        if self.log_scale :
-            plt.yscale('log')
-        if self.legend:
-            plt.legend(loc='upper left')
-        if False and self.file :
-            self.format = self.format or 'png'
-            if '.' not in os.path.basename(self.file) :
-                file = f'{self.file}.{format}'
-            plt.savefig(file, bbox_inches='tight', format=self.format or 'png')
-        plt.show()
+    @dataclass
+    class colors():
+        background = 'ivory'
+        button = 'linen'
+        button_hover = 'bisque'
+        susceptible = 'deepskyblue'
+        infected = 'red'
+        recovered = 'lime'
+        total = 'cornflowerblue'
+        graph_infected = 'darkorange'
+        graph_total = 'red'
+        graph = 'blue,forestgreen,red,cyan,darkviolet,gold,' \
+                'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,magenta,' \
+                'purple,yellowgreen,rosybrown,steelblue,crimson,black'
 
-    def plot_dynamic(self, worlds, labels):
+        def load(self, props):
+            for pname, pvalue in props:
+                if pname[0] == 'color':
+                    setattr(self, pname[-1], pvalue)
+            self.graph = self.graph.split(',')
+
+    arg_table = {
+        'title' : (str, ''),
+        'log_scale' : (bool, True),
+        'legend': (bool, True),
+        'file': (str, ''),
+        'show': (bool, False),
+        'format': (str, ''),
+        'props': None,
+        'total_color': None,
+        'infected_color': None,
+        'lines': None,
+        'incremental': False,
+        'size': None,
+        'x_size': default_x_size,
+        'y_size': default_y_size,
+        'left_margin': 0.1,
+        'right_margin': 0.1,
+        'bottom_margin': 0.05,
+        'graph_height': 0.8,
+        'display': True,
+        'square': False,
+    }
+
+    def __init__(self, **kwargs):
+        constructor(plotter.arg_table, args=kwargs).apply(self)
+        if self.lines is None:
+            self.lines = (line_info('total', style='solid'),
+                          line_info('infected', style='dashed'))
+        self.colors = plotter.colors()
+        self.colors.load(self.props)
+
+    @staticmethod
+    def make_line_info(*args, **kwargs):
+        return line_info(*args, **kwargs)
+
+    def plot(self, worlds, labels):
         self.pre_plot(x_size=default_x_size, y_size=default_y_size)
         self.worlds = worlds
         self.labels = labels
@@ -77,13 +119,22 @@ class plotter(dynamic_plot):
         self.last_world = 0
         self.build()
         self.animation = FuncAnimation(self.fig, self.do_day,
-                                       frames=plotter.range_maker(self.worlds),
+                                       frames=plotter.range_maker(self),
                                        blit=False,
                                        repeat=False)
         plt.show()
 
     def build(self):
-        self.graph = self.fig.add_axes((0.1, 0.1, 0.8, 0.8))
+        size = self.props.get(int, 'plot', 'size') or self.size
+        x_size = self.props.get(int, 'plot', 'x_size') or self.size or self.x_size
+        if self.square:
+            y_size = x_size
+        else:
+            y_size = self.props.get(int, 'plot', 'y_size') or self.size or self.y_size
+        self.fig = plt.figure(figsize=(x_size, y_size))
+        self.fig.patch.set_facecolor(self.colors.background)
+        self.graph = self.fig.add_axes((self.left_margin, self.bottom_margin,
+                                        (1 - self.left_margin - self.right_margin), self.graph_height))
         self.x_values = [ d for d in range(1, initial_x_limit) ]
         self.graph.set_xlim(0, len(self.x_values))
         self.graph.set_xlabel('Days')
@@ -100,13 +151,27 @@ class plotter(dynamic_plot):
                                                                   label=lab if l.style=='solid' else None,
                                                                   linestyle=l.style or 'solid')[0]
                                       for l in self.lines})
-        if self.legend:
             legend2 = self.graph.legend([ g for g in self.graph_lines[0].values() ],
                                         [ n for n in self.graph_lines[0].keys()],
-                                        loc='center left')
-            self.graph.legend(loc='upper left')
+                                        loc='center left' if self.legend else 'upper left')
             self.graph.add_artist(legend2)
+            if self.legend:
+                self.graph.legend(loc='upper left')
         self.first = True
+        self.build_extra()
+
+    def build_extra(self):
+        pass
+
+    def pre_plot(self, x_size, y_size):
+        pass
+
+    def reset(self):
+        for w in range(len(self.labels)):
+            for l in self.lines:
+                e = l.element
+                for i in len(self.values[w][e]):
+                    self.values[w][e][i] = np.nan
 
     def do_day(self, r):
         world_no, day = r
@@ -115,10 +180,11 @@ class plotter(dynamic_plot):
             self.last_day = 0
         while self.last_day < day:
             self.last_day += 1
-            if self.last_day > len(self.x_values) :
-                self.extend_x()
             w = self.worlds[world_no]
             daily = w.get_daily(self.last_day)
+            self.day_pre_extra(self.last_day, w, daily)
+            if self.last_day > len(self.x_values) :
+                self.extend_x()
             if self.first:
                 self.first = False
                 self.graph.set_ylim(initial_y_min, w.population)
@@ -126,13 +192,20 @@ class plotter(dynamic_plot):
                 e = l.element
                 self.values[world_no][e][self.last_day-1] = getattr(daily, e)
                 self.graph_lines[world_no][e].set_ydata(self.values[world_no][e])
+            self.day_extra(self.last_day, w, daily)
+
+    def day_pre_extra(self, day, world, daily):
+        pass
+
+    def day_extra(self, day, world, daily):
+        pass
 
     def extend_x(self):
         old_x = len(self.x_values)
         new_x = old_x + x_increase_delta
         self.x_values += [ d for d in range(old_x, new_x) ]
         self.graph.set_xlim(0, len(self.x_values))
-        for w in range(len(self.labels)):
+        for w in range(len(self.values)):
             for l in self.lines:
                 e = l.element
                 self.values[w][e] += [ np.nan ] * x_increase_delta

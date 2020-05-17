@@ -129,8 +129,9 @@ class epidemia() :
     def plot_bubbles(self, w):
         title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        rd = bubbles(w, title=title)
-        rd.plot(file=plotfile, format = self.args.format)
+        rd = bubbles(title=title, file=plotfile, format = self.args.format, props=self.props, world_size=w.size,
+                     population=w.population, legend=False, incremental=True)
+        rd.plot([w], ('total', 'infected'))
 
     def run_sensitivity(self):
         def one_col(w, name) :
@@ -164,8 +165,8 @@ class epidemia() :
                 title += '\nVarying {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                           format=self.args.format, props=self.props)
-            plot.plot_dynamic(self.worlds, self.labels)
+                           format=self.args.format, props=self.props, incremental=False)
+            plot.plot(self.worlds, self.labels)
         if detail_log :
             detail_log.close()
         self.run_thread.join()
