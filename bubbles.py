@@ -99,6 +99,12 @@ class bubbles(plotter):
                                                    size=10)
         self.bubble_chart.set_xlim(-bubble_margin, self.world_size+bubble_margin)
         self.bubble_chart.set_ylim(-bubble_margin, self.world_size + bubble_margin)
+        self.total_box = self.graph.text(label_left, 0.9,
+                                         '', color = self.colors.total,
+                                         transform = self.graph.transAxes)
+        self.infected_box = self.graph.text(label_left, 0.7,
+                                            '', color = self.colors.infected,
+                                            transform = self.graph.transAxes)
         self.add_buttons()
 
     def day_pre_extra(self, day, world, daily):
@@ -150,6 +156,13 @@ class bubbles(plotter):
         for b, text in self.labels.items():
             percent = 100 * getattr(daily, b) / self.population
             text.set_text(f'{b.title()} {percent:4.1f}%')
+        total_percent = 100 * daily.total / world.population
+        infected_percent = 100 * daily.infected / world.population
+        self.max_infected = max(daily.infected, self.max_infected)
+        max_infected_percent = 100 * self.max_infected / world.population
+        self.total_box.set_text(f'Total {total_percent:4.1f}% ({daily.total})')
+        self.infected_box.set_text(f'Infected {infected_percent:4.1f}% ({daily.infected})'
+                                   f'\nMax {max_infected_percent:4.1f}% ({self.max_infected})')
 
     def make_bubble_size(self, data, b, prev_b):
         pop = getattr(data, b)
