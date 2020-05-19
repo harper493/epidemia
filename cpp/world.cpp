@@ -326,19 +326,11 @@ void world::infect_cities()
 void world::make_infection_prob()
 {
     static vector<pair<float,float>> immunity_correction{
-#if 0
         P( 0, 0.32 ),
-        P( 0.25, 0.49 ),
-        P( 0.5, 0.77 ),
-        P( 0.75, 1.6 ),
-        P( 0.9, 5 )
-#else
-        P( 0, 0.32 ),
-        P( 0.25, 0.48 ),
+        P( 0.25, 0.44 ),
         P( 0.5, 0.67 ),
-        P( 0.75, 1.35 ),
+        P( 0.75, 1.36 ),
         P( 0.9, 4 )
-#endif
     };
     static interpolator<float> immunity_corrector(immunity_correction);
     float inf = min(0.9, infectiousness);
