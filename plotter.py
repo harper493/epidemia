@@ -28,36 +28,70 @@ animated_formats = ('mp4', 'gif', 'html5')
 class plotter():
 
     class range_maker():
+        """
+        range_maker - iterator to feed to the animation class
+
+        Each call yields: (world_no, day_no, last_day, last_world)
+
+        We need to have look ahead to know whether this is the last day of this
+        world, and the last day of all worlds, so we can save files using the
+        animation. It makes for very messy code, since the logic essentially
+        has to be repeated twice.
+        """
 
         def __init__(self, plotter):
             self.plotter = plotter
             self.worlds = plotter.worlds
             self.world_no = 0
             self.highest_day = 0
+            self.last_signalled = -1
+
+        def _get_next(self):
+            daily = None
+            while True:
+                w = self.worlds[self.world_no]
+                if w:
+                    d = self._get_day(self.highest_day + 1, wait=False)
+                    if d:
+                        daily = d
+                        self.highest_day += 1
+                        if self.plotter.incremental:
+                            break
+                    elif daily:
+                        break
+                    else:
+                        time.sleep(0.1)
+            return daily
+
+        def _get_day(self, day, wait):
+            while True:
+                w = self.worlds[self.world_no]
+                if w:
+                    d = w.get_daily(self.highest_day + 1)
+                    if d or not wait:
+                        break
+                    else:
+                        time.sleep(0.1)
+            return d
 
         def __iter__(self):
             while self.world_no >= 0 and self.world_no < len(self.worlds):
-                daily = None
-                while True:
-                    w = self.worlds[self.world_no]
-                    if w:
-                        d = w.get_daily(self.highest_day + 1)
-                        if d:
-                            daily = d
-                            self.highest_day += 1
-                            if self.plotter.incremental:
-                                break
-                        elif daily:
-                            break
-                        else:
-                            time.sleep(0.1)
+                daily = self._get_next()
                 if daily.infected < 0:
+                    if self.last_signalled + 1 < self.highest_day:
+                        self.last_signalled = self.highest_day - 1
+                        yield (self.world_no, self.last_signalled, True, False)
                     self.world_no += 1
                     self.highest_day = 0
                     if self.world_no >= len(self.worlds):
-                        yield(-1, -1)
+                        yield(-1, -1, True, True)
                         return
-                yield (self.world_no, self.highest_day)
+                else:
+                    next_daily = self._get_day(self.highest_day + 1, wait=True)
+                    self.last_signalled = self.highest_day
+                    yield (self.world_no, self.highest_day,
+                           next_daily.infected<0,
+                           self.world_no + 1 >= len(self.worlds))
 
     @dataclass
     class colors():
@@ -149,8 +183,6 @@ class plotter():
                 self.save_animation()
         if show:
             plt.show()
-        if self.file and self.format not in animated_formats:
-            self.save_file()
 
     def build(self):
         size = self.props.get(int, 'plot', 'size') or self.size
@@ -252,15 +284,14 @@ class plotter():
                     self.values[w][e][i] = np.nan
 
     def do_day(self, r):
-        world_no, day = r
+        world_no, day, last_day, last_world = r
         if world_no != self.last_world:
-            self.update_table(self.worlds[self.last_world], self.last_world+1)
             self.last_world = world_no
             self.last_day = 0
         if world_no >= 0:
+            w = self.worlds[world_no]
             while self.last_day < day:
                 self.last_day += 1
-                w = self.worlds[world_no]
                 daily = w.get_daily(self.last_day)
                 self.day_pre_extra(self.last_day, w, daily)
                 if self.last_day > len(self.x_values) :
@@ -277,12 +308,24 @@ class plotter():
                 fn = f'{self.save_frames}-{self.frame_no:04d}.svg'
                 self.frame_no += 1
                 plt.savefig(fn, bbox_inches='tight')
+            if last_day:
+                self.update_table(self.worlds[self.last_world], self.last_world + 1)
+            if self.file and last_world:
+                self.save_file()
 
     def day_pre_extra(self, day, world, daily):
         pass
 
     def day_extra(self, day, world, daily):
         pass
+
+    def next_is_end(self, w, day):
+        result = False
+        next_daily = w.get_daily(day)
+        #print('   ', len(w.daily), next_daily.infected if next_daily else None)
+        if next_daily and next_daily.infected < 0 :
+            result = True
+        return result
 
     def extend_x(self):
         old_x = len(self.x_values)
