@@ -7,11 +7,11 @@ class file_listener():
 
     def __init__(self, filename):
         self.filename = filename
+        self.ended = False
         self.lines = []
         self.lock = Lock()
         self.thread = Thread(target=self.run, name='file_listener-' + filename)
         self.thread.start()
-        self.ended = False
 
     def run(self):
 

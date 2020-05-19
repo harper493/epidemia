@@ -174,11 +174,11 @@ class bubbles(plotter):
     def make_bubble_size(self, data, b, prev_b):
         pop = getattr(data, b)
         if prev_b and pop > 0:
-            inner = getattr(data, prev_b)
-            pop = max(pop, inner * 0.1)
+            inner = getattr(data, prev_b + '_inner')
             total = inner + pop
         else:
             inner, total = 0, pop
+        setattr(data, b + '_inner', total)
         result = bubble_size * total / self.min_pop
         return result
 
@@ -186,24 +186,9 @@ class bubbles(plotter):
         interval = 1 if self.world.args.no_display else animation_interval
         self.animation = FuncAnimation(self.fig, self.do_day,
                                        frames=bubbles.range_maker(self),
-                                       blit=False,
+                                       blit=True,
                                        repeat=False,
                                        interval=interval)
-
-    def _save_file(self):
-        if self.file:
-            self.format = self.format or 'gif'
-            if '.' not in os.path.basename(self.file) :
-                self.file = f'{self.file}.{self.format}'
-            if self.format == 'mp4':
-                Writer = animation.writers['ffmpeg']
-                writer = Writer(fps=15)
-                self.animation.save(self.file, writer=writer)
-            elif self.format == 'gif':
-                self.animation.save(self.file, writer='imagemagick', fps=10)
-            elif self.format == 'html5':
-                with open(self.file, 'w') as f:
-                    f.write(self.animation.to_html5_video())
 
     def _build_cities(self, cities):
         self.min_pop = 0

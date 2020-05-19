@@ -133,9 +133,10 @@ class epidemia() :
                     ('Infectiousness', w.get_infectiousness()),
                     ('Auto Immunity', w.get_auto_immunity())]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        rd = bubbles(file=plotfile, format = self.args.format, props=self.props, world_size=w.size,
-                     population=w.population, legend=False, incremental=True, surtitle=surtitle)
-        rd.plot([w], ('total', 'infected'))
+        rd = bubbles(file=plotfile, format=self.args.format, props=self.props, world_size=w.size,
+                     population=w.population, legend=False, incremental=True, surtitle=surtitle,
+                     save_frames=self.args.save_frames)
+        rd.plot([w], ('total', 'infected'), show=not self.args.no_display)
 
     def run_sensitivity(self):
         def one_col(w, name) :
@@ -170,9 +171,9 @@ class epidemia() :
                 title = '\nVarying: {}'.format(', '.join([var_to_title(p) for p in sens.get_variables()]))
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
-                           format=self.args.format, props=self.props, incremental=False, surtitle=surtitle,
-                           table=table_cols)
-            plot.plot(self.worlds, self.labels)
+                           format=self.args.format or 'svg', props=self.props, incremental=False, surtitle=surtitle,
+                           table=table_cols, save_frames=self.args.save_frames)
+            plot.plot(self.worlds, self.labels, show=self.args.plot)
         if detail_log :
             detail_log.close()
         self.run_thread.join()
@@ -182,10 +183,10 @@ class epidemia() :
             self.props.add_properties(values=ss)
             self.props.add_properties(values=self.base_params)
             w = fast_world(props=self.props, args=self.args)
+            w.params = {sss[0]: sss[1] for sss in ss}
             self.worlds.append(w)
             w.run(sync=True)
             if self.table:
-                w.params = { sss[0]:sss[1] for sss in ss }
                 self.table.add_line(w)
 
 epidemia().run()

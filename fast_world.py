@@ -12,6 +12,8 @@ from threading import Lock, Thread
 from file_listener import file_listener
 from csv_listener import csv_listener
 
+days_to_double_start = 10
+
 class fast_world(infection_counter):
 
     @dataclass
@@ -69,6 +71,9 @@ class fast_world(infection_counter):
         self.max_growth = 0
         self.highest_day = 0
         self.today = None
+        self.double_start = None
+        self.double_start_day = None
+        self.days_to_double = 0
 
     def run(self, sync=True):
         os.system("mkdir -p tmp")
@@ -92,6 +97,8 @@ class fast_world(infection_counter):
         self.process = subprocess.Popen(cmd_args)
         self.city_listener = file_listener(self.city_file)
         self.city_reader = csv_listener(self.city_listener, self._unpack_city)
+        self.city_listener.join()
+        self.city_reader.join()
         self.csv_listener = file_listener(self.csv_file)
         self.csv_reader = csv_listener(self.csv_listener, self._unpack_row)
         if sync:
@@ -99,8 +106,6 @@ class fast_world(infection_counter):
 
     def terminate(self):
         self.process.wait()
-        self.city_listener.join()
-        self.city_reader.join()
         self.csv_reader.join()
         self.csv_listener.join()
         os.remove(self.city_file)
@@ -135,7 +140,13 @@ class fast_world(infection_counter):
                 self.dead = data.dead
                 self.max_growth = max(self.max_growth, data.growth)
                 self.total = data.total
-                self.days_to_double = log(2) / log(1 + self.max_growth / 100) if self.max_growth else 0
+                if self.double_start is None:
+                    if self.total >= sqrt(self.population):
+                        self.double_start = self.total
+                        self.double_start_day = day
+                elif self.days_to_double==0 and self.total >= 2 * self.double_start:
+                    ratio = self.total / self.double_start
+                    self.days_to_double = pow(day - self.double_start_day, 2 / ratio)
                 with self.daily_lock:
                     self.daily[day] = self.today
             else:

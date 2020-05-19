@@ -3,6 +3,7 @@ import os
 from matplotlib import animation
 from matplotlib.animation import FuncAnimation
 from matplotlib.widgets import Button
+from matplotlib.patches import Rectangle
 import numpy as np
 from utility import *
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ class line_info():
     color: str = None
     style: str = None
 
+animated_formats = ('mp4', 'gif', 'html5')
+
 class plotter():
 
     class range_maker():
@@ -33,7 +36,7 @@ class plotter():
             self.highest_day = 0
 
         def __iter__(self):
-            while True:
+            while self.world_no >= 0 and self.world_no < len(self.worlds):
                 daily = None
                 while True:
                     w = self.worlds[self.world_no]
@@ -70,7 +73,7 @@ class plotter():
         total = 'cornflowerblue'
         graph_infected = 'darkorange'
         graph_total = 'red'
-        graph = 'blue,forestgreen,red,cyan,darkviolet,gold,' \
+        graph = 'blue,forestgreen,red,cyan,darkviolet,goldenrod,' \
                 'sienna,cornflowerblue,lime,lightcoral,turquoise,orange,magenta,' \
                 'purple,yellowgreen,rosybrown,steelblue,crimson,black'
         table_header_background = 'oldlace'
@@ -113,7 +116,11 @@ class plotter():
         'display': True,
         'square': False,
         'surtitle': [],    # must be a list of 2-tuples (label, value)
-        'table': None
+        'table': None,
+        'save_frames': None,
+        'file': None,
+        'format': None,
+        'mp4_frame_rate': 8,
     }
 
     def __init__(self, **kwargs):
@@ -129,18 +136,21 @@ class plotter():
     def make_line_info(*args, **kwargs):
         return line_info(*args, **kwargs)
 
-    def plot(self, worlds, labels):
+    def plot(self, worlds, labels, show=True):
         self.pre_plot(x_size=default_x_size, y_size=default_y_size)
         self.worlds = worlds
         self.labels = labels
         self.last_day = 0
         self.last_world = 0
+        self.frame_no = 0
         self.build()
-        self.animation = FuncAnimation(self.fig, self.do_day,
-                                       frames=plotter.range_maker(self),
-                                       blit=False,
-                                       repeat=False)
-        plt.show()
+        self.make_animation()
+        if self.file and self.format in animated_formats:
+                self.save_animation()
+        if show:
+            plt.show()
+        if self.file and self.format not in animated_formats:
+            self.save_file()
 
     def build(self):
         size = self.props.get(int, 'plot', 'size') or self.size
@@ -202,12 +212,13 @@ class plotter():
             col_colors = [ self.colors.table_header_background ] * len(col_labels)
             data = [ [ '' ] * len(col_labels)] * len (self.labels)
             cell_colors = [ [ self.colors.table_cell_background ] * len(col_labels)] * len (self.labels)
+            box = (self.left_margin,
+                   -(self.table_height + self.table_top_margin)*2,
+                   self.table_width, self.table_height*1.5)
             self.table_obj = self.graph.table(colLabels=col_labels, colColours=col_colors,
                                               cellColours=cell_colors,
                                               fontsize=self.table_font_size, edges='horizontal',
-                                              bbox=(self.left_margin,
-                                                    -(self.table_height + self.table_top_margin)*2,
-                                                    self.table_width, self.table_height*1.5))
+                                              bbox=box, zorder=2)
             for pos, c in self.table_obj.get_celld().items():
                 c.set_facecolor(self.colors.table_cell_background)
                 c.set_text_props(ha='right')
@@ -226,6 +237,12 @@ class plotter():
 
     def pre_plot(self, x_size, y_size):
         pass
+
+    def make_animation(self):
+        self.animation = FuncAnimation(self.fig, self.do_day,
+                                       frames=plotter.range_maker(self),
+                                       blit=False,
+                                       repeat=False)
 
     def reset(self):
         for w in range(len(self.labels)):
@@ -256,6 +273,10 @@ class plotter():
                     self.values[world_no][e][self.last_day-1] = getattr(daily, e)
                     self.graph_lines[world_no][e].set_ydata(self.values[world_no][e])
                 self.day_extra(self.last_day, w, daily)
+            if self.save_frames:
+                fn = f'{self.save_frames}-{self.frame_no:04d}.svg'
+                self.frame_no += 1
+                plt.savefig(fn, bbox_inches='tight')
 
     def day_pre_extra(self, day, world, daily):
         pass
@@ -275,4 +296,25 @@ class plotter():
                 self.graph_lines[w][e].set_xdata(self.x_values)
                 self.graph_lines[w][e].set_ydata(self.values[w][e])
 
+    def save_file(self):
+        format = self.format or 'png'
+        f = self.file
+        if '.' not in os.path.basename(self.file) :
+            f = f'{self.file}.{self.format}'
+        plt.savefig(f, bbox_inches='tight', format=format)
+
+    def save_animation(self):
+        format = self.format or 'mp4'
+        file = self.file
+        if '.' not in os.path.basename(file) :
+            file = f'{file}.{format}'
+        if format == 'mp4':
+            Writer = animation.writers['ffmpeg']
+            writer = Writer(fps=self.mp4_frame_rate)
+            self.animation.save(file, writer=writer)
+        elif format == 'gif':
+            self.animation.save(file, writer='imagemagick', fps=self.mp4_frame_rate)
+        elif format == 'html5':
+            with open(file, 'w') as f:
+                f.write(self.animation.to_html5_video())
 
