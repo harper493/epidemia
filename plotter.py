@@ -80,7 +80,8 @@ class plotter():
                 if daily.infected < 0:
                     if self.last_signalled + 1 < self.highest_day:
                         self.last_signalled = self.highest_day - 1
-                        yield (self.world_no, self.last_signalled, True, False)
+                        last_world = self.world_no + 1 >= len(self.worlds)
+                        yield (self.world_no, self.last_signalled, True, last_world)
                     self.world_no += 1
                     self.highest_day = 0
                     if self.world_no >= len(self.worlds):
@@ -89,9 +90,9 @@ class plotter():
                 else:
                     next_daily = self._get_day(self.highest_day + 1, wait=True)
                     self.last_signalled = self.highest_day
-                    yield (self.world_no, self.highest_day,
-                           next_daily.infected<0,
-                           self.world_no + 1 >= len(self.worlds))
+                    last_day = next_daily.infected<0
+                    last_world = last_day and self.world_no + 1 >= len(self.worlds)
+                    yield (self.world_no, self.highest_day, last_day, last_world)
 
     @dataclass
     class colors():
@@ -322,7 +323,6 @@ class plotter():
     def next_is_end(self, w, day):
         result = False
         next_daily = w.get_daily(day)
-        #print('   ', len(w.daily), next_daily.infected if next_daily else None)
         if next_daily and next_daily.infected < 0 :
             result = True
         return result
@@ -340,11 +340,12 @@ class plotter():
                 self.graph_lines[w][e].set_ydata(self.values[w][e])
 
     def save_file(self):
-        format = self.format or 'png'
-        f = self.file
-        if '.' not in os.path.basename(self.file) :
-            f = f'{self.file}.{self.format}'
-        plt.savefig(f, bbox_inches='tight', format=format)
+        if self.format not in animated_formats:
+            format = self.format or 'png'
+            f = self.file
+            if '.' not in os.path.basename(self.file) :
+                f = f'{self.file}.{self.format}'
+            plt.savefig(f, bbox_inches='tight', format=format)
 
     def save_animation(self):
         format = self.format or 'mp4'
