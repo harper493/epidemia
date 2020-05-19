@@ -326,11 +326,19 @@ void world::infect_cities()
 void world::make_infection_prob()
 {
     static vector<pair<float,float>> immunity_correction{
+#if 0
         P( 0, 0.32 ),
         P( 0.25, 0.49 ),
         P( 0.5, 0.77 ),
         P( 0.75, 1.6 ),
         P( 0.9, 5 )
+#else
+        P( 0, 0.32 ),
+        P( 0.25, 0.48 ),
+        P( 0.5, 0.67 ),
+        P( 0.75, 1.35 ),
+        P( 0.9, 4 )
+#endif
     };
     static interpolator<float> immunity_corrector(immunity_correction);
     float inf = min(0.9, infectiousness);
@@ -340,7 +348,7 @@ void world::make_infection_prob()
     if (cluster_factor==0) {
         for (auto iter : cluster_type::get_cluster_types()) {
             cluster_type *ct = iter.second;
-            cluster_factor += ct->base_size_rms * pow(ct->base_influence, 2);
+            cluster_factor += (ct->base_size_rms - 1) * pow(ct->base_influence, 2);
         }
     }
     infection_prob = ((float)infectiousness) * correction / (exposure_time * cluster_factor);
