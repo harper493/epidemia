@@ -13,6 +13,7 @@ from file_listener import file_listener
 from csv_listener import csv_listener
 
 days_to_double_start = 10
+default_world_size = 100
 
 class fast_world(infection_counter):
 
@@ -62,7 +63,7 @@ class fast_world(infection_counter):
         self.infectiousness = self.props.get(float, 'infectiousness')
         self.daily = {}
         self.daily_lock = Lock()
-        self.size = 100
+        self.size = props.get(int, 'world_size') or default_world_size
         self.cities = {}
         self.cities_by_index = {}
         self.total = 0

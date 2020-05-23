@@ -25,6 +25,8 @@ class argparser(object) :
         arg('',   '--min-days', type=int, default=0, help='minimum number of days to run')
         arg('',   '--max-days', type=int, default=0, help='maximum number of days to run')
         arg('',   '--random', type=int, default=0, help='random number seed')
+        arg('',   '--no-base', action='store_true', help="don't set base values for parameters which are varied")
+        arg('',   '--linear', action='store_true', help="use linear Y-axis on graphs")
         arg('-R', '--repeat', type=int, default=0, help='run repeatedly with the same parameters')
         arg('-o', '--output', type=str, default=None, help='output file name')
         arg('-F', '--format', type=str, default=None, help='graphics file format')
@@ -56,7 +58,7 @@ class argparser(object) :
         for s in a.stuff :
             if '=' in s :
                 ss = s.split('=')
-                self.extra_props[ss[0]] = ss[1]
+                self.extra_props[ss[0].replace('-', '_')] = ss[1]
             else :
                 self.props_file = s
         for an in self.argnames :

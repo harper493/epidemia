@@ -147,7 +147,7 @@ class plotter():
         'table_height': 0.25,
         'table_width': 0.8,
         'table_top_margin': 0.03,
-        'table_font_size': 0,
+        'table_font_size': 9,
         'display': True,
         'square': False,
         'surtitle': [],    # must be a list of 2-tuples (label, value)
@@ -263,7 +263,7 @@ class plotter():
     def update_table(self, w, row):
         if self.table:
             for col, f in enumerate(self.table):
-                self.table_obj[row, col].set_text_props(text=f(w))
+                self.table_obj[row, col].set_text_props(text=f(w), fontsize=self.table_font_size)
 
     def build_extra(self):
         pass
@@ -281,7 +281,7 @@ class plotter():
         for w in range(len(self.labels)):
             for l in self.lines:
                 e = l.element
-                for i in len(self.values[w][e]):
+                for i in range(len(self.values[w][e])):
                     self.values[w][e][i] = np.nan
 
     def do_day(self, r):
@@ -306,7 +306,7 @@ class plotter():
                     self.graph_lines[world_no][e].set_ydata(self.values[world_no][e])
                 self.day_extra(self.last_day, w, daily)
             if self.save_frames:
-                fn = f'{self.save_frames}-{self.frame_no:04d}.svg'
+                fn = f'{self.save_frames}-{self.frame_no:04d}.png'
                 self.frame_no += 1
                 plt.savefig(fn, bbox_inches='tight')
             if last_day:

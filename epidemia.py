@@ -6,7 +6,7 @@ from cluster import cluster
 from sensitivity import sensitivity
 from utility import *
 from dynamic_table import dynamic_table
-from plotter import plotter
+from plotter import plotter, line_info
 from argparser import argparser
 from math import *
 from datetime import datetime
@@ -61,6 +61,11 @@ summary_fields = (
     _f('%', '%5.2f', lambda w: 100 * w.dead / w.population),
     _f('days_to_double', '%5.1f'),
     _f('Days to Peak', '%3d', lambda w: w.highest_day),
+)
+
+sensitivity_lines = (
+    line_info('total', style='solid'),
+    line_info('infected', style='dashed'),
 )
 
 class epidemia() :
@@ -135,7 +140,7 @@ class epidemia() :
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
         rd = bubbles(file=plotfile, format=self.args.format, props=self.props, world_size=w.size,
                      population=w.population, legend=False, incremental=True, surtitle=surtitle,
-                     save_frames=self.args.save_frames)
+                     save_frames=self.args.save_frames, log_scale=not self.args.linear)
         rd.plot([w], ('total', 'infected'), show=not self.args.no_display)
 
     def run_sensitivity(self):
@@ -159,7 +164,10 @@ class epidemia() :
         else :
             detail_log = detail_table = None
         self.worlds = []
-        self.base_params = [ (f'base.{r[0]}', r[1]) for r in self.ranges[0] ]
+        if not self.args.no_base:
+            self.base_params = [ (f'base.{r[0]}', r[1]) for r in self.ranges[0] ]
+        else:
+            self.base_params = []
         self.run_thread = Thread(target=self._world_runner)
         self.run_thread.start()
         if self.args.plot or self.log_path:
@@ -172,7 +180,8 @@ class epidemia() :
             plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
                            format=self.args.format or 'svg', props=self.props, incremental=False, surtitle=surtitle,
-                           table=table_cols, save_frames=self.args.save_frames)
+                           table=table_cols, save_frames=self.args.save_frames,
+                           lines=sensitivity_lines, log_scale=not self.args.no_log)
             plot.plot(self.worlds, self.labels, show=self.args.plot)
         if detail_log :
             detail_log.close()

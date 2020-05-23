@@ -29,7 +29,8 @@ graph_infected_color = 'darkorange'
 
 default_size = 10
 
-bubble_size = 700
+default_bubble_size = 700
+bubble_size_base_world_size = 100
 
 bubble_top = 0.9
 bubble_bottom = 0.3
@@ -89,6 +90,7 @@ class bubbles(plotter):
         self.right_margin = 0.2
         self.square = True
         self.max_infected = 0
+        self.bubble_size = default_bubble_size * bubble_size_base_world_size / self.world_size
         self.lines = (plotter.make_line_info('total', color=self.colors.total, style='solid'),
                       plotter.make_line_info('infected', color=self.colors.infected, style='dashed'),
                       plotter.make_line_info('dead', color=self.colors.dead, style='dotted'))
@@ -179,7 +181,7 @@ class bubbles(plotter):
         else:
             inner, total = 0, pop
         setattr(data, b + '_inner', total)
-        result = bubble_size * total / self.min_pop
+        result = self.bubble_size * total / self.min_pop
         return result
 
     def _make_animation(self):
