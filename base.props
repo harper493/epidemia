@@ -15,7 +15,7 @@ cluster.friends.max_depth          = 3
 cluster.work.min_pop               = 2
 cluster.work.max_pop               = 20
 cluster.work.average_pop           = 8
-cluster.work.same_city             = 0.99
+cluster.work.same_city             = 0.95
 
 cluster.locale.min_pop             = 20
 cluster.locale.max_pop             = 100
@@ -23,6 +23,7 @@ cluster.locale.average_pop         = 40
 cluster.locale.same_city           = 1
 cluster.locale.influence           = 0.2
 cluster.locale.nest_influence      = 0.4
+cluster.locale.singleton           = 0
 
 cluster.*.min_pop                  = 2
 cluster.*.max_proportion           = 0.3
@@ -35,6 +36,7 @@ cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
 cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
+cluster.*.singleton                = 0.2
 
 distance.min.city.exposure         = 0
 distance.min.cluster.*.influence   = 0
@@ -60,7 +62,7 @@ city.pop_ratio_power               = 0.5
 city.exposure                      = 0.000001 # useful range is 0 - 0.01
 city.appeal_power                  = 0.4
 city.auto_max_pop                  = 0.2
-city.min_distance                  = 10
+city.min_distance                  = 5
 
 world_size                         = 100
 mobility_max                       = 0.1
@@ -69,13 +71,13 @@ recovery_time                      = 15
 recovery_sd                        = 2
 gestating_time                     = 4
 gestating_sd                       = 1.5
-infectiousness                     = 3.0
+infectiousness                     = 2
 cluster_exposure                   = 0.002
 initial_infected                   = 0
 city_count                         = 0
 infected_cities                    = 0.8
 travel                             = 0.001 # useful range is 0 - 0.05 or so
-auto_immunity                      = 0.5
+auto_immunity                      = 0
 population                         = 1000000
 max_days                           = 1000
 
