@@ -28,7 +28,7 @@ h2
 	font-family:"Verdana";
 }
 -->
-</style> <title>Epidemia documentation</title>
+</style> <title>Epidemia Documentation</title>
   </head>
   <body>
     <h1>Introduction</h1>
@@ -38,15 +38,14 @@ h2
       aspects of the interaction between individuals and society is controlled
       by parameters which can be modified for each run, or changed during a run
       to show the effect of varying them.</p>
-    <p>It produces graphs showing the number ofcurrent and total infected people
-      over time. It can also show the animated growth of infection city-by-city.
-      It can also produce tabular data foranalysis by other means.</p>
-    <h1>Installation</h1>
-    <p>The code for Epidemia can be obtained from github:
-      <meta http-equiv="content-type" content="text/html; charset=utf-8">
-      <a href="https://github.com/harper493/epidemia">https://github.com/harper493/epidemia</a>.
-      The code is written in Python (specifically the 3.8 dialect) and in C++.It
-      has a few external dependencies. The C++ code will need to be built for
+    <p>It produces graphs showing the number of current and total infected
+      people over time. It can also show the animated growth of infection
+      city-by-city. It can also produce tabular data for analysis by other
+      means.</p>
+    <h1><a name="installation" id="installation">Installation</h1>
+    <p>The code for Epidemia can be obtained from github: <a href="https://github.com/harper493/epidemia">https://github.com/harper493/epidemia</a>.
+      The code is written in Python (specifically the 3.8 dialect) and in C++.
+      It has a few external dependencies. The C++ code will need to be built for
       your system.A Makefile for Ubuntu and other Linux variants is part of the
       distro.</p>
     <p>The following commands, on Ubuntu, will install and build all the
@@ -66,20 +65,18 @@ h2
       github).</p>
     <h1>Running Epidemia</h1>
     <p>Once in the Python virtual environment, the following command:</p>
-    <p>python3.8 epidemia.py -p <em>population</em> -i <em>infectiousness</em>
-      -P<br>
-      <br>
-      will run for the specified population (in the range 10000-10000000) and
-      infectiousness (the default is 2.5,<br>
-      anything in the range 1.5-4 should produce interesting results). It will
-      show what is going on day by<br>
-      day on a graph.</p>
+    <p class="code">python3.8 epidemia.py -p <em>population</em> -i <em>infectiousness</em>
+      -P</p>
+    <p> will run for the specified population (in the range 10000-10000000) and
+      infectiousness (the default is 2.5, anything in the range 1.5-4 should
+      produce interesting results). It will show what is going on day by day on
+      a graph.</p>
     <p>The simulation itself is done by the C++ code, which is run automatically
       from the Python code as needed.</p>
     <p>There are four ways Epidemia can be run:</p>
     <ul>
       <li>to produce a simple graph, as above</li>
-      <li>to produce tabular data: replace -P with -L followed by the path where
+      <li>to produce tabular data: replace -P with -o followed by the file where
         the tabular data should be created.</li>
       <li>to produce multiple graphs on the same axes, varying one or more
         parameters. This is described in detail below, under "Sensitivity
@@ -87,7 +84,11 @@ h2
       <li>to produce a"bubble" animation showing the development of the pandemic
         in multiple cities. Replace -P with -B.</li>
     </ul>
-    <h2>Command Line Options</h2>
+    <h2><a name="options" id="options">Command Line Options</h2>
+    <p>Command line options, as described below, can be used to set the way the
+      simulation runs, and to control its output. There are many simulation
+      parameters which do not have their own command line options. Thesecan be
+      set as described at the end of this section. </p>
     <p>The following command line options are available.</p>
     <table style="width: 100%;" border="1">
       <tbody>
@@ -98,14 +99,13 @@ h2
           <td><strong>Default</strong></td>
         </tr>
         <tr>
-        <tr>
-        <tr>
           <td>-a</td>
           <td>--auto-immunity</td>
           <td>Proportion (in range 0-1) who will develop immunity without
             becoming infectious</td>
           <td>0</td>
         </tr>
+        <tr>
           <td>-B<br>
           </td>
           <td>--bubbles<br>
@@ -115,6 +115,7 @@ h2
           <td>Bubble chart not displayed<br>
           </td>
         </tr>
+        <tr>
           <td>-c <br>
             <br>
             <br>
@@ -150,8 +151,8 @@ h2
         <tr>
           <td>-F</td>
           <td>--format</td>
-          <td>Graphcics file format (one of png, svg, jpg)</td>
-          <td>PNG</td>
+          <td>Graphics file format (one of png, svg, jpg)</td>
+          <td>png</td>
         </tr>
         <tr>
           <td><br>
@@ -203,14 +204,6 @@ h2
           <td>Maximum number of days to simulate<br>
           </td>
           <td>As above<br>
-          </td>
-        </tr>
-        <tr>
-          <td><br>
-          </td>
-          <td>--no-base</td>
-          <td>See explanation in text</td>
-          <td><br>
           </td>
         </tr>
         <tr>
@@ -269,9 +262,18 @@ h2
         </tr>
       </tbody>
     </table>
-    <p><br>
-    </p>
-    <h2>Sensitivity Analysis</h2>
+    <p>To set simulation parameters which do not have their own command line
+      options, two methods are available. First, they can be specified at the
+      end of the command line using one or more '<em>name</em>=<em>value</em>'
+      constructs. For example: </p>
+    <p class="code">python3.8 epidemia.py -p 1000000 -i 2.5 -P mobility_max=0.3
+      mobility_average=0.002 </p>
+    <p>Alternatively, multiple parameter settings may be combined into a <em>properties
+        file</em>, whose name is appended to the command line. For example: </p>
+    <p class="code">python3.8 epidemia.py -p 1000000 -i 2.5 -P
+      my_parameters.props </p>
+    <p>The properties file format is described in a later section. </p>
+    <h2><a name="sensitivity" id="sensitivity">Sensitivity Analysis</h2>
     <p>Often it is interesting to see how changing a parameter affects the
       evolution of the pandemic. This can be done using the -S command line
       option. It is followed by the name of a parameter, and the values to use.
@@ -293,8 +295,468 @@ h2
     <p class="code">-S xxx:0.1*2:0.8</p>
     <p>will run with xxx taking the values 0.1, 0.2, 0.4 and 0.8.<br>
     </p>
-    <p>
-      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <h1>How The Simulation Works</h1>
+    <p>To understand the parameters that control the simulation and how they can
+      be adjusted, it is necessary to have a basic understanding of how the
+      simulation operates.</p>
+    <h2><a name="infection_probability" id="infection_probability"></a>Infection
+      Probability</h2>
+    <p>While it's common to use the term <em>R0</em> to describe the
+      infectiousness of a disease, this is actually a description of its effect
+      - how rapidly it spreads. To build a model, we need something at a much
+      lower level that can be used in a simulation. We call this the <em>infection
+        probability</em>. It is the probability that a single susceptible
+      person, exposed to a single infected person for one day, will themselves
+      be infected, or develop an immune response. </p>
+    <p>For Covid-19 and other respiratory viruses, we know that this is a bit of
+      an oversimplification. A single cough or sneeze can infect someone, or
+      spending less than an hour close to an infected person, especially if they
+      are exhaling heavily, for example while singing. Still, it captures the
+      fact that such an event is itself probabilistic. </p>
+    <p>To derive the infection probability, we work backwards from the desired
+      infectiousness (R0). Knowing the average sizes of the clusters, and the
+      period for which an infected person is infectious, we can get a first
+      estimate. We then apply a empirical correction factor, based on measuring
+      the actual observed R0 from the simulation. </p>
+    <p>The numerical value of the infection probability is quite small. For an
+      R0 of 2.5 with the default parameter settings in the model, it is about
+      0.005. </p>
+    <h2><a name="clusters" id="clusters"></a>Clusters</h2>
+    <p>The key to this model is that everybody is a member of several groups, or
+      clusters. Within a cluster, everyone is heavily exposed to everyone else.
+      The default clusters are family, friends, work and (with lower intimacy)
+      the local community. </p>
+    <p>In the simulation of a single day, first the <em>exposure</em> of each
+      cluster is calculated. This is simply the number of infectious members of
+      the cluster, multiplied by the infection probability. Then, for each
+      susceptible (not immune or infected) member of the cluster, this
+      probability is used to decide whether or not they become infected. </p>
+    <p>Clusters are organised in a hierarchy, so every first level cluster
+      belongs to a second level cluster, and so on. When cluster exposure is
+      being calculated, it is passed up the hierarchy, being diluted at each
+      step by a factor called <em>nest_influence</em> (by default, 0.15). So
+      one infected person in a first level cluster is equivalent to 0.15
+      infected people in the second level cluster, and 0.0225 (0.15 squared) in
+      its third level cluster. </p>
+    <p>Once the exposure has been rolled up to the top of the cluster hierarchy,
+      it is then pushed back down again to each of its members, again being
+      multiplied by the value of <em>nest_influence</em>. So one sick person in
+      a first level cluster ends up being equivalent to 0.0225 sick people in
+      each of its peers. This doesn't sound much, but as infection levels rise,
+      it's enough to spread the infection into different clusters. </p>
+    <p>Some clusters, in particular family and workplace, represent a very close
+      level of interaction. Others though represent something more distant. In
+      particular, the <em>locale</em> cluster represents interactions with the
+      local environment, such as shopping and public transport. The <em>influence</em>
+      of a cluster represents the closeness of this interaction. Exactly as with
+      <em>nest_influence</em>, the contribution of an infected person to a
+      cluster, and the risk it brings to a susceptible person, are both
+      multiplied by this influence factor. For the locale cluster, it is 0.2 by
+      default. So for a susceptible person sharing a cluster with one infected
+      person, their chance of infection is 0.04 (0.2 squared) what it wold be
+      sharing a family or workplace with them. This makes sense because such
+      clusters are a lot bigger; the default average size of a locale cluster is
+      40 compared to 4 for a family or 8 for a workplace. </p>
+    <p>Not all clusters apply to all individuals. For example, some people live
+      on their own, and others are unemployed or work alone. This is reflected
+      in the <em>singleton</em> cluster parameter, which is the proportion of
+      people who do not belong to a first level cluster. </p>
+    <p>Even within a category, not all clusters are the same size. For example,
+      the average size of a family group is 4, but there are some larger
+      families. Cluster sizes are chosen at random with a reciprocal-like
+      distribution, i.e. smaller values are more common than larger values. The
+      shape of the distribution is determined by three parameters: <em>min_pop</em>,
+      the smallest cluster (by default, 2), <em>max_pop</em>, the largest
+      cluster, and <em>average_pop</em>, the mean of all the cluster sizes.
+      Similarly, the higher level clusters have a varying number of subsidiary
+      clusters. </p>
+    <h2><a name="cities" id="cities"></a>Cities</h2>
+    <p>Every person belongs to a city. There are several cities - with a
+      population of one million, by default there are about 40 cities. Just as
+      with clusters, their size follows a reciprocal-like distribution, with a
+      few large cities and many smaller ones. In the bubble view, each city is
+      represented by a colored blob, its size in proportion to the population. </p>
+    <p>Every cluster is associated with a city. Mostly, people are associated
+      with clusters in their own city, and clusters belong to higher level
+      clusters in their own city. There are exceptions though, expressed by the
+      <em>same_city</em> parameter. This corresponds to someone who works in a
+      different city, for example, or to a family whose relatives are all in a
+      different city. This provides one means for infection to be passed to
+      another city. </p>
+    <p>When someone belongs to a cluster in a different city, the target city is
+      chosen at random but weighted by population and distance. It is more
+      likely that someone will be associated with somewhere that is nearby or
+      has a large population, than somewhere which is distant and has a small
+      population. </p>
+    <p>The model assumes people travel between cities. Each person is assigned a
+      <em>mobility</em> value, whose average by default is 0.001. This is the
+      probability that on any given day, they will travel to another city. As
+      with cluster membership, the choice of city is weighted by population and
+      distance. If someone does travel, for that day they are treated exactly
+      the same as a randomly chosen person in the city they are visiting, just
+      as if they were spending the day with that person. </p>
+    <p>Every city has a geographical <em>size</em>, in kilometers This is a
+      function of the population, but it is not linear. Larger cities have a
+      higher density, and hence are smaller in proportion to their size. This
+      affects the influence of the locale cluster. It is also used to size the
+      "blobs" on the bubbles display.</p>
+    <h2><a name="distance" id="distance">Social Distance</h2>
+    <p>A common question in the current pandemic is the value of social
+      distancing. How thorough does it have to be to have significant effect?
+      Does it have any effect at all? The model has a <em>distance</em>
+      parameter, whose value lies between 0 and 1. Zero means "business as
+      usual"; all the parameters take their default values. It can be set on the
+      command line using the -d option. </p>
+    <p>A distancing value of one corresponds to the highest degree of distancing
+      possible while society still functions, for example that people have
+      enough to eat and urgent medical conditions are attended to. This is what
+      was implemented in Wuhan or Spain during the outbreak. </p>
+    <p>The primary implementation of distancing is through the level of contact
+      within clusters. People remain fully in contact with their families, so
+      this does not change. Wit full distancing, contact between friends drops
+      to zero, so the influence value for the friends cluster is zero. Some
+      people have to continue to work, so the average influence value for the
+      work cluster is taken as 20% of its normal value. </p>
+    <p>For values of distance between 0 and 1, affected parameters take the
+      corresponding pro-rata values. For example, if distance is 0.5, then the
+      work cluster influence is 0.6, i.e. half way between 1 and 0.2. </p>
+    <h2><a name="auto_immunity" id="auto_immunity">Auto Immunity</h2>
+    <p>With any disease, some people are exposed but show no signs of infection.
+      In some cases they may be asymptomatic but infectious. In other cases,
+      their immune systems may react quickly enough that they gain immunity
+      without ever becoming infectious. </p>
+    <p>This is reflected by the parameter <em>auto_immunity</em>, settable from
+      the command line using the -a option. It takes a value between 0, meaning
+      that nobody becomes immune without becoming infectious, and 1, which would
+      mean nobody becomes infectious (so there would be no pandemic). </p>
+    <p>It should be noted that for Covd-19, this value is unknown. It is certain
+      that some people are exposed but never develop symptoms - about 50%, in
+      general. But it is not known what proportion of those, if any, never
+      become infectious. </p>
+    <h2><a name="vaccination" id="vaccination">Vaccination</h2>
+    <p>People who are vaccinated against a disease will never become infectious,
+      or symptomatic, even if they are exposed. The parameter <em>vaccination</em>
+      expresses the proportion of people who are effectively vaccinated, taking
+      a value between 0 and 1. It can be set from the command line using the -v
+      option. </p>
+    <p>In reality, vaccination is not always effective. In a recent annual
+      influenza pandemic, the effectiveness of that year's vaccine was estimated
+      at 25%. The value of the option is given as the product of uptake and
+      effectiveness. For example, if 60% of people get vaccinated, and the
+      vaccine is 50% effective, then the vaccination parameter should be set to
+      0.3. </p>
+    <h2><a name="transition_times" id="transition_times">Transition Times (Gestation, Recovery)</h2>
+    <p>Sometimes the transition of a person from one state to another depends on
+      time. When a person is infected, they go through a period where they are
+      not yet infectious, but cannot be re-infected - the <em>gestation</em>
+      state. When someone becomes infectious, they will recover or die after a
+      certain time. These times are parameters of the model, called for example
+      <em>recovery_time</em> and <em>recovery_sd</em>. When a person enters
+      such a state, their transition time is chosen at random using a log-normal
+      distribution with the given parameters. </p>
+    <h1>Model Parameters</h1>
+    <h2>Properties Files</h2>
+    <p>The model's operation is controlled by a large number of parameters. A
+      few of these can be controlled by their own command line options, such as
+      distance and population. All the others can be specified on the command
+      line, using the "<em>name</em>=<em>value</em>" syntax, and varied using
+      the susceptibility (-S) option. </p>
+    <p>It is also possible to create a properties file, containing values of
+      several parameters. This is in the standard Java properties file format,
+      consisting of one or more lines of the form "<em>name</em>=<em>value</em>".
+      Comments can be included in the file, either on a line by themselves or at
+      the end of a value specification, introduced by "#". For an example, see
+      the file <em>base.props</em>, which contains the default values of all
+      parameters. </p>
+    <p>Parameter names have a structure, consisting of name parts separated by
+      ".". Some have just a single name, such as "population" and "city_count".
+      Others have a more elaborate structure. For example all parameters
+      relating to clusters are named as "cluster.<em>cluster-type</em>.<em>parameter</em>",
+      for example "cluster.family.average_pop". </p>
+    <p>In a properties file, one or more of the name parts can be replaced by
+      "*". In that case the value given applies to all matching names, unless
+      overridden by something more explicit. For example, the value given for
+      "cluster.*.influence" applies to all clusters that do not specify their
+      own value, such as "cluster.locale.influence". </p>
+    <h2>General Parameters</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><strong>Name</strong></td>
+          <td><strong>Default</strong></td>
+          <td><strong>Meaning</strong></td>
+        </tr>
+        <tr>
+          <td>auto_immunity</td>
+          <td>0</td>
+          <td>Proportion of population who will develop immunity without
+            becoming infectious, when exposed.</td>
+        </tr>
+        <tr>
+          <td>city_count</td>
+          <td>0</td>
+          <td>Number of cities. If zero, this is calculated based on the
+            population.</td>
+        </tr>
+        <tr>
+          <td>distance</td>
+          <td>0</td>
+          <td>The degree of social distancing. See detailed explanation in text.</td>
+        </tr>
+        <tr>
+          <td>gestating_sd</td>
+          <td>1.5</td>
+          <td>The standard deviation (variation) of the time it takes to become
+            infectious after exposure.</td>
+        </tr>
+        <tr>
+          <td>gestating_time</td>
+          <td>4</td>
+          <td>The mean of the time it takes to become infectious after exposure</td>
+        </tr>
+        <tr>
+          <td>infected_cities</td>
+          <td>0.8</td>
+          <td>Either the number or the proportion of cities to have at least one
+            infected person at the start of the simulation. If less than1, it is
+            the proportion; if greater than or equal to 1, it is the number.</td>
+        </tr>
+        <tr>
+          <td>infectiousness</td>
+          <td>2</td>
+          <td>How rapidly infection will spread. This corresponds approximately
+            to the <em>R0</em> number for the disease, i.e. the number of
+            people who will be infected by a single infectious person.</td>
+        </tr>
+        <tr>
+          <td>initial_infected</td>
+          <td>0</td>
+          <td>The number of people who will be infected at the start of the
+            simulation. If 0,a default is calculated based on the size of the
+            population.</td>
+        </tr>
+        <tr>
+          <td>mobility_average</td>
+          <td>0.001</td>
+          <td>The average mobility of a person, i.e. the mean probability that a
+            person will travel to another city on a given day.</td>
+        </tr>
+        <tr>
+          <td>mobility_max</td>
+          <td>0.1</td>
+          <td>The maximum value of mobility that will be assigned to a person.</td>
+        </tr>
+        <tr>
+          <td>mortality</td>
+          <td>0.001</td>
+          <td>The number of infected people who will die instead of recovering.</td>
+        </tr>
+        <tr>
+          <td>population</td>
+          <td>1000000</td>
+          <td>The number of people in the simulated world.</td>
+        </tr>
+        <tr>
+          <td>recovery_sd</td>
+          <td>2</td>
+          <td>The standard deviation (variation)in the time it takes to recover,
+            and stop being infectious, once infected.</td>
+        </tr>
+        <tr>
+          <td>recovery_time</td>
+          <td>15</td>
+          <td>The mean of the time(in days) that it takesto recover, and stop
+            being infectious, once infected.</td>
+        </tr>
+        <tr>
+          <td>world_size</td>
+          <td>100</td>
+          <td>The square size of the world, in kilometers.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>City Parameters</h2>
+    <p>The following parameters apply to the way cities are constructed. They
+      all have names of the form "city.<em>parameter</em>". There are also some
+      more obscure parameters which appear in base.props, which should not be
+      changed. </p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><strong>Name</strong></td>
+          <td><strong>Default</strong></td>
+          <td><strong>Meaning</strong></td>
+        </tr>
+        <tr>
+          <td>city.min_density</td>
+          <td>2000</td>
+          <td>The minimum density of a city, in people per square kilometer.
+            This is used to determine the physical area covered by the city.</td>
+        </tr>
+        <tr>
+          <td>city.max_density</td>
+          <td>0</td>
+          <td>The minimum population of a city. If 0, the minimum population is
+            calculated based on population and the number of cities.</td>
+        </tr>
+        <tr>
+          <td>city.min_distance</td>
+          <td>5</td>
+          <td>The minimum distance between the outside boundaries of two cities.</td>
+        </tr>
+        <tr>
+          <td>city.min_pop</td>
+          <td>5</td>
+          <td>The minimum population of a city. If 0, the minimum population is
+            calculated based on population and the number of cities.</td>
+        </tr>
+        <tr>
+          <td>city.max_pop</td>
+          <td>5</td>
+          <td>The maximum population of a city. If 0, the maximum population is
+            calculated based on population and the number of cities.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Cluster Parameters</h2>
+    <p>Each cluster has its own parameters, with shared defaults.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td with="20%"><strong>Name</strong></td>
+          <td width="10%"><strong>Default</strong></td>
+          <td width="35%"><strong>Meaning</strong></td>
+          <td width="35%"><strong>Type-Specific Overrides</strong></td>
+        </tr>
+        <tr>
+          <td>cluster.*.average_pop</td>
+          <td>None</td>
+          <td>The default average size of a cluster.</td>
+          <td>
+            <ul>
+              <li><em>family</em>: 4 </li>
+              <li><em>friends</em>: 8 </li>
+              <li><em>locale</em>: 40 </li>
+              <li><em>work</em>: 8 </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.influence</td>
+          <td>1</td>
+          <td>The influence of an infected cluster member on the cluster's
+            exposure, and the cluster's exposure on a susceptble member. See
+            description in text.</td>
+          <td>
+            <ul>
+              <li><em>locale</em>: 0.2</li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.max_depth</td>
+          <td>0</td>
+          <td>The maximum nesting depth of clusters. If 0, the maximum occurs
+            when the largest (deepest) cluster is the same size as its
+            containing city.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.max_pop</td>
+          <td>None</td>
+          <td>The maximum cluster size is specified individually for each type.</td>
+          <td>
+            <ul>
+              <li><em>family</em>: 10 </li>
+              <li><em>friends</em>: 20 </li>
+              <li><em>locale</em>: 100 </li>
+              <li><em>work</em>: 20 </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.min_pop</td>
+          <td>2</td>
+          <td>The default minimum size of a cluster.</td>
+          <td>
+            <ul>
+              <li><em>friends</em>:5 </li>
+              <li><em>locale</em>: 20 </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.nest_average</td>
+          <td>8</td>
+          <td>The average number of first level clusters in a second level one,
+            and so on.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.nest_influence</td>
+          <td>0.15</td>
+          <td>The influence of a first level cluster on a second level one, and
+            so on.</td>
+          <td>
+            <ul>
+              <li><em>locale</em>: 0.4 </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.nest_max</td>
+          <td>5</td>
+          <td>The maximum number of first level clusters in a second level one,
+            and so on.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.nest_min</td>
+          <td>5</td>
+          <td>The minimum number of first level clusters in a second level one,
+            and so on.</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.same_city</td>
+          <td>0.98</td>
+          <td>The probability that a cluster will be nested in one in the same
+            city.</td>
+          <td>
+            <ul>
+              <li><em>locale</em>: 1 (by definition, all clusters in a locale
+                are in the same city) </li>
+              <li><em>work</em>:0.95 </li>
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.proximality</td>
+          <td>0.9</td>
+          <td>How close cluster members are to the cluster itself, within the
+            city. (Not yet implemented).</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>cluster.*.singleton</td>
+          <td>0.2</td>
+          <td>The probability that a person will not be a member of a first
+            level cluster of this type.</td>
+          <td>
+            <ul>
+              <li><em>locale</em>: 0 (everybody has to do their shopping, etc) </li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
     </p>
+    <p> </p>
   </body>
 </html>
