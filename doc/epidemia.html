@@ -1,19 +1,300 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <style>
 <!--
 
-p
+p,li,td
 	{
 	font-size:11.0pt;
 	font-family:"Verdana";
 }
+p.code
+      {
+      font-family:monospace;
+      font-size: 9pt;
+      }
+h1
+	{
+	font-size:16.0pt;
+  font-style: "bold";
+	font-family:"Verdana";
+}
+h2
+	{
+	font-size:14.0pt;
+  font-style: "bold";
+	font-family:"Verdana";
+}
 -->
-</style> <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>Epidemia documentation</title>
+</style> <title>Epidemia documentation</title>
   </head>
   <body>
-    <p>Please be patient - it will be here soon. </p>
+    <h1>Introduction</h1>
+    <p>Epidemia simulates the large scale spread of a pandemic. It simulates
+      each individual in the population, up to a limit of tens of millions, with
+      realistic membership of family, workplace, friends and other groupings.All
+      aspects of the interaction between individuals and society is controlled
+      by parameters which can be modified for each run, or changed during a run
+      to show the effect of varying them.</p>
+    <p>It produces graphs showing the number ofcurrent and total infected people
+      over time. It can also show the animated growth of infection city-by-city.
+      It can also produce tabular data foranalysis by other means.</p>
+    <h1>Installation</h1>
+    <p>The code for Epidemia can be obtained from github:
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+      <a href="https://github.com/harper493/epidemia">https://github.com/harper493/epidemia</a>.
+      The code is written in Python (specifically the 3.8 dialect) and in C++.It
+      has a few external dependencies. The C++ code will need to be built for
+      your system.A Makefile for Ubuntu and other Linux variants is part of the
+      distro.</p>
+    <p>The following commands, on Ubuntu, will install and build all the
+      necessary components.</p>
+    <p class="code"> apt install python3.8<br>
+      apt install libboost-dev-all<br>
+      apt-get install python3.8-venv<br>
+      python3.8 -m venv .venv<br>
+      source .venv/bin/activate<br>
+      pip3 install numpy<br>
+      pip3 install matplotlib<br>
+      apt install python3-tk<br>
+      cd cpp<br>
+      make</p>
+    <p> For other systems (Mac, Windows) you will need to figure out how to
+      build it in the equivalent way. (If you do, please also contribute it to
+      github).</p>
+    <h1>Running Epidemia</h1>
+    <p>Once in the Python virtual environment, the following command:</p>
+    <p>python3.8 epidemia.py -p <em>population</em> -i <em>infectiousness</em>
+      -P<br>
+      <br>
+      will run for the specified population (in the range 10000-10000000) and
+      infectiousness (the default is 2.5,<br>
+      anything in the range 1.5-4 should produce interesting results). It will
+      show what is going on day by<br>
+      day on a graph.</p>
+    <p>The simulation itself is done by the C++ code, which is run automatically
+      from the Python code as needed.</p>
+    <p>There are four ways Epidemia can be run:</p>
+    <ul>
+      <li>to produce a simple graph, as above</li>
+      <li>to produce tabular data: replace -P with -L followed by the path where
+        the tabular data should be created.</li>
+      <li>to produce multiple graphs on the same axes, varying one or more
+        parameters. This is described in detail below, under "Sensitivity
+        Analysis".</li>
+      <li>to produce a"bubble" animation showing the development of the pandemic
+        in multiple cities. Replace -P with -B.</li>
+    </ul>
+    <h2>Command Line Options</h2>
+    <p>The following command line options are available.</p>
+    <table style="width: 100%;" border="1">
+      <tbody>
+        <tr>
+          <td style="width:10%"><strong>Short Form</strong></td>
+          <td style="width:20%"><strong>Long Form</strong></td>
+          <td><strong>Meaning</strong></td>
+          <td><strong>Default</strong></td>
+        </tr>
+        <tr>
+        <tr>
+        <tr>
+          <td>-a</td>
+          <td>--auto-immunity</td>
+          <td>Proportion (in range 0-1) who will develop immunity without
+            becoming infectious</td>
+          <td>0</td>
+        </tr>
+          <td>-B<br>
+          </td>
+          <td>--bubbles<br>
+          </td>
+          <td>Show results as "bubble" chart with cities<br>
+          </td>
+          <td>Bubble chart not displayed<br>
+          </td>
+        </tr>
+          <td>-c <br>
+            <br>
+            <br>
+          </td>
+          <td>--console<br>
+          </td>
+          <td style="width: 63.967px;">Send output to console as well as log
+            file<br>
+          </td>
+          <td style="width: 130.967px;">Don't send output to console</td>
+        </tr>
+        <tr>
+          <td>-C<br>
+          </td>
+          <td>--city-count<br>
+          </td>
+          <td>Number of cities.<br>
+          </td>
+          <td>Based on population, approximately proportional to its square
+            root.</td>
+        </tr>
+        <tr>
+          <td>-d<br>
+          </td>
+          <td>--distance<br>
+          </td>
+          <td style="height: 19px;">Social distance, between 0 (none) and 1
+            (maximum, Wuhan stye)<br>
+          </td>
+          <td>0<br>
+          </td>
+        </tr>
+        <tr>
+          <td>-F</td>
+          <td>--format</td>
+          <td>Graphcics file format (one of png, svg, jpg)</td>
+          <td>PNG</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--linear</td>
+          <td>Make Y-axis of graphs linear rather than logarithmic</td>
+          <td>Y-axis is logarithmic</td>
+        </tr>
+        <tr>
+          <td>-N</td>
+          <td>--infected-cities</td>
+          <td>Number of cities with at least one infected person initially, or
+            if i range 0-1, the proportion of cities to be infected</td>
+          <td>0.1</td>
+        </tr>
+        <tr>
+          <td>-i</td>
+          <td>--infectiousness</td>
+          <td>The infectiousness (approximate R0 value) of the disease</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>-n</td>
+          <td>--initial-infected</td>
+          <td>Number of people initially infected</td>
+          <td>Chosen based on population</td>
+        </tr>
+        <tr>
+          <td>-L</td>
+          <td>--log-path</td>
+          <td>Path (relative to current directory) to store log files</td>
+          <td>None, log files are not created</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--min-days<br>
+          </td>
+          <td>Minimum number of days to simulate<br>
+          </td>
+          <td>Simulation stops when pandemic has run its course<br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--max-days<br>
+          </td>
+          <td>Maximum number of days to simulate<br>
+          </td>
+          <td>As above<br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--no-base</td>
+          <td>See explanation in text</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>-o</td>
+          <td>--output</td>
+          <td>Output file name</td>
+          <td>Output is not sent to file</td>
+        </tr>
+        <tr>
+          <td>-P</td>
+          <td>--plot</td>
+          <td>Plot results as graph</td>
+          <td>No graph is displayed</td>
+        </tr>
+        <tr>
+          <td>-p</td>
+          <td>--population</td>
+          <td>Number of simulated people</td>
+          <td>1,000,000</td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--random</td>
+          <td>Random number seed,used to generate reproducible results</td>
+          <td>Generated from system true random number generator</td>
+        </tr>
+        <tr>
+          <td>-R</td>
+          <td>--repeat</td>
+          <td>Repeat simulation with same parameters but different random
+            numbers</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td><br>
+          </td>
+          <td>--save-frames</td>
+          <td>Root path name to save every frame of animation. Individual frames
+            will have a frame number added.</td>
+          <td>Frames are not saved</td>
+        </tr>
+        <tr>
+          <td>-S</td>
+          <td>--sensitivity</td>
+          <td>See explanation below</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>-v</td>
+          <td>--vaccination</td>
+          <td>Set vaccination level (in range 0-1)</td>
+          <td>0</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <h2>Sensitivity Analysis</h2>
+    <p>Often it is interesting to see how changing a parameter affects the
+      evolution of the pandemic. This can be done using the -S command line
+      option. It is followed by the name of a parameter, and the values to use.
+      These can either be in a comma-separated list, or in the form <em>initial-value:increment:final-value</em>.
+      For example:</p>
+    <p class="code">-S infectiousness:1:0.5:3<br>
+      -S infectiousness:0.8,1,1,2,1.5,2,2,5,3</p>
+    <p>It is possible to vary two or more parameters in parallel, separating the
+      two with ';'. For example:</p>
+    <p class="code">-S xxx:1,2,3;yyy:10,11,12</p>
+    <p>This will run three times, once with xxx=1 and yyy=10, then with
+      xxx=2,yyy=11 and finally with xxx=3,yyy=12.</p>
+    <p>It is also possible to run combinations of parameter values, separating
+      them with '+'. For example:</p>
+    <p class="code">-S xxx:1:0.5:3+yyy:0.2,0.5</p>
+    <p>will run first with xxx=1 and yyy taking each of 0.2 and 0.5, then again
+      with xxx=1.5 and yyy=0.2 and then 0.5, and so on.</p>
+    <p>The increment can be replaced by a multiplier, using '*'. For example:</p>
+    <p class="code">-S xxx:0.1*2:0.8</p>
+    <p>will run with xxx taking the values 0.1, 0.2, 0.4 and 0.8.<br>
+    </p>
+    <p>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </p>
   </body>
 </html>
