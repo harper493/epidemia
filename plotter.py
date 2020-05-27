@@ -81,9 +81,13 @@ class plotter():
                     if self.last_signalled + 1 < self.highest_day:
                         self.last_signalled = self.highest_day - 1
                         last_world = self.world_no + 1 >= len(self.worlds)
-                        yield (self.world_no, self.last_signalled, True, last_world)
-                    self.world_no += 1
-                    self.highest_day = 0
+                        wno = self.world_no
+                        self.world_no += 1
+                        self.highest_day = 0
+                        yield (wno, self.last_signalled, True, last_world)
+                    else:
+                        self.world_no += 1
+                        self.highest_day = 0
                     if self.world_no >= len(self.worlds):
                         yield(-1, -1, True, True)
                         return

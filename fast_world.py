@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from threading import Lock, Thread
 from file_listener import file_listener
 from csv_listener import csv_listener
+import time
 
 days_to_double_start = 10
 default_world_size = 100
@@ -149,7 +150,9 @@ class fast_world(infection_counter):
                 elif self.days_to_double==0 and self.total >= 2 * self.double_start:
                     ratio = self.total / self.double_start
                     self.days_to_double = pow(day - self.double_start_day, 2 / ratio)
+                    #print('%%%', day, ratio, self.days_to_double, day-self.double_start_day)
                 with self.daily_lock:
+                    #print('$$$', self, day, max(self.daily.keys() or [-1]), self.today)
                     self.daily[day] = self.today
             else:
                 city = self.cities_by_index[city_no]

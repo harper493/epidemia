@@ -66,7 +66,7 @@ void world::load_props()
     }
     gestation_generator.reset(gestating_time, gestating_sd);
     asymptomatic_generator.reset(asymptomatic_time, asymptomatic_sd);
-    recovery_generator.reset(recovery_time, recovery_sd);
+    recovery_generator.reset(recovery_time - asymptomatic_time, recovery_sd);
 }
 
 /************************************************************************

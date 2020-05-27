@@ -15,9 +15,6 @@ from plotter import plotter
 
 graph_height = 0.2
 
-susceptible_color = 'deepskyblue'
-infected_color = 'red'
-recovered_color = 'lime'
 button_color = 'linen'
 button_hovercolor = 'bisque'
 

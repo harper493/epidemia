@@ -124,14 +124,16 @@ class epidemia() :
 
     def plot_results(self, w) :
         from_, to = w.get_interesting()
-        title = f'Population {w.population} Infectiousness {w.get_infectiousness()} Auto-Immunity {w.get_auto_immunity()}'
-        # title += f'\nMax Days to Double {w.days_to_double:.1f}'
+        surtitle = [('Population', w.population), ('Infectiousness', w.get_infectiousness() ),
+                    ('Auto-Immunity', w.get_auto_immunity()),
+                    ('Max Days to Double', f'{w.days_to_double:.1f}')]
         plotfile = f'{self.log_path}{self.log_filename}' if self.log_path else None
-        p = plotter(title=title, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props)
+        p = plotter(surtitle=surtitle, file=plotfile, show=self.args.plot, format=self.args.format, props=self.props,
+                    legend=False)
         x = w.get_days()[from_:to]
         data = [ {'label': var_to_title(v),
                   'data' : w.get_data(v)[from_:to] } for v in ('total', 'infected') ]
-        p.plot(x, *data)
+        p.plot([w], ('total', 'infected'))
 
     def plot_bubbles(self, w):
         surtitle = [('Population', w.population),
@@ -181,7 +183,7 @@ class epidemia() :
             plot = plotter(title=title, legend=(not self.args.repeat), file=plotfile, show=self.args.plot,
                            format=self.args.format or 'svg', props=self.props, incremental=False, surtitle=surtitle,
                            table=table_cols, save_frames=self.args.save_frames,
-                           lines=sensitivity_lines, log_scale=not self.args.no_log)
+                           lines=sensitivity_lines, log_scale=not self.args.linear)
             plot.plot(self.worlds, self.labels, show=self.args.plot)
         if detail_log :
             detail_log.close()
