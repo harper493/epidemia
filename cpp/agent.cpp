@@ -180,10 +180,10 @@ void epidemia_agent::expose(day_number day)
     gestatings.reset();
     for (person *p : gestatings) {
         p->one_day(day);
-        if (p->is_gestating()) {
-            gestatings.insert(p);
-        } else {
+        if (p->is_infectious()) {
             infecteds.insert(p);
+        } else {
+            gestatings.insert(p);
         }
     }
     city *prev_city = NULL;
@@ -196,7 +196,7 @@ void epidemia_agent::expose(day_number day)
             prev_city = this_city;
         }
         p->one_day(day);
-        if (p->is_infected()) {
+        if (p->is_infectious()) {
             infecteds.insert(p);
         }
     }

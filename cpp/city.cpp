@@ -268,7 +268,7 @@ void city::add_person(person *p)
         cl->add_person(p);
     }
     if (random::get_random() < my_world->get_vaccination()) {
-        p->vaccinate();
+        p->vaccinate(0);
     }
 }
 

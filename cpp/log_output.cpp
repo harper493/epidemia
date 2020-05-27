@@ -73,6 +73,7 @@ log_output::column::column(const log_output &logger, const string &fmt, const st
     } else {
         width = lexical_cast<int>(m[1]);
     }
+    width = max(width, heading.size() + 1);
     if (logger.csv) {
         if (m[3]=="s") {
             format_.parse(string("\"%") + m[2] + m[3] + "\"");
@@ -80,6 +81,6 @@ log_output::column::column(const log_output &logger, const string &fmt, const st
             format_.parse(string("%") + m[2] + m[3]);
         }
     } else {
-        format_.parse(string("%" + format_str));
+        format_.parse(string("%" + lexical_cast<string>(width) + m[2] + m[3]));
     }
 }

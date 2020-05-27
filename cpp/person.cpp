@@ -2,8 +2,24 @@
 #include "random.h"
 #include "city.h"
 #include "world.h"
+#include "cluster.h"
+
+/************************************************************************
+ * Static data
+ ***********************************************************************/
 
 DEFINE_ALLOCATOR(person)
+
+SHOW_ENUM(person_state)
+    SHOW_ENUM_VAL(person_state::pst_, susceptible)
+    SHOW_ENUM_VAL(person_state::pst_, vaccinated)
+    SHOW_ENUM_VAL(person_state::pst_, gestating)
+    SHOW_ENUM_VAL(person_state::pst_, asymptomatic)
+    SHOW_ENUM_VAL(person_state::pst_, infected)
+    SHOW_ENUM_VAL(person_state::pst_, recovered)
+    SHOW_ENUM_VAL(person_state::pst_, dead)
+    SHOW_ENUM_VAL(person_state::pst_, immune)
+SHOW_ENUM_END(person_state)
 
 /************************************************************************
  * Constructor.
@@ -44,7 +60,7 @@ bool person::one_day(day_number day)
     bool result = false;
     person *visitee = get_visitee(); // will be me if no travel
     switch(my_state) {
-    case state::susceptible:
+    case person_state::pst_susceptible:
         {
             float risk = visitee->get_city()->get_exposure();
             for (auto *cl : visitee->my_clusters) {
@@ -63,19 +79,25 @@ bool person::one_day(day_number day)
             }
         }
         break;
-    case state::gestating:
+    case person_state::pst_gestating:
+        if (day >= next_transition) {
+            result = true;
+            asymptomatic(day);
+        }
+        break;
+    case person_state::pst_asymptomatic:
         if (day >= next_transition) {
             result = true;
             infect(day);
         }
         break;
-    case state::infected:
+    case person_state::pst_infected:
         if (day >= next_transition) {
             result = true;
             if (random::get_random() < get_world()->get_mortality()) {
-                kill();
+                kill(day);
             } else {
-                recover();
+                recover(day);
             }
         } else {
             visitee->get_city()->expose(my_city);
@@ -91,6 +113,20 @@ bool person::one_day(day_number day)
 }
 
 /************************************************************************
+ * set_state - adjust the state counts for the cioty and myh
+ * clusters
+ ***********************************************************************/
+
+void person::set_state(person_state new_state)
+{
+    my_city->count_one(this, new_state);
+    for (auto *cl : my_clusters) {
+        cl->count_one(this, new_state);
+    }
+    my_state = new_state;
+}
+
+/************************************************************************
  * gestate - start the gestation period
  ***********************************************************************/
 
@@ -98,38 +134,36 @@ void person::gestate(day_number day)
 {
     infected_time = day;
     next_transition = day + get_world()->get_gestation_interval();
-    my_city->gestate_one(this);
-    for (auto *cl : my_clusters) {
-        cl->gestate_one(this);
-    }
-    my_state = state::gestating;
+    set_state(person_state::pst_gestating);
 }
 
 /************************************************************************
- * infect - transition for gestating to infected
+ * asymptomatic - transition for gestating to asymptomatic
+ ***********************************************************************/
+
+void person::asymptomatic(day_number day)
+{
+    next_transition = day + get_world()->get_asymptomatic_interval();
+    set_state(person_state::pst_asymptomatic);
+}
+
+/************************************************************************
+ * infect - transition for asymptomatic to infected
  ***********************************************************************/
 
 void person::infect(day_number day)
 {
     next_transition = day + get_world()->get_recovery_interval();
-    my_city->infect_one(this);
-    for (auto *cl : my_clusters) {
-        cl->infect_one(this);
-    }
-    my_state = state::infected;
+    set_state(person_state::pst_infected);
 }
 
 /************************************************************************
  * recover - transition for infected to recovered
  ***********************************************************************/
 
-void person::recover()
+void person::recover(day_number day)
 {
-    my_city->recover_one(this);
-    for (auto *cl : my_clusters) {
-        cl->recover_one(this);
-    }
-    my_state = state::recovered;
+    set_state(person_state::pst_recovered);
 }
 
 /************************************************************************
@@ -138,37 +172,25 @@ void person::recover()
 
 void person::immunise(day_number day)
 {
-    my_city->immunise_one(this);
-    for (auto *cl : my_clusters) {
-        cl->immunise_one(this);
-    }
-    my_state = state::immune;
+    set_state(person_state::pst_immune);
 }
 
 /************************************************************************
  * vaccinate - transition to vaccinated
  ***********************************************************************/
 
-void person::vaccinate()
+void person::vaccinate(day_number day)
 {
-    my_city->vaccinate_one(this);
-    for (auto *cl : my_clusters) {
-        cl->vaccinate_one(this);
-    }
-    my_state = state::vaccinated;
+    set_state(person_state::pst_vaccinated);
 }
 
 /************************************************************************
  * kill - transition to dead
  ***********************************************************************/
 
-void person::kill()
+void person::kill(day_number day)
 {
-    my_city->kill_one(this);
-    for (auto *cl : my_clusters) {
-        cl->kill_one(this);
-    }
-    my_state = state::dead;
+    set_state(person_state::pst_dead);
 }
 
 /************************************************************************

@@ -31,7 +31,7 @@ class argparser(object) :
         arg('-o', '--output', type=str, default=None, help='output file name')
         arg('-F', '--format', type=str, default=None, help='graphics file format')
         arg('-P', '--plot', action='store_true',  help='plot results as graph')
-        arg('-Z', '--bubbles', action='store_true', help='plot data as bubbles chart')
+        arg('-B', '--bubbles', action='store_true', help='plot data as bubbles chart')
         arg('-X', '--profile', action='store_true',  help='run cProfile')
         arg('-v', '--vaccination*', type=float, default=0, help="proportion vaccinated (0-1)")
         arg('-V', '--very-verbose', action='store_true',  help="describe what's going on A LOT")

@@ -7,50 +7,63 @@ void infection_counter::add_person(person *p)
     susceptible += 1;
 }
 
-void infection_counter::infect_one(person *p)
+void infection_counter::count_one(person *p, person_state new_state)
 {
-    if (p->is_susceptible()) {
-        susceptible -= 1;
-    } else {
-        debug_assert(p->is_gestating());
-        gestating -= 1;
+    switch (p->get_state()) {
+    case person_state::pst_susceptible:
+        --susceptible;
+        break;
+    case person_state::pst_vaccinated:
+        --vaccinated;
+        break;
+    case person_state::pst_gestating:
+        --gestating;
+        break;
+    case person_state::pst_asymptomatic:
+        --asymptomatic;
+        break;
+    case person_state::pst_infected:
+        --infected;
+        break;
+    case person_state::pst_recovered:
+        --recovered;
+        break;
+    case person_state::pst_dead:
+        --dead;
+        break;
+    case person_state::pst_immune:
+        --immune;
+        break;
     }
-    infected += 1;
-    total_infected += 1;
-}
-
-void infection_counter::gestate_one(person *p)
-{
-    debug_assert(p->is_susceptible());
-    gestating += 1;
-    susceptible -= 1;
-}
-
-void infection_counter::vaccinate_one(person *p)
-{
-    debug_assert(p->is_susceptible());
-    vaccinated += 1;
-    susceptible -= 1;
-}
-
-void infection_counter::kill_one(person *p)
-{
-    debug_assert(p->is_infected());
-    dead += 1;
-    infected -= 1;
-}
-
-void infection_counter::immunise_one(person *p)
-{
-    debug_assert(p->is_susceptible());
-    susceptible -= 1;
-    immune += 1;
-}
-
-void infection_counter::recover_one(person *p)
-{
-    debug_assert(p->is_infected());
-    infected -= 1;
-    recovered += 1;
+    switch (new_state) {
+    case person_state::pst_susceptible:
+        ++susceptible;
+        break;
+    case person_state::pst_vaccinated:
+        ++vaccinated;
+        break;
+    case person_state::pst_gestating:
+        ++gestating;
+        break;
+    case person_state::pst_asymptomatic:
+        ++total_infected;
+        ++asymptomatic;
+        break;
+    case person_state::pst_infected:
+        if (p->get_state()==person_state::pst_susceptible) {
+            ++total_infected;
+        }
+        ++infected;
+        break;
+    case person_state::pst_recovered:
+        ++recovered;
+        break;
+    case person_state::pst_dead:
+        ++dead;
+        break;
+    case person_state::pst_immune:
+        ++immune;
+        break;
+    }    
 }
 

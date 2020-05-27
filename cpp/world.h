@@ -18,6 +18,8 @@
     _P(float, , , recovery_sd, 5)                                       \
     _P(float, , , gestating_time, 5)                                    \
     _P(float, , , gestating_sd, 2)                                      \
+    _P(float, , , asymptomatic_time, 5)                                 \
+    _P(float, , , asymptomatic_sd, 2)                                   \
     _P(U32  , , , initial_infected, 100)                                \
     _P(U32, , ,   city_count, 0)                                        \
     _P(U32, , ,   min_city_count, 10)                                   \
@@ -63,6 +65,7 @@ private:
     vector<agent_info> cities_by_agent;
     U32 agent_max_pop = 0;
     random::lognormal gestation_generator;
+    random::lognormal asymptomatic_generator;
     random::lognormal recovery_generator;
     float infection_prob;
     float mobility_threshold;
@@ -74,8 +77,11 @@ private:
     U32 prev_infected = 0;
     U32 prev_total = 0;
     U32 immune = 0;
+    U32 gestating = 0;
+    U32 asymptomatic = 0;
     U32 vaccinated = 0;
     U32 dead = 0;
+    U32 recovered = 0;
     U32 untouched_cities = 0;
     U32 verbosity = 1;
     chooser<city, U32> city_chooser;
@@ -96,6 +102,7 @@ public:
     void run(log_output &logger);
     const vector<city*> get_cities() const { return my_cities; };
     U32 get_gestation_interval() const;
+    U32 get_asymptomatic_interval() const;
     U32 get_recovery_interval() const;
     point get_random_location() const;
     city *get_random_city() const;

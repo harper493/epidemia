@@ -13,13 +13,16 @@ using boost::posix_time::microsec_clock;
 log_output::column_defs log_columns{
     { "4d", "day" },
     { "6d", "city" },
-    { "9d", "infected" },
-    { "9d", "total" },
+    { "8d", "gestating" },
+    { "8d", "asymptomatic" },
+    { "8d", "infected" },
+    { "8d", "total" },
     { "7.2f", "growth" },
-    { "9d", "immune" },
-    { "11d", "vaccinated" },
-    { "9d", "dead" },
-    { "17d", "untouched_cities" },
+    { "8d", "immune" },
+    { "8d", "vaccinated" },
+    { "8d", "recovered" },
+    { "8d", "dead" },
+    { "6d", "untouched_cities" },
 };
 
 world *the_world = NULL;

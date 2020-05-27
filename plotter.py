@@ -101,6 +101,8 @@ class plotter():
         button_hover = 'bisque'
         susceptible = 'deepskyblue'
         infected = 'red'
+        gestating = 'lightsalmon'
+        asymptomatic = 'tomato'
         recovered = 'mediumseagreen'
         immune = 'limegreen'
         vaccinated = 'chartreuse'

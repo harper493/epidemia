@@ -65,6 +65,7 @@ void world::load_props()
         }
     }
     gestation_generator.reset(gestating_time, gestating_sd);
+    asymptomatic_generator.reset(asymptomatic_time, asymptomatic_sd);
     recovery_generator.reset(recovery_time, recovery_sd);
 }
 
@@ -399,13 +400,19 @@ bool world::end_of_day()
     prev_infected = infected;
     prev_total = total_infected;
     infected = 0;
+    gestating = 0;
+    asymptomatic = 0;
     total_infected = 0;
     immune = 0;
+    recovered = 0;
     untouched_cities = 0;
     vaccinated = 0;
     dead = 0;
     for (city *c : my_cities) {
         infected += c->get_infected();
+        gestating += c->get_gestating();
+        asymptomatic += c->get_asymptomatic();
+        recovered += c->get_recovered();
         total_infected += c->get_total_infected();
         immune += c->get_immune();
         vaccinated += c->get_vaccinated();
@@ -416,12 +423,14 @@ bool world::end_of_day()
     }
     max_infected = max(max_infected, infected);
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
-    my_logger->put_line(day, 0, infected, total_infected, growth, immune, vaccinated, dead, untouched_cities);
+    my_logger->put_line(day, 0, gestating, asymptomatic,
+                        infected, total_infected, growth, immune, vaccinated,
+                        recovered, dead, untouched_cities);
     if (the_args->get_log_cities()) {
         for (city *c : my_cities) {
-            my_logger->put_line(day, c->index, c->infected,
+            my_logger->put_line(day, c->index, c->gestating, c->asymptomatic, c->infected,
                                 c->total_infected, 0, c->immune,
-                                c->vaccinated, c->dead, c->is_untouched()?1:0);
+                                c->vaccinated, c->recovered, c->dead, c->is_untouched()?1:0);
         }
     }
     my_logger->flush();
@@ -455,6 +464,16 @@ bool world::still_interesting() const
 U32 world::get_gestation_interval() const
 {
     return gestation_generator();
+}
+
+/************************************************************************
+ * get_asymptomatic_interval - get a randomly generated asymptomatic interval
+ * according to the parameters
+ ***********************************************************************/
+
+U32 world::get_asymptomatic_interval() const
+{
+    return asymptomatic_generator();
 }
 
 /************************************************************************

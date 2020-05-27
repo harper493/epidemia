@@ -36,11 +36,13 @@ class fast_world(infection_counter):
     @dataclass
     class _day_info():
         city: int
+        gestating: int = 0
         infected: int = 0
         recovered: int = 0
         total: int = 0
         growth: float = 0
         immune: int = 0
+        asymptomatic: int = 0
         vaccinated: int = 0
         dead: int = 0
         susceptible: int = 0
@@ -129,7 +131,6 @@ class fast_world(infection_counter):
             city_no = int(row['city'])
             data = fast_world._day_info(**{ n: (float(v) if '.' in v else int(v)) for n, v in row.items()
                                              if n in fast_world._day_info.get_fields() })
-            data.recovered = data.total - data.infected
             if data.city==0:
                 self.today = data
                 data.population = self.population
