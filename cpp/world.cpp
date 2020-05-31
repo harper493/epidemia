@@ -135,7 +135,8 @@ void world::add_cities()
         float this_size = make_city_size(pop);
         point loc = get_random_location();
         bool good = false;
-        while (!good) {
+        U32 tries = 0;
+        while (!good && tries < max_city_tries) {
             good = true;
             loc = get_random_location();
             for (city *other : my_cities) {
@@ -144,9 +145,14 @@ void world::add_cities()
                     break;
                 }
             }
+            ++tries;
         }
-        city *c = new city(cname, this, pop, loc);
-        my_cities.push_back(c);
+        if (good) {
+            city *c = new city(cname, this, pop, loc);
+            my_cities.push_back(c);
+        } else {
+            break;              // give up if we couldn't find a place for the new city
+        }
     }
     //
     // populate the population-based chooser

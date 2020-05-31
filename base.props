@@ -37,6 +37,7 @@ cluster.*.influence                = 1
 cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
 cluster.*.singleton                = 0.2
+cluster.*.singleton_influence      = 0.2
 
 distance.min.city.exposure         = 0
 distance.min.cluster.*.influence   = 0
@@ -67,7 +68,7 @@ city.min_distance                  = 5
 world_size                         = 100
 mobility_max                       = 0.1
 mobility_average                   = 0.001
-recovery_time                      = 15
+recovery_time                      = 14
 recovery_sd                        = 2
 gestating_time                     = 4
 gestating_sd                       = 1.5

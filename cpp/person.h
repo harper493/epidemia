@@ -16,7 +16,7 @@ class person : public bintr::list_base_hook<bintr::link_mode<bintr::auto_unlink>
 {
 public:
     typedef bintr::list<person, bintr::constant_time_size<false>> list;
-    typedef sized_array<cluster*,max_cluster_types> cluster_array_t;
+    typedef sized_array<cluster_user,max_cluster_types> cluster_array_t;
     static const int prefetch_depth = 10;
 private:
     string name;
@@ -30,7 +30,7 @@ private:
     day_number infected_time;
     day_number next_transition;
 public:
-    person(const string &n, city *c, const point &loc, const cluster::list &clusters);
+    person(const string &n, city *c, const point &loc, const cluster_user::list &clusters);
     const string &get_name() const { return name; };
     person_state get_state() const { return my_state; };
     city *get_city() const { return my_city; };
@@ -51,7 +51,7 @@ public:
     void kill(day_number day);
     string show() const;
     world *get_world() const;
-    static person* factory(const string &n, city *c, const point &loc, const cluster::list &clusters);
+    static person* factory(const string &n, city *c, const point &loc, const cluster_user::list &clusters);
 private:
     void gestate(day_number day);
     void asymptomatic(day_number day);
@@ -59,6 +59,7 @@ private:
     void recover(day_number day);
     void immunise(day_number day);
     void set_state(person_state new_state);
+    void expose(person *p, day_number day);
     person *get_visitee();
 public:
     static void prefetch(person *p, int slot)
@@ -68,8 +69,8 @@ public:
             ::prefetch(p);
             break;
         case 4:
-            for (cluster *cl : p->my_clusters) {
-                ::prefetch_n<2>(cl);
+            for (cluster_user &cu : p->my_clusters) {
+                ::prefetch_n<2>(cu.get_cluster());
             }
             break;
         default:

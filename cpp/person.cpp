@@ -28,11 +28,11 @@ SHOW_ENUM_END(person_state)
  * -- assign self to random clusters within the city
  ***********************************************************************/
 
-person::person(const string &n, city *c, const point &loc, const cluster::list &clusters)
+person::person(const string &n, city *c, const point &loc, const cluster_user::list &clusters)
     : name(n), my_city(c), my_location(loc)
 {
-    for (cluster *cl : clusters) {
-        my_clusters.push_back(cl);
+    for (const auto &cu : clusters) {
+        my_clusters.emplace_back(cu);
     }
     mobility = get_world()->make_mobility();
 }
@@ -42,7 +42,7 @@ person::person(const string &n, city *c, const point &loc, const cluster::list &
  * static allocator pointer.
  ***********************************************************************/
 
-person *person::factory(const string &n, city *c, const point &loc, const cluster::list &clusters)
+person *person::factory(const string &n, city *c, const point &loc, const cluster_user::list &clusters)
 {
     return new person(n, c, loc, clusters);
 }
@@ -63,8 +63,8 @@ bool person::one_day(day_number day)
     case person_state::pst_susceptible:
         {
             float risk = visitee->get_city()->get_exposure();
-            for (auto *cl : visitee->my_clusters) {
-                risk += cl->get_member_exposure(day);
+            for (auto &cu : visitee->my_clusters) {
+                risk += cu.get_exposure(day);
             }
             if (risk>0) {
                 float r = random::get_random();
@@ -89,6 +89,8 @@ bool person::one_day(day_number day)
         if (day >= next_transition) {
             result = true;
             infect(day);
+        } else {
+            expose(visitee, day);
         }
         break;
     case person_state::pst_infected:
@@ -100,10 +102,7 @@ bool person::one_day(day_number day)
                 recover(day);
             }
         } else {
-            visitee->get_city()->expose(my_city);
-            for (auto *cl : visitee->my_clusters) {
-                cl->expose(day, this);
-            }
+            expose(visitee, day);
         }
         break;
     default:                    // nothing to do for the other states
@@ -113,15 +112,27 @@ bool person::one_day(day_number day)
 }
 
 /************************************************************************
- * set_state - adjust the state counts for the cioty and myh
+ * expose - expose a person's environment to their infection
+ ***********************************************************************/
+
+void person::expose(person *p, day_number day)
+{
+    p->get_city()->expose(my_city);
+    for (auto &cu : p->my_clusters) {
+        cu.expose(day, this);
+    }
+}
+
+/************************************************************************
+ * set_state - adjust the state counts for the city and my
  * clusters
  ***********************************************************************/
 
 void person::set_state(person_state new_state)
 {
     my_city->count_one(this, new_state);
-    for (auto *cl : my_clusters) {
-        cl->count_one(this, new_state);
+    for (auto &cu : my_clusters) {
+        cu.get_cluster()->count_one(this, new_state);
     }
     my_state = new_state;
 }
