@@ -14,6 +14,7 @@ private:
     int thread_count = 0;
     string output_file;
     bool csv = false;
+    bool double_ = false;
     bool log_cities = false;
     U32 verbosity = 1;
     vector<string> props_files;
@@ -22,6 +23,7 @@ public:
     int get_thread_count() const { return thread_count; };
     string get_output_file() const { return output_file; };
     bool get_csv() const { return csv; };
+    bool get_double() const { return double_; };
     bool get_log_cities() const { return log_cities; };
     U32 get_verbosity() const { return verbosity; };
     const vector<string> &get_props_files() const { return props_files; };

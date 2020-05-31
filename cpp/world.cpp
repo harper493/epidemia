@@ -432,15 +432,31 @@ bool world::end_of_day()
         }
     }
     max_infected = max(max_infected, infected);
+    if (double_start_day==0) {
+        U32 effective_pop = population * (1 - vaccination) * (1 - auto_immunity);
+        if (total_infected > sqrt(effective_pop)) {
+            double_start_day = day;
+            double_start = total_infected;
+        }
+    } else if (days_to_double==0) {                    // already started looking for doubling
+        if (total_infected >= 2 * double_start) {
+            float ratio = ((float)total_infected) / double_start;
+            days_to_double = pow(((float)(day - double_start_day)), 2.0 / ratio);
+#if 0
+            std::cout << formatted("days to double %.2f at day %d (days %d) ratio %.4f\n",
+                                   days_to_double, day, day-double_start_day, ratio);
+#endif
+        }
+    }
     float growth = 100 * ((prev_total ? ((float)total_infected) / prev_total: 1) - 1);
     my_logger->put_line(day, 0, gestating, asymptomatic,
                         infected, total_infected, growth, immune, vaccinated,
-                        recovered, dead, untouched_cities);
+                        recovered, dead, untouched_cities, days_to_double);
     if (the_args->get_log_cities()) {
         for (city *c : my_cities) {
             my_logger->put_line(day, c->index, c->gestating, c->asymptomatic, c->infected,
                                 c->total_infected, 0, c->immune,
-                                c->vaccinated, c->recovered, c->dead, c->is_untouched()?1:0);
+                                c->vaccinated, c->recovered, c->dead, c->is_untouched()?1:0, 0);
         }
     }
     my_logger->flush();
@@ -457,6 +473,8 @@ bool world::still_interesting() const
     if (min_days > 0 && day < min_days) {
         result = true;
     } else if (max_days > 0 && day > max_days) {
+        result = false;
+    } else if (days_to_double>0 && the_args->get_double()) {
         result = false;
     } else {
         result = (max_infected > initial_infected * 10)

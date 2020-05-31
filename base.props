@@ -36,7 +36,7 @@ cluster.*.min_nested_cluster_count = 3
 cluster.*.influence                = 1
 cluster.*.nest_influence           = 0.15   # useful range is up about 0.25
 cluster.*.proximality              = 0.9
-cluster.*.singleton                = 0.3
+cluster.*.singleton                = 0
 cluster.*.singleton_influence      = 0.02
 
 distance.min.city.exposure         = 0

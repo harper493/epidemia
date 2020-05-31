@@ -31,6 +31,7 @@ bool command::parse(int argc, const char **argv)
         ("city-data",         po::value<string>(), "send city information to this file")
         ("csv",                                    "output in CSV format")
         ("distance,d",        po::value<float>(),  "social distancing (0=none - 1=Wuhan)")
+        ("double",                                 "stop when total has doubled")
         ("infectiousness,i",  po::value<float>(),  "infectiousness, typically 1-5")
         ("initial,n",         po::value<int>(),    "initial infected population")
         ("infected-cities,C", po::value<float>(),  "proportion or number of cities to infect")
@@ -70,6 +71,8 @@ bool command::parse(int argc, const char **argv)
                 output_file = values["output"].as<string>();
             } else if (name=="csv") {
                 csv = true;
+            } else if (name=="double") {
+                double_ = true;
             } else if (name=="log-cities") {
                 log_cities = true;
             } else if (name=="positional") {

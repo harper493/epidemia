@@ -72,6 +72,9 @@ private:
     float mobility_threshold;
     float mobility_multiplier;
     day_number day = 0;
+    day_number double_start_day = 0;
+    U32 double_start = 0;
+    float days_to_double = 0;
     U32 infected = 0;
     U32 total_infected = 0;
     U32 max_infected = 0;

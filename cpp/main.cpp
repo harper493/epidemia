@@ -23,6 +23,7 @@ log_output::column_defs log_columns{
     { "8d", "recovered" },
     { "8d", "dead" },
     { "6d", "untouched_cities" },
+    { "5.2f", "days_to_double" },
 };
 
 world *the_world = NULL;

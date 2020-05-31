@@ -49,6 +49,7 @@ class fast_world(infection_counter):
         susceptible: int = 0
         severe: int = 0
         population: int = 0
+        days_to_double: float = 0
 
         fields = None
 
@@ -74,10 +75,8 @@ class fast_world(infection_counter):
         self.max_infected = 0
         self.max_growth = 0
         self.highest_day = 0
-        self.today = None
-        self.double_start = None
-        self.double_start_day = None
         self.days_to_double = 0
+        self.today = None
 
     def run(self, sync=True):
         os.system("mkdir -p tmp")
@@ -95,6 +94,8 @@ class fast_world(infection_counter):
             cmd_args.append(f'--min-days={self.args.min_days}')
         if self.args.max_days:
             cmd_args.append(f'--max-days={self.args.max_days}')
+        if self.args.double:
+            cmd_args.append('--double')
         if self.args.random:
             cmd_args.append(f'--random={self.args.random}')
         cmd_args.append(self.props_file)
@@ -142,15 +143,8 @@ class fast_world(infection_counter):
                     self.highest_day = day
                 self.dead = data.dead
                 self.max_growth = max(self.max_growth, data.growth)
+                self.days_to_double = max(self.days_to_double, data.days_to_double)
                 self.total = data.total
-                if self.double_start is None:
-                    if self.total >= sqrt(self.population):
-                        self.double_start = self.total
-                        self.double_start_day = day
-                elif self.days_to_double==0 and self.total >= 2 * self.double_start:
-                    ratio = self.total / self.double_start
-                    self.days_to_double = pow(day - self.double_start_day, 2 / ratio)
-                    #print('%%%', day, ratio, self.days_to_double, day-self.double_start_day)
                 with self.daily_lock:
                     #print('$$$', self, day, max(self.daily.keys() or [-1]), self.today)
                     self.daily[day] = self.today
