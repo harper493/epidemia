@@ -51,6 +51,12 @@ distance.min.mobility_average     = 0.0001
 plot.x_size                        = 12
 plot.y_size                        = 8
 
+infection_correction.immunity.0    = 0.32
+infection_correction.immunity.25   = 0.46
+infection_correction.immunity.5    = 0.6
+infection_correction.immunity.75   = 1.42
+infection_correction.immunity.9    = 3.2
+
 city.max_density                   = 5000
 city.min_density                   = 2000
 city.auto_power                    = 0.6

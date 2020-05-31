@@ -20,6 +20,7 @@ public:
         const string &get_name() const { return name; };
         string get_value() const;
         vector<string> get_elements() const;
+        string operator[](size_t idx) const { return get_elements()[idx]; };
         virtual bool is_wild() const { return wild!=NULL; };
     friend class properties;
     };

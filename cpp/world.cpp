@@ -332,13 +332,20 @@ void world::infect_cities()
 
 void world::make_infection_prob()
 {
-    static vector<pair<float,float>> immunity_correction{
-        P( 0, 0.32 ),
-        P( 0.25, 0.44 ),
-        P( 0.5, 0.67 ),
-        P( 0.75, 1.36 ),
-        P( 0.9, 4 )
-    };
+    vector<pair<float,float>> immunity_correction;
+    for (const auto &p : *my_props) {
+        if ((*p)[0]=="infection_correction" && (*p)[1]=="immunity") {
+            float thresh = -1;
+            float value = -1;
+            try {
+                thresh = lexical_cast<float>(string("0.") + (*p)[2]);
+                value = lexical_cast<float>(p->get_value());
+            } catch (...) {};
+            if (value>=0) {
+                immunity_correction.emplace_back(std::pair(thresh, value));
+            }
+        }
+    }
     static interpolator<float> immunity_corrector(immunity_correction);
     float inf = min(0.9, infectiousness);
     float correction = immunity_corrector(base_auto_immunity);
