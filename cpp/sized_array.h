@@ -108,9 +108,18 @@ public:
     ~sized_array()
     {
         for (size_t i=0; i<my_size; ++i) {
-            delete my_data[i];
+            _delete(i);
         }
     }
+    template<class CC=C, typename enable_if<boost::is_pointer<CC>,int>::type=0>
+    void _delete(size_t i)
+    {
+        delete my_data[i];
+    };
+    template<class CC=C, typename disable_if<boost::is_pointer<CC>,int>::type=0>
+    void _delete(size_t i)
+    {
+    };
     size_t size() const
     {
         return my_size;
@@ -122,6 +131,12 @@ public:
     void push_back(const value_type &v)
     {
         my_data[my_size] = v;
+        ++my_size;
+    }
+    template<typename... ARGS>
+    void emplace_back(const ARGS &...args)
+    {
+        new(&my_data[my_size]) value_type(args...);
         ++my_size;
     }
     C &back()

@@ -57,6 +57,7 @@ public:
         U32 max_pop = 0;
         vector<city*> cities;
     };
+    enum { max_city_tries = 10 }; // max times to try placing a city
 private:
     vector<city*> my_cities;
     properties *my_props;

@@ -264,8 +264,8 @@ void city::build_clusters()
 void city::add_person(person *p)
 {
     infection_counter::add_person(p);
-    for (cluster *cl : p->get_clusters()) {
-        cl->add_person(p);
+    for (const cluster_user &cu : p->get_clusters()) {
+        cu.get_cluster()->add_person(p);
     }
     if (random::get_random() < my_world->get_vaccination()) {
         p->vaccinate(0);
@@ -273,7 +273,10 @@ void city::add_person(person *p)
 }
 
 /************************************************************************
- * make_person - create one person for this city
+ * make_person - create one person for this city. We use some not-very-kosher
+ * C-style string handling becuase performance matters a lot when creating
+ * 10 million of them. And lexical_cast is very clever but performance
+ * sucks.
  ***********************************************************************/
 
 person *city::make_person()
@@ -286,12 +289,16 @@ person *city::make_person()
     *offset++ = '.';
     itoa(person_number, offset);
     point location;
-    cluster::list clusters;
+    cluster_user::list clusters;
     for (auto &i : my_cluster_families) {
         cluster_family *cf = i.second;
         cluster *cl = cf->my_chooser.choose();
         debug_assert(cl->is_leaf());
-        clusters.push_back(cl);
+        if (false && random::get_random() < cf->my_type->singleton) {
+            clusters.emplace_back(cl->get_parent(), cf->my_type->singleton_influence);
+        } else {
+            clusters.emplace_back(cl, 1);
+        }
         if (cf->my_type->is_local()) {
             location = cl->get_location();
         }
@@ -320,7 +327,7 @@ city *city::get_random_neighbor() const
 
 /************************************************************************
  * get_random_parent_cluster - given a cluster from another city,
- * choose a random cluster to be its "exposure parent". Must bein
+ * choose a random cluster to be its "exposure parent". Must be in
  * the same family and at one greater depth. Return NULL if there is
  * no such cluster.
  ***********************************************************************/

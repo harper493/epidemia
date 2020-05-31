@@ -17,6 +17,8 @@
     _CP(U32, nest_max) \
     _CP(U32, nest_average) \
     _CP(U32, max_depth) \
+    _CP(float, singleton) \
+    _CP(float, singleton_influence) \
     _CP(float, same_city) \
     _CP(float, nest_influence) \
     _CP(float, size_rms) \
@@ -53,6 +55,24 @@ private:
 friend class city;
 friend class cluster;
 friend class world;
+};
+
+class cluster_user
+{
+private:
+    cluster *my_cluster = NULL;
+    float influence = 1;
+public:
+    cluster_user() { };
+    cluster_user(cluster *c, float i)
+        : my_cluster(c), influence(i) { };
+    cluster_user(const cluster_user &other)
+        : my_cluster(other.my_cluster), influence(other.influence) { };
+    float get_exposure(day_number day) const;
+    void expose(day_number day, person *p);
+    cluster *get_cluster() const { return my_cluster; };
+public:
+    typedef vector<cluster_user> list;
 };
 
 class cluster : public infection_counter,
@@ -149,12 +169,13 @@ public:
     cluster(const string &n, const cluster_type *t, city *c, U32 sz, U16 d, const point &loc)
         : name(n), my_type(t), my_city(c), size(sz), depth(d), location(loc) { };
     void reset();
-    void expose(day_number day, const person *p);
+    void expose(day_number day, const person *p, float influence=1);
     U32 get_size() const { return size; };
     const cluster_type *get_type() const { return my_type; };
     U16 get_depth() const { return depth; };
     float get_member_exposure(day_number day);
     const point &get_location() const { return location; };
+    cluster *get_parent() const { return my_parent; };
     void add_person(person *p);
     void add_child(cluster *cl);
     void expose_parent(day_number day);
@@ -180,6 +201,7 @@ private:
 public:
     typedef prefetcher<cluster::list, prefetch_depth, &prefetch_one> cluster_prefetcher;
 friend class cluster_type;
+friend class cluster_user;
 } _cache_aligned;
 
 inline void cluster::prefetch_one(cluster *cl, int slot)
