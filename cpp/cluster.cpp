@@ -331,12 +331,12 @@ void cluster::iterator::advance()
 
 float cluster_user::get_exposure(day_number day) const
 {
-    return my_cluster->get_member_exposure(day); //  * influence;
+    return my_cluster->get_member_exposure(day) * influence;
 }
 
 void cluster_user::expose(day_number day, person *p)
 {
-    my_cluster->expose(day, p, 1 /*influence*/);
+    my_cluster->expose(day, p, influence);
 }
 
 /************************************************************************
@@ -419,22 +419,18 @@ void cluster_type::build(world *w)
 void cluster_type::build_one(world *w)
 {
     refresh(w->get_props());
-    U32 singletons = 0; //100.0 * singleton;
+    U32 singletons = 100.0 * singleton;
     random::reciprocal trial(min_pop, max_pop, 100 - singletons, average_pop);
     auto trial_values = trial.get_values_int();
-#if 0
     for (size_t i = 0; i<singletons; ++i) {
-        trial_values.push_back(0);
+        trial_values.push_back(singleton_influence);
     }
-#endif
     size_rms = make_rms(trial_values);
     random::reciprocal base_trial(base_min_pop, base_max_pop, 100 - singletons, base_average_pop);
     auto base_trial_values = base_trial.get_values_int();
-#if 0
     for (size_t i = 0; i<singletons; ++i) {
-        base_trial_values.push_back(0);
+        base_trial_values.push_back(singleton_influence);
     }
-#endif
     base_size_rms = make_rms(base_trial_values);
 }
 

@@ -351,6 +351,10 @@ void world::make_infection_prob()
         }
     }
     infection_prob = ((float)infectiousness) * correction / (exposure_time * cluster_factor);
+#if 0
+    std::cout << formatted("inf_prob %.5f inf %.2f corr %.5f exp_time %.2f cf %.4f\n",
+                           infection_prob, infectiousness, correction, exposure_time, cluster_factor);
+#endif
 }
 
 /************************************************************************

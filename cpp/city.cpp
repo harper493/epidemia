@@ -294,7 +294,7 @@ person *city::make_person()
         cluster_family *cf = i.second;
         cluster *cl = cf->my_chooser.choose();
         debug_assert(cl->is_leaf());
-        if (false && random::get_random() < cf->my_type->singleton) {
+        if (random::get_random() < cf->my_type->singleton) {
             clusters.emplace_back(cl->get_parent(), cf->my_type->singleton_influence);
         } else {
             clusters.emplace_back(cl, 1);
