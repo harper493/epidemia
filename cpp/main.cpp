@@ -7,6 +7,7 @@
 #include "log_output.h"
 #include "random.h"
 #include "city.h"
+#include "unit_test.h"
 
 using boost::posix_time::microsec_clock;
 
@@ -46,8 +47,9 @@ int main(int argc, const char **argv)
     }
     for (auto i : the_args->get_props()) {
         props->add_property(i.first, i.second);
-    }
+    }    
     random::initialize(props->get_numeric("random"));
+    unit_test::apply();
     the_world = new world(props);
     the_world->build();
     if (!props->get("city_data").empty()) {

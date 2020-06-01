@@ -1,4 +1,6 @@
 #include "random.h"
+#include "formatted.h"
+#include "unit_test.h"
 #include <iostream>
 #include <fstream>
 #include <boost/random/mersenne_twister.hpp>
@@ -52,6 +54,8 @@ interpolator<float> random::reciprocal::power_table(vector<pair<float,float>>{
     { 0.5609, 2.9 },
     { 1,      10 },
 });
+
+UNIT_TEST_CLASS(random)
 
 /************************************************************************
  * true_random - get a hardware sourced truly random number
@@ -154,16 +158,10 @@ float random::lognormal::operator()() const
 }
 
 /************************************************************************
- * reciprocal - generate numbers with a reciprocal-like distribution.
+ * reciprocal - generate numbers with the requested ditribution,
+ * such that the min, max, mean and count are as requested.
  *
- * More exactly, generate numbers that follow the distribution
- * y = 1 / x^p where x is a uniform random number in the appropriate
- * range, and p is a power chosen to make the mean come out right.
- * A larger value of p results in a more "axis hugging" distribution,
- * a smaller value less so.
- *
- * Thereis no straightforward mathematical approach to this. We use
- * a table which relates the power to the mean, whic is good enough.
+ * The name reflects an earlier approach to the problem.
  ***********************************************************************/
 
 void random::reciprocal::reset(float min_, float max_, U32 count_, float mean_)
@@ -172,14 +170,7 @@ void random::reciprocal::reset(float min_, float max_, U32 count_, float mean_)
     max_value = max_;
     count = count_;
     mean = mean_;
-    if (max_ < min_ * 2 || mean < min_ * 1.2 || mean > max_ * 0.8) {
-        power = 1;              // bad inputs, give up
-    } else {
-        float mean_ratio = log(mean/min_) / log(max_/min_);
-        power = power_table(mean_ratio);
-    }
-    max_x = 1 / pow(min_, 1/power);
-    min_x = 1 / pow(max_, 1/power);
+    power = (max_value - min_value) / (mean - min_value) - 1;
 }
 
 /************************************************************************
@@ -188,8 +179,7 @@ void random::reciprocal::reset(float min_, float max_, U32 count_, float mean_)
 
 float random::reciprocal::operator()() const
 {
-    float r = uniform_real(min_x, max_x);
-    return 1 / pow(r, power);
+    return min_value + (max_value - min_value) * pow(get_random(), power);
 }
 
 /************************************************************************
@@ -228,6 +218,8 @@ vector<U32> random::reciprocal::get_values_int() const
     }
     return result;
 }
+
+
 /************************************************************************
  * init_thread - check that the generator for this thread has been
  * initialised. Note that 'generator' is thread local, hence there are
@@ -240,5 +232,32 @@ void random::init_thread()
         generator = new boost::mt19937();
         generator->seed(my_seed ? my_seed : true_random());
     }
+}
+
+/************************************************************************
+ * unit test
+ ***********************************************************************/
+
+void _random_ut_1(float min_, float max_, float count, float mean_)
+{
+    random::reciprocal recip(min_, max_, count, mean_);
+    auto values = recip.get_values_int();
+    U32 sum = 0;
+    for (U32 v : values) {
+        sum += v;
+    }
+    float avg = ((float)sum) / count;
+    UT_EQUAL(count, values.size());
+    UT_ASSERT(avg+1 >= mean_ && avg-1 <= mean_, "mean should be %.0f, was %.2f", mean_, avg);
+}
+
+void random::unit_test()
+{
+    _random_ut_1(0, 10, 100, 5);
+    _random_ut_1(10, 20, 100, 15);
+    _random_ut_1(0, 10, 100, 1);
+    _random_ut_1(0, 10, 100, 9);
+    _random_ut_1(0, 10, 100, 3);
+    _random_ut_1(0, 1000, 100, 300);
 }
 

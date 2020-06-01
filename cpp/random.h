@@ -59,6 +59,7 @@ public:
     {
         return coll[uniform_int(0, coll.size()-1)];
     }
+    static void unit_test();
 private:
     static void init_thread();
 };

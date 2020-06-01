@@ -29,6 +29,7 @@ SRC      := \
 	person.cpp \
 	properties.cpp \
 	random.cpp \
+	unit_test.cpp \
 	utility.cpp \
 	world.cpp \
 

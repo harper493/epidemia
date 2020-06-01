@@ -145,8 +145,10 @@ extern command *the_args;
 
 #ifdef DEBUG
 #define debug_assert(PRED) assert(PRED)
+#define DEBUG_TRUE true
 #else
 #define debug_assert(PRED)
+#define DEBUG_TRUE false
 #endif
 
 /************************************************************************
