@@ -110,13 +110,13 @@ void itoa(U32 value, char *ptr)
 
 /************************************************************************
  * get_system_core_count - return the number of cores given by the
- * lscpu command. Return 0- if we can't get it.
+ * lscpu command. Return - if we can't get it.
  ***********************************************************************/
 
 int get_system_core_count()
 {
     int result = 0;
-    regex rx("^processor.*:\\s*(\\d+)");
+    regex rx("^cpu cores.*:\\s*(\\d+)");
     std::ifstream istr("/proc/cpuinfo");
     while (istr.good()) {
         string line;
@@ -126,6 +126,6 @@ int get_system_core_count()
             result = max(result, lexical_cast<int>(s[1]));
         }
     }
-    return result + 1;
+    return result;
 }
 

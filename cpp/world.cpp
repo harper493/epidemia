@@ -175,7 +175,7 @@ void world::add_cities()
 void world::assign_cities_to_agents()
 {
     if (thread_count==0) {
-        thread_count = get_system_core_count() * 2;
+        thread_count = get_system_core_count();
     }
     thread_count = max(1, thread_count);
     if (thread_count > 1) {
