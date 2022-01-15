@@ -112,7 +112,6 @@ class epidemia() :
         if self.args.bubbles:
             self.plot_bubbles(w)
         elif self.args.plot :
-            w.terminate()
             self.plot_results(w)
         w.terminate()
 
