@@ -49,7 +49,9 @@ int main(int argc, const char **argv)
         props->add_property(i.first, i.second);
     }    
     random::initialize(props->get_numeric("random"));
-    unit_test::apply();
+    if (the_args->get_unit_test()) {
+        unit_test::apply();
+    }
     the_world = new world(props);
     the_world->build();
     if (!props->get("city_data").empty()) {

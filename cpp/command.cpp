@@ -43,6 +43,7 @@ bool command::parse(int argc, const char **argv)
         ("population,p",      po::value<int>(),    "population")
         ("random,r",          po::value<float>(),  "random number seed")
         ("threads,T",         po::value<int>(),    "number of threads to use")
+        ("unit-test,U",                            "run unit test")
         ("vaccination,v",     po::value<float>(),   "proportion of people vaccinated (0-1)")
         ("verbosity,V",       po::value<int>(),    "how much output to give");
     po::options_description hidden("");
@@ -72,6 +73,8 @@ bool command::parse(int argc, const char **argv)
                 output_file = values["output"].as<string>();
             } else if (name=="csv") {
                 csv = true;
+            } else if (name=="unit-test") {
+                unit_test = true;
             } else if (name=="double") {
                 double_ = true;
             } else if (name=="log-cities") {
